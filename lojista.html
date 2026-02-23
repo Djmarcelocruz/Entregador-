@@ -3,55 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solicitar Entrega - Quintana</title>
+    <title>Painel Lojista - Quintana</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
-        // Verifica se o Marcelo está Online
+        // Monitorar Status do Entregador
         onSnapshot(doc(db, "config", "status"), (d) => {
-            const online = d.data()?.online;
-            const btn = document.getElementById('btnPedir');
-            const aviso = document.getElementById('avisoOffline');
-            if(online) {
-                btn.disabled = false; btn.classList.remove('opacity-50'); aviso.classList.add('hidden');
+            const s = d.data()?.online;
+            const luz = document.getElementById('statusLuz');
+            const txt = document.getElementById('statusTxt');
+            const btnChamada = document.getElementById('btnChamada');
+            
+            if(s) {
+                luz.className = "w-4 h-4 rounded-full bg-green-500 animate-pulse";
+                txt.innerText = "Marcelo está Online";
+                btnChamada.disabled = false; btnChamada.classList.remove('opacity-50');
             } else {
-                btn.disabled = true; btn.classList.add('opacity-50'); aviso.classList.remove('hidden');
+                luz.className = "w-4 h-4 rounded-full bg-red-500";
+                txt.innerText = "Marcelo está Offline";
+                btnChamada.disabled = true; btnChamada.classList.add('opacity-50');
             }
         });
 
-        window.enviarPedido = async () => {
+        // Botão de Chamar Presença
+        window.chamarMotoboy = async () => {
             const perfil = JSON.parse(localStorage.getItem('perfilLoja'));
-            const dest = document.getElementById('destino').value;
-            if(!dest) return alert("Digite o endereço!");
             await addDoc(collection(db, "pedidos"), {
                 loja: perfil.nome, zap: perfil.zap, retirada: perfil.endereco,
-                destino: dest, status: "Aguardando", tempo: "", valor: 7, timestamp: Date.now()
+                destino: "SOLICITAÇÃO DE PRESENÇA (RETIRADA)", status: "Chamando", valor: 0, timestamp: Date.now()
+            });
+            alert("Chamada enviada ao Marcelo!");
+        };
+
+        // Adicionar Entrega na Lista
+        window.enviarEndereco = async () => {
+            const perfil = JSON.parse(localStorage.getItem('perfilLoja'));
+            const dest = document.getElementById('destino').value;
+            if(!dest) return alert("Digite o endereço");
+            await addDoc(collection(db, "pedidos"), {
+                loja: perfil.nome, zap: perfil.zap, retirada: perfil.endereco,
+                destino: dest, status: "Aguardando", valor: 7, timestamp: Date.now()
             });
             document.getElementById('destino').value = "";
         };
 
         window.onload = () => {
             const perfil = JSON.parse(localStorage.getItem('perfilLoja'));
-            if(!perfil) return document.getElementById('reg').classList.remove('hidden');
-            document.getElementById('app').classList.remove('hidden');
-            document.getElementById('nomeExibicao').innerText = perfil.nome;
-            
-            onSnapshot(query(collection(db, "pedidos"), where("loja", "==", perfil.nome)), (snaps) => {
-                const lista = document.getElementById('lista'); lista.innerHTML = "";
-                snaps.forEach(d => {
-                    const p = d.data();
-                    let cor = p.status === "Aguardando" ? "border-gray-300" : "border-blue-500 animate-pulse";
-                    let msg = p.status === "Aguardando" ? "🕒 Aguardando Marcelo..." : `🛵 Marcelo a caminho (${p.tempo})`;
-                    lista.innerHTML += `<div class="bg-white p-4 rounded-2xl mb-2 border-l-8 ${cor} shadow">
-                        <p class="text-[10px] font-black uppercase text-blue-600">${msg}</p>
-                        <p class="font-bold text-gray-800">${p.destino}</p>
-                    </div>`;
-                });
-            });
+            if(!perfil) document.getElementById('reg').classList.remove('hidden');
+            else {
+                document.getElementById('app').classList.remove('hidden');
+                document.getElementById('nomeLoja').innerText = perfil.nome;
+            }
         };
 
         window.salvarPerfil = () => {
@@ -60,22 +66,31 @@
         };
     </script>
 </head>
-<body class="bg-slate-100 p-4">
-    <div id="reg" class="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-xl hidden">
-        <h2 class="font-black text-2xl mb-4 text-center">CADASTRO DA LOJA</h2>
-        <input id="n" placeholder="Nome da Loja" class="w-full p-4 mb-2 bg-gray-50 rounded-xl">
-        <input id="z" placeholder="WhatsApp" class="w-full p-4 mb-2 bg-gray-50 rounded-xl">
-        <input id="e" placeholder="Endereço de Retirada" class="w-full p-4 mb-4 bg-gray-50 rounded-xl">
+<body class="bg-gray-100 p-4">
+    <div id="reg" class="max-w-md mx-auto bg-white p-6 rounded-3xl hidden shadow-xl">
+        <h2 class="font-black mb-4">CADASTRO</h2>
+        <input id="n" placeholder="Nome da Loja" class="w-full p-4 mb-2 bg-gray-50 rounded-xl border">
+        <input id="z" placeholder="Seu WhatsApp" class="w-full p-4 mb-2 bg-gray-50 rounded-xl border">
+        <input id="e" placeholder="Endereço da Loja" class="w-full p-4 mb-4 bg-gray-50 rounded-xl border">
         <button onclick="salvarPerfil()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl">SALVAR</button>
     </div>
+
     <div id="app" class="max-w-md mx-auto hidden">
-        <div class="bg-white p-6 rounded-3xl shadow-xl mb-4 border-t-8 border-blue-600">
-            <h1 id="nomeExibicao" class="font-black text-xl mb-4 italic"></h1>
-            <div id="avisoOffline" class="hidden bg-red-500 text-white p-3 rounded-xl mb-4 font-bold text-center">MARCELO ESTÁ OFFLINE</div>
-            <input id="destino" placeholder="Endereço de Entrega" class="w-full p-4 bg-gray-100 rounded-xl mb-4 font-bold border-2 border-transparent focus:border-blue-500">
-            <button id="btnPedir" onclick="enviarPedido()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg">SOLICITAR ENTREGA 🛵</button>
+        <div class="bg-white p-4 rounded-2xl mb-4 flex items-center gap-3 shadow-sm">
+            <div id="statusLuz"></div>
+            <span id="statusTxt" class="font-bold text-sm">Verificando...</span>
         </div>
-        <div id="lista"></div>
+
+        <div class="bg-blue-900 p-6 rounded-3xl text-white mb-4 shadow-xl">
+            <h1 id="nomeLoja" class="font-black text-xl mb-4 uppercase italic"></h1>
+            <button id="btnChamada" onclick="chamarMotoboy()" class="w-full bg-yellow-400 text-blue-900 font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all">SOLICITAR MOTOBOY AGORA 🛵</button>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl shadow-lg">
+            <h3 class="font-bold mb-2 text-gray-400 uppercase text-xs">Adicionar Entregas à Lista</h3>
+            <input id="destino" placeholder="Endereço da entrega" class="w-full p-4 bg-gray-100 rounded-xl mb-2 border-2 border-transparent focus:border-blue-400 outline-none">
+            <button onclick="enviarEndereco()" class="w-full bg-gray-800 text-white font-bold py-3 rounded-xl">+ ADICIONAR NA FILA</button>
+        </div>
     </div>
 </body>
 </html>
