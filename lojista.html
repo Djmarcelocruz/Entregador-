@@ -3,20 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Lojista</title>
+    <title>Entregas Quintana - Loja</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, where, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
         const perfil = JSON.parse(localStorage.getItem('perfilLoja'));
 
-        window.chamarPresenca = async () => {
-            await addDoc(collection(db, "chamados"), {
-                loja: perfil.nome, status: "Enviado", tempo: "", timestamp: Date.now()
+        // Monitorar se o Marcelo está Online
+        onSnapshot(doc(db, "config", "status"), (d) => {
+            const s = d.data()?.online;
+            const statusLabel = document.getElementById('statusLabel');
+            statusLabel.innerText = s ? "🟢 MARCELO ONLINE" : "🔴 MARCELO OFFLINE";
+            document.getElementById('btnPresenca').disabled = !s;
+        });
+
+        window.pedirPresenca = async () => {
+            await addDoc(collection(db, "pedidos"), {
+                loja: perfil.nome, zap: perfil.zap, destino: "SOLICITAÇÃO DE PRESENÇA 🛵", status: "Aguardando", tempo: "", valor: 0, timestamp: Date.now()
             });
+            alert("Chamado enviado!");
+        };
+
+        window.lancarEntrega = async () => {
+            const dest = document.getElementById('destino').value;
+            if(!dest) return alert("Digite o endereço");
+            await addDoc(collection(db, "pedidos"), {
+                loja: perfil.nome, zap: perfil.zap, destino: dest, status: "Fila", tempo: "", valor: 7, timestamp: Date.now()
+            });
+            document.getElementById('destino').value = "";
         };
 
         window.onload = () => {
@@ -24,38 +43,44 @@
             document.getElementById('app').classList.remove('hidden');
             document.getElementById('nomeLoja').innerText = perfil.nome;
 
-            // Escuta respostas do Marcelo para esta loja
-            onSnapshot(query(collection(db, "chamados"), where("loja", "==", perfil.nome)), (snaps) => {
-                const statusDiv = document.getElementById('statusChamado');
-                statusDiv.innerHTML = "";
+            onSnapshot(query(collection(db, "pedidos"), where("loja", "==", perfil.nome)), (snaps) => {
+                const lista = document.getElementById('lista'); lista.innerHTML = "";
                 snaps.forEach(d => {
-                    const c = d.data();
-                    let msg = c.status === "Enviado" ? "Aguardando Marcelo visualizar..." : `✅ Marcelo recebeu e chega em ${c.tempo}!`;
-                    let cor = c.status === "Enviado" ? "bg-gray-100 text-gray-500" : "bg-green-100 text-green-700 border-2 border-green-500 animate-pulse";
-                    statusDiv.innerHTML = `<div class="${cor} p-6 rounded-2xl font-black text-center text-lg shadow-lg">${msg}</div>`;
+                    const p = d.data();
+                    let info = p.status === "Aguardando" ? "Aguardando..." : (p.status === "A caminho" ? `A caminho (${p.tempo})` : "Na fila");
+                    lista.innerHTML += `<div class="p-3 bg-white border-l-4 border-blue-500 mb-2 shadow-sm rounded-r-xl">
+                        <p class="text-[10px] font-bold text-blue-600 uppercase">${info}</p>
+                        <p class="text-sm font-bold text-gray-700">${p.destino}</p>
+                    </div>`;
                 });
             });
         };
 
         window.salvarPerfil = () => {
-            localStorage.setItem('perfilLoja', JSON.stringify({ nome: document.getElementById('n').value, zap: document.getElementById('z').value, endereco: document.getElementById('e').value }));
+            localStorage.setItem('perfilLoja', JSON.stringify({ nome: document.getElementById('n').value, zap: document.getElementById('z').value }));
             location.reload();
         };
     </script>
 </head>
-<body class="bg-slate-50 p-4">
-    <div id="reg" class="max-w-md mx-auto bg-white p-8 rounded-3xl hidden shadow-xl">
-        <h2 class="font-black text-2xl mb-6 italic">MEU CADASTRO</h2>
-        <input id="n" placeholder="Nome da Loja" class="w-full p-4 mb-4 bg-gray-50 rounded-2xl border">
-        <button onclick="salvarPerfil()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg">ENTRAR</button>
+<body class="bg-gray-50 p-4">
+    <div id="reg" class="max-w-md mx-auto bg-white p-6 rounded-3xl hidden shadow-xl border-t-8 border-blue-600">
+        <h2 class="font-black text-xl mb-4 text-center">CADASTRO LOJA</h2>
+        <input id="n" placeholder="Nome da Loja" class="w-full p-4 mb-2 bg-gray-100 rounded-xl">
+        <input id="z" placeholder="WhatsApp" class="w-full p-4 mb-4 bg-gray-100 rounded-xl">
+        <button onclick="salvarPerfil()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl">ENTRAR</button>
     </div>
 
     <div id="app" class="max-w-md mx-auto hidden">
-        <div class="bg-blue-900 p-8 rounded-[40px] text-white mb-6 shadow-2xl text-center">
-            <h1 id="nomeLoja" class="font-black text-2xl mb-6 italic uppercase tracking-tighter"></h1>
-            <button onclick="chamarPresenca()" class="w-full bg-yellow-400 text-blue-900 font-black py-6 rounded-3xl shadow-xl text-xl active:scale-95 transition-all">CHAMAR MARCELO AGORA 🛵</button>
+        <p id="statusLabel" class="text-center font-black text-xs mb-4"></p>
+        <div class="bg-blue-600 p-6 rounded-3xl text-white mb-4 shadow-lg">
+            <h1 id="nomeLoja" class="font-black text-xl mb-4 uppercase italic"></h1>
+            <button id="btnPresenca" onclick="pedirPresenca()" class="w-full bg-yellow-400 text-blue-900 font-black py-4 rounded-2xl">SOLICITAR PRESENÇA 🛵</button>
         </div>
-        <div id="statusChamado" class="space-y-4"></div>
+        <div class="bg-white p-4 rounded-3xl shadow mb-4">
+            <input id="destino" placeholder="Endereço da entrega" class="w-full p-4 bg-gray-100 rounded-2xl mb-2 font-bold outline-none">
+            <button onclick="lancarEntrega()" class="w-full bg-gray-800 text-white font-bold py-3 rounded-2xl">+ ADICIONAR ENTREGA</button>
+        </div>
+        <div id="lista"></div>
     </div>
 </body>
 </html>
