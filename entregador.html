@@ -7,77 +7,49 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, query, orderBy, deleteDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        
+        import { getFirestore, collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
-        let fechamento = {};
+        // CONFIGURAÇÃO DE PREÇO PADRÃO
+        window.mudarPrecoPadrao = (v) => localStorage.setItem('precoPadrao', v);
+        const getPreco = () => localStorage.getItem('precoPadrao') || "7";
 
-        window.toggleStatus = async (s) => await setDoc(doc(db, "config", "status"), { online: s });
-        
-        onSnapshot(doc(db, "config", "status"), (d) => {
-            const s = d.data()?.online;
-            const b = document.getElementById('btnStatus');
-            b.innerText = s ? "ESTOU ONLINE 🟢" : "ESTOU OFFLINE 🔴";
-            b.className = s ? "w-full py-4 bg-green-500 text-white font-black rounded-2xl mb-4 shadow-lg" : "w-full py-4 bg-red-500 text-white font-black rounded-2xl mb-4 shadow-lg";
-        });
-
-        onSnapshot(query(collection(db, "pedidos"), orderBy("timestamp", "asc")), (snaps) => {
-            const rota = document.getElementById('rota'); rota.innerHTML = "";
+        onSnapshot(query(collection(db, "chamados"), orderBy("timestamp", "asc")), (snaps) => {
+            const lista = document.getElementById('listaChamados'); lista.innerHTML = "";
             snaps.forEach(d => {
-                const p = d.data();
-                rota.innerHTML += `
-                    <div class="bg-white p-5 rounded-3xl shadow-lg mb-4 border-l-[12px] border-blue-600">
-                        <h3 class="font-black uppercase text-blue-900">${p.loja}</h3>
-                        <p class="font-bold text-sm mb-4">${p.destino}</p>
-                        
-                        <div class="grid grid-cols-3 gap-1 mb-4">
-                            <button onclick="atender('${d.id}', '5m')" class="bg-gray-100 p-2 rounded-lg text-[10px] font-bold">5 MIN</button>
-                            <button onclick="atender('${d.id}', '15m')" class="bg-gray-100 p-2 rounded-lg text-[10px] font-bold">15 MIN</button>
-                            <button onclick="atender('${d.id}', '30m')" class="bg-gray-100 p-2 rounded-lg text-[10px] font-bold">30 MIN</button>
+                const c = d.data();
+                if(c.status === "Pendente") {
+                    lista.innerHTML += `
+                    <div class="bg-white p-6 rounded-3xl shadow-xl mb-4 border-t-8 border-yellow-400">
+                        <h2 class="font-black text-blue-900 uppercase mb-4">${c.loja} chamou!</h2>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="responder('${d.id}', '5 min')" class="bg-blue-600 text-white p-3 rounded-xl font-bold">5m</button>
+                            <button onclick="responder('${d.id}', '15 min')" class="bg-blue-600 text-white p-3 rounded-xl font-bold">15m</button>
+                            <button onclick="responder('${d.id}', '30 min')" class="bg-blue-600 text-white p-3 rounded-xl font-bold">30m</button>
                         </div>
-
-                        <div class="flex items-center gap-2 mb-4 bg-gray-50 p-2 rounded-xl">
-                            <span class="text-xs font-bold text-gray-400">VALOR R$:</span>
-                            <input id="val-${d.id}" type="number" value="${p.valor}" class="w-full bg-transparent font-black text-green-600 outline-none">
-                        </div>
-
-                        <button onclick="concluir('${d.id}', '${p.loja}', '${p.zap}', '${p.destino}', document.getElementById('val-${d.id}').value)" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg">CONCLUIR ENTREGA</button>
                     </div>`;
+                } else if(c.status === "Confirmado") {
+                    lista.innerHTML += `
+                    <div class="bg-green-500 text-white p-6 rounded-3xl mb-4 font-black flex justify-between items-center italic uppercase">
+                        <span>IR PARA: ${c.loja}</span>
+                        <button onclick="finalizar('${d.id}')" class="bg-white text-green-600 px-4 py-2 rounded-xl text-xs">CHEGUEI</button>
+                    </div>`;
+                }
             });
         });
 
-        window.atender = async (id, tempo) => await updateDoc(doc(db, "pedidos", id), { status: "A caminho", tempo: tempo });
-        
-        window.concluir = async (id, loja, zap, dest, valor) => {
-            if(!fechamento[loja]) fechamento[loja] = { zap: zap, itens: [], total: 0 };
-            fechamento[loja].itens.push(dest);
-            fechamento[loja].total += parseFloat(valor);
-            await deleteDoc(doc(db, "pedidos", id));
-            renderResumos();
-        };
-
-        const renderResumos = () => {
-            const div = document.getElementById('resumos'); div.innerHTML = "";
-            for (let l in fechamento) {
-                div.innerHTML += `<button onclick="zap('${l}')" class="w-full bg-white border-2 border-green-500 text-green-600 p-4 rounded-2xl mb-2 font-black shadow-sm">ZAP FECHAMENTO: ${l} (R$ ${fechamento[l].total.toFixed(2)})</button>`;
-            }
-        };
-
-        window.zap = (l) => {
-            const d = fechamento[l];
-            const msg = window.encodeURIComponent(`*FECHAMENTO MARCELO ENTREGAS*\n\n✅ *${l}*\n- ${d.itens.join('\n- ')}\n\n*TOTAL: R$ ${d.total.toFixed(2)}*`);
-            window.open(`https://api.whatsapp.com/send?phone=55${d.zap}&text=${msg}`);
-            delete fechamento[l]; renderResumos();
-        };
+        window.responder = async (id, t) => await updateDoc(doc(db, "chamados", id), { status: "Respondido", tempo: t });
+        window.finalizar = async (id) => await deleteDoc(doc(db, "chamados", id));
     </script>
 </head>
-<body class="bg-gray-100 p-4 pb-20">
+<body class="bg-gray-100 p-4">
     <div class="max-w-md mx-auto">
-        <button id="btnStatus" onclick="toggleStatus(this.innerText.includes('OFFLINE'))"></button>
-        <div id="resumos"></div>
-        <div id="rota"></div>
+        <div class="bg-white p-4 rounded-2xl mb-6 shadow-sm flex items-center justify-between">
+            <span class="font-bold text-xs uppercase text-gray-400">Preço Padrão R$:</span>
+            <input type="number" onchange="mudarPrecoPadrao(this.value)" value="7" class="w-16 text-right font-black text-blue-600 outline-none">
+        </div>
+        <div id="listaChamados"></div>
     </div>
 </body>
 </html>
