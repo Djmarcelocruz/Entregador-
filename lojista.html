@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Lojista - Solicitar Entrega</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE",
+            authDomain: "meuappentregas.firebaseapp.com",
+            projectId: "meuappentregas",
+            storageBucket: "meuappentregas.firebasestorage.app",
+            messagingSenderId: "442484186787",
+            appId: "1:442484186787:web:ac914827ebebda987f2916"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.chamarEntregador = async () => {
+            const nomeLoja = document.getElementById('nomeLoja').value;
+            const endereco = document.getElementById('enderecoEntrega').value;
+            if(!nomeLoja || !endereco) return alert("Por favor, preencha todos os campos!");
+
+            await addDoc(collection(db, "pedidos"), {
+                loja: nomeLoja,
+                endereco: endereco,
+                timestamp: Date.now()
+            });
+            document.getElementById('enderecoEntrega').value = "";
+            alert("Solicitação enviada! O entregador já recebeu.");
+        };
+
+        const q = query(collection(db, "pedidos"), orderBy("timestamp", "asc"));
+        onSnapshot(q, (snapshot) => {
+            const count = snapshot.size;
+            document.getElementById('infoFila').innerText = count > 0 ? `Há ${count} pedido(s) na fila.` : "O entregador está disponível!";
+        });
+    </script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-md mx-auto bg-white p-6 rounded-2xl shadow-lg border-t-8 border-blue-500">
+        <h1 class="text-xl font-bold mb-4 text-gray-800 text-center">Solicitar Entrega 🛵</h1>
+        <input id="nomeLoja" type="text" placeholder="Nome da sua Loja" class="w-full border p-3 rounded-xl mb-3 shadow-sm">
+        <input id="enderecoEntrega" type="text" placeholder="Endereço da Entrega" class="w-full border p-3 rounded-xl mb-4 shadow-sm">
+        <button onclick="chamarEntregador()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-md active:scale-95 transition-transform">ENVIAR PARA ENTREGADOR</button>
+        <div class="mt-4 p-3 bg-blue-50 rounded-lg text-center">
+            <p id="infoFila" class="text-blue-700 font-medium italic text-sm">Carregando fila...</p>
+        </div>
+    </div>
+</body>
+</html>
