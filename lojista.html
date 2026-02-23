@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solicitar Entrega - Quintana</title>
+    <title>Painel Lojista - Entregas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE",
@@ -17,53 +17,84 @@
             messagingSenderId: "442484186787",
             appId: "1:442484186787:web:ac914827ebebda987f2916"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Função para sugerir valor baseado na cidade
-        window.calcularValor = () => {
-            const end = document.getElementById('destino').value.toLowerCase();
-            let valor = 7.00; // Valor padrão Quintana
-            if (end.includes('pompeia') || end.includes('herculandia') || end.includes('paulopolis')) {
-                valor = 20.00; // Valor viagem
+        // Registro Único: Salva no celular da loja
+        const salvarPerfil = () => {
+            const perfil = {
+                nome: document.getElementById('nomeLoja').value,
+                zap: document.getElementById('zapLoja').value,
+                endereco: document.getElementById('ruaLoja').value
+            };
+            localStorage.setItem('perfilLoja', JSON.stringify(perfil));
+            location.reload();
+        };
+
+        const carregarPerfil = () => {
+            const salvo = localStorage.getItem('perfilLoja');
+            if(salvo) {
+                const dados = JSON.parse(salvo);
+                document.getElementById('registro').classList.add('hidden');
+                document.getElementById('app').classList.remove('hidden');
+                document.getElementById('infoLoja').innerText = dados.nome;
+                escutarPedidos(dados.nome);
             }
-            document.getElementById('valorSugestao').innerText = `Valor estimado: R$ ${valor.toFixed(2)}`;
-            return valor;
         };
 
         window.enviarPedido = async () => {
-            const loja = document.getElementById('nomeLoja').value;
-            const zap = document.getElementById('zapLoja').value;
-            const retirada = document.getElementById('retirada').value;
+            const perfil = JSON.parse(localStorage.getItem('perfilLoja'));
             const destino = document.getElementById('destino').value;
-            const valor = window.calcularValor();
-
-            if(!loja || !retirada || !destino) return alert("Preencha os campos!");
+            let valor = destino.toLowerCase().match(/pompeia|herculandia|paulopolis/) ? 20 : 7;
 
             await addDoc(collection(db, "pedidos"), {
-                loja, zap, retirada, destino, valor,
-                status: "Aguardando",
+                loja: perfil.nome,
+                zap: perfil.zap,
+                retirada: perfil.endereco,
+                destino: destino,
+                valor: valor,
                 timestamp: Date.now()
             });
-            alert("Pedido enviado! O entregador já foi notificado.");
             document.getElementById('destino').value = "";
         };
+
+        const escutarPedidos = (nomeLoja) => {
+            const q = query(collection(db, "pedidos"), where("loja", "==", nomeLoja));
+            onSnapshot(q, (snaps) => {
+                const lista = document.getElementById('meusPedidos');
+                lista.innerHTML = "";
+                snaps.forEach(d => {
+                    lista.innerHTML += `<div class="p-3 bg-gray-100 rounded-xl mb-2 flex justify-between items-center text-sm">
+                        <span>${d.data().destino}</span>
+                        <button onclick="removerPedido('${d.id}')" class="text-red-500 font-bold px-2">X</button>
+                    </div>`;
+                });
+            });
+        };
+
+        window.removerPedido = async (id) => { if(confirm("Remover?")) await deleteDoc(doc(db, "pedidos", id)); };
+        window.salvarPerfil = salvarPerfil;
+        window.onload = carregarPerfil;
     </script>
 </head>
-<body class="bg-blue-50 p-4">
-    <div class="max-w-md mx-auto bg-white p-6 rounded-3xl shadow-xl border-b-4 border-blue-600">
-        <h2 class="text-2xl font-black text-blue-900 mb-6 text-center italic">ENTREGAS QUINTANA 🛵</h2>
-        
-        <div class="space-y-4">
-            <input id="nomeLoja" type="text" placeholder="Seu Nome ou Nome da Loja" class="w-full p-4 bg-gray-100 rounded-2xl border-none outline-blue-500 font-bold">
-            <input id="zapLoja" type="tel" placeholder="Seu WhatsApp (com DDD)" class="w-full p-4 bg-gray-100 rounded-2xl border-none outline-blue-500">
-            <input id="retirada" type="text" placeholder="Onde retirar? (Ex: Rua Direita, 10)" class="w-full p-4 bg-gray-100 rounded-2xl border-none outline-blue-500">
-            <input id="destino" type="text" oninput="calcularValor()" placeholder="Destino da Entrega (Endereço Completo)" class="w-full p-4 bg-gray-100 rounded-2xl border-none outline-blue-500 font-bold">
-            
-            <div id="valorSugestao" class="text-center font-black text-green-600 text-lg py-2 italic">Valor estimado: R$ 7,00</div>
-            
-            <button onclick="enviarPedido()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg active:scale-95 transition-all text-xl">PEDIR AGORA</button>
+<body class="bg-blue-50 p-4 font-sans">
+    <div id="registro" class="max-w-md mx-auto bg-white p-6 rounded-3xl shadow-xl">
+        <h2 class="font-black text-xl mb-4">Registro da Loja</h2>
+        <input id="nomeLoja" placeholder="Nome da Loja" class="w-full p-4 mb-2 bg-gray-100 rounded-xl">
+        <input id="zapLoja" placeholder="Seu WhatsApp" class="w-full p-4 mb-2 bg-gray-100 rounded-xl">
+        <input id="ruaLoja" placeholder="Seu Endereço de Retirada" class="w-full p-4 mb-4 bg-gray-100 rounded-xl">
+        <button onclick="salvarPerfil()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl">SALVAR E ENTRAR</button>
+    </div>
+
+    <div id="app" class="max-w-md mx-auto hidden">
+        <div class="bg-white p-6 rounded-3xl shadow-xl mb-4">
+            <h2 id="infoLoja" class="font-black text-2xl text-blue-900 mb-4"></h2>
+            <input id="destino" placeholder="Endereço de Entrega" class="w-full p-4 bg-gray-100 rounded-xl mb-2 font-bold border-2 border-blue-200">
+            <button onclick="enviarPedido()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg">CHAMAR ENTREGADOR</button>
+        </div>
+        <div class="bg-white p-4 rounded-3xl shadow">
+            <h3 class="font-bold text-gray-500 mb-2 uppercase text-xs tracking-widest">Pedidos Ativos</h3>
+            <div id="meusPedidos"></div>
         </div>
     </div>
 </body>
