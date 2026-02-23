@@ -3,61 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Lojista - Quintana</title>
+    <title>Painel Lojista</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
-        // Monitorar Status do Entregador
-        onSnapshot(doc(db, "config", "status"), (d) => {
-            const s = d.data()?.online;
-            const luz = document.getElementById('statusLuz');
-            const txt = document.getElementById('statusTxt');
-            const btnChamada = document.getElementById('btnChamada');
-            
-            if(s) {
-                luz.className = "w-4 h-4 rounded-full bg-green-500 animate-pulse";
-                txt.innerText = "Marcelo está Online";
-                btnChamada.disabled = false; btnChamada.classList.remove('opacity-50');
-            } else {
-                luz.className = "w-4 h-4 rounded-full bg-red-500";
-                txt.innerText = "Marcelo está Offline";
-                btnChamada.disabled = true; btnChamada.classList.add('opacity-50');
-            }
-        });
+        const perfil = JSON.parse(localStorage.getItem('perfilLoja'));
 
-        // Botão de Chamar Presença
-        window.chamarMotoboy = async () => {
-            const perfil = JSON.parse(localStorage.getItem('perfilLoja'));
-            await addDoc(collection(db, "pedidos"), {
-                loja: perfil.nome, zap: perfil.zap, retirada: perfil.endereco,
-                destino: "SOLICITAÇÃO DE PRESENÇA (RETIRADA)", status: "Chamando", valor: 0, timestamp: Date.now()
+        window.chamarPresenca = async () => {
+            await addDoc(collection(db, "chamados"), {
+                loja: perfil.nome, status: "Enviado", tempo: "", timestamp: Date.now()
             });
-            alert("Chamada enviada ao Marcelo!");
-        };
-
-        // Adicionar Entrega na Lista
-        window.enviarEndereco = async () => {
-            const perfil = JSON.parse(localStorage.getItem('perfilLoja'));
-            const dest = document.getElementById('destino').value;
-            if(!dest) return alert("Digite o endereço");
-            await addDoc(collection(db, "pedidos"), {
-                loja: perfil.nome, zap: perfil.zap, retirada: perfil.endereco,
-                destino: dest, status: "Aguardando", valor: 7, timestamp: Date.now()
-            });
-            document.getElementById('destino').value = "";
         };
 
         window.onload = () => {
-            const perfil = JSON.parse(localStorage.getItem('perfilLoja'));
-            if(!perfil) document.getElementById('reg').classList.remove('hidden');
-            else {
-                document.getElementById('app').classList.remove('hidden');
-                document.getElementById('nomeLoja').innerText = perfil.nome;
-            }
+            if(!perfil) return document.getElementById('reg').classList.remove('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            document.getElementById('nomeLoja').innerText = perfil.nome;
+
+            // Escuta respostas do Marcelo para esta loja
+            onSnapshot(query(collection(db, "chamados"), where("loja", "==", perfil.nome)), (snaps) => {
+                const statusDiv = document.getElementById('statusChamado');
+                statusDiv.innerHTML = "";
+                snaps.forEach(d => {
+                    const c = d.data();
+                    let msg = c.status === "Enviado" ? "Aguardando Marcelo visualizar..." : `✅ Marcelo recebeu e chega em ${c.tempo}!`;
+                    let cor = c.status === "Enviado" ? "bg-gray-100 text-gray-500" : "bg-green-100 text-green-700 border-2 border-green-500 animate-pulse";
+                    statusDiv.innerHTML = `<div class="${cor} p-6 rounded-2xl font-black text-center text-lg shadow-lg">${msg}</div>`;
+                });
+            });
         };
 
         window.salvarPerfil = () => {
@@ -66,31 +43,19 @@
         };
     </script>
 </head>
-<body class="bg-gray-100 p-4">
-    <div id="reg" class="max-w-md mx-auto bg-white p-6 rounded-3xl hidden shadow-xl">
-        <h2 class="font-black mb-4">CADASTRO</h2>
-        <input id="n" placeholder="Nome da Loja" class="w-full p-4 mb-2 bg-gray-50 rounded-xl border">
-        <input id="z" placeholder="Seu WhatsApp" class="w-full p-4 mb-2 bg-gray-50 rounded-xl border">
-        <input id="e" placeholder="Endereço da Loja" class="w-full p-4 mb-4 bg-gray-50 rounded-xl border">
-        <button onclick="salvarPerfil()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl">SALVAR</button>
+<body class="bg-slate-50 p-4">
+    <div id="reg" class="max-w-md mx-auto bg-white p-8 rounded-3xl hidden shadow-xl">
+        <h2 class="font-black text-2xl mb-6 italic">MEU CADASTRO</h2>
+        <input id="n" placeholder="Nome da Loja" class="w-full p-4 mb-4 bg-gray-50 rounded-2xl border">
+        <button onclick="salvarPerfil()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg">ENTRAR</button>
     </div>
 
     <div id="app" class="max-w-md mx-auto hidden">
-        <div class="bg-white p-4 rounded-2xl mb-4 flex items-center gap-3 shadow-sm">
-            <div id="statusLuz"></div>
-            <span id="statusTxt" class="font-bold text-sm">Verificando...</span>
+        <div class="bg-blue-900 p-8 rounded-[40px] text-white mb-6 shadow-2xl text-center">
+            <h1 id="nomeLoja" class="font-black text-2xl mb-6 italic uppercase tracking-tighter"></h1>
+            <button onclick="chamarPresenca()" class="w-full bg-yellow-400 text-blue-900 font-black py-6 rounded-3xl shadow-xl text-xl active:scale-95 transition-all">CHAMAR MARCELO AGORA 🛵</button>
         </div>
-
-        <div class="bg-blue-900 p-6 rounded-3xl text-white mb-4 shadow-xl">
-            <h1 id="nomeLoja" class="font-black text-xl mb-4 uppercase italic"></h1>
-            <button id="btnChamada" onclick="chamarMotoboy()" class="w-full bg-yellow-400 text-blue-900 font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all">SOLICITAR MOTOBOY AGORA 🛵</button>
-        </div>
-
-        <div class="bg-white p-6 rounded-3xl shadow-lg">
-            <h3 class="font-bold mb-2 text-gray-400 uppercase text-xs">Adicionar Entregas à Lista</h3>
-            <input id="destino" placeholder="Endereço da entrega" class="w-full p-4 bg-gray-100 rounded-xl mb-2 border-2 border-transparent focus:border-blue-400 outline-none">
-            <button onclick="enviarEndereco()" class="w-full bg-gray-800 text-white font-bold py-3 rounded-xl">+ ADICIONAR NA FILA</button>
-        </div>
+        <div id="statusChamado" class="space-y-4"></div>
     </div>
 </body>
 </html>
