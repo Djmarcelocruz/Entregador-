@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pedidos - Quintana</title>
+    <title>Solicitar Entrega - Quintana</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -11,46 +11,36 @@
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
-        onSnapshot(doc(db, "config", "status"), (d) => {
-            const data = d.data();
-            const btn = document.getElementById('btnPedir');
-            const aviso = document.getElementById('avisoOffline');
-            btn.disabled = !data?.online;
-            data?.online ? aviso.classList.add('hidden') : aviso.classList.remove('hidden');
-        });
+        const perfil = JSON.parse(localStorage.getItem('perfilLoja'));
 
         window.enviarPedido = async () => {
-            const perfil = JSON.parse(localStorage.getItem('perfilLoja'));
             const dest = document.getElementById('destino').value;
             if(!dest) return alert("Digite o endereço!");
             await addDoc(collection(db, "pedidos"), {
                 loja: perfil.nome, zap: perfil.zap, retirada: perfil.endereco,
-                destino: dest, valor: dest.toLowerCase().includes('quintana') ? 7 : 20,
-                status: "Aguardando", timestamp: Date.now()
+                destino: dest, status: "Aguardando", tempo: "", timestamp: Date.now()
             });
             document.getElementById('destino').value = "";
         };
 
         window.onload = () => {
-            const perfil = JSON.parse(localStorage.getItem('perfilLoja'));
-            if(perfil) {
-                document.getElementById('reg').classList.add('hidden');
-                document.getElementById('app').classList.remove('hidden');
-                document.getElementById('nomeExibicao').innerText = perfil.nome;
-                
-                onSnapshot(query(collection(db, "pedidos"), where("loja", "==", perfil.nome)), (snaps) => {
-                    const lista = document.getElementById('lista');
-                    lista.innerHTML = "";
-                    snaps.forEach(d => {
-                        const p = d.data();
-                        let cor = p.status === "Aguardando" ? "bg-gray-100" : (p.status === "Buscando" ? "bg-blue-100 animate-pulse" : "bg-green-100");
-                        lista.innerHTML += `<div class="${cor} p-4 rounded-2xl mb-2 border-2 border-white">
-                            <p class="text-xs font-bold uppercase">${p.status}</p>
-                            <p class="font-bold">${p.destino}</p>
+            if(!perfil) return document.getElementById('reg').classList.remove('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            document.getElementById('nomeExibicao').innerText = perfil.nome;
+            
+            onSnapshot(query(collection(db, "pedidos"), where("loja", "==", perfil.nome)), (snaps) => {
+                const lista = document.getElementById('lista');
+                lista.innerHTML = "";
+                snaps.forEach(d => {
+                    const p = d.data();
+                    let etapa = p.status === "Aguardando" ? "🕒 Aguardando..." : (p.status === "Buscando" ? `🛵 Motoboy a caminho (${p.tempo})` : "📦 Pacote Coletado");
+                    lista.innerHTML += `
+                        <div class="bg-white p-4 rounded-2xl mb-3 shadow border-l-8 ${p.status === 'Buscando' ? 'border-blue-500' : 'border-gray-200'}">
+                            <p class="font-black text-blue-600 text-sm mb-1">${etapa}</p>
+                            <p class="text-gray-800 font-bold">${p.destino}</p>
                         </div>`;
-                    });
                 });
-            }
+            });
         };
 
         window.salvarPerfil = () => {
@@ -59,22 +49,25 @@
         };
     </script>
 </head>
-<body class="bg-blue-50 p-4">
-    <div id="reg" class="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-xl">
-        <h2 class="font-black text-2xl mb-6 italic">CADASTRO LOJA</h2>
+<body class="bg-gray-100 p-4 font-sans">
+    <div id="reg" class="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-xl hidden">
+        <h2 class="font-black text-2xl mb-4 italic text-blue-900 text-center">MEU NEGÓCIO</h2>
         <input id="n" placeholder="Nome da Loja" class="w-full p-4 mb-3 bg-gray-50 rounded-2xl border">
         <input id="z" placeholder="WhatsApp" class="w-full p-4 mb-3 bg-gray-50 rounded-2xl border">
         <input id="e" placeholder="Endereço de Retirada" class="w-full p-4 mb-6 bg-gray-50 rounded-2xl border">
-        <button onclick="salvarPerfil()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg">COMEÇAR</button>
+        <button onclick="salvarPerfil()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg">SALVAR CONFIGURAÇÃO</button>
     </div>
+
     <div id="app" class="max-w-md mx-auto hidden">
-        <div class="bg-white p-6 rounded-3xl shadow-xl mb-6">
-            <h1 id="nomeExibicao" class="font-black text-2xl mb-4 text-blue-900 italic"></h1>
-            <div id="avisoOffline" class="hidden bg-red-500 text-white p-3 rounded-xl mb-4 font-bold text-center animate-bounce">MARCELO ESTÁ OFFLINE</div>
-            <input id="destino" placeholder="Endereço para entrega" class="w-full p-5 bg-gray-100 rounded-2xl mb-4 font-bold border-2 border-blue-100 focus:border-blue-500 outline-none">
-            <button id="btnPedir" onclick="enviarPedido()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg active:scale-95 transition-all uppercase">Chamar Marcelo 🛵</button>
+        <div class="bg-blue-600 p-6 rounded-3xl shadow-xl mb-6 text-white italic text-center">
+            <h1 id="nomeExibicao" class="font-black text-2xl uppercase"></h1>
         </div>
-        <div id="lista" class="space-y-2"></div>
+        <div class="bg-white p-6 rounded-3xl shadow-xl mb-6 border-2 border-blue-500">
+            <h3 class="font-black mb-3 text-blue-900">NOVA ENTREGA</h3>
+            <input id="destino" placeholder="Endereço Completo do Cliente" class="w-full p-4 bg-gray-100 rounded-2xl mb-4 font-bold outline-none border-2 border-transparent focus:border-blue-400">
+            <button onclick="enviarPedido()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg text-lg">SOLICITAR MOTOBOY 🛵</button>
+        </div>
+        <div id="lista"></div>
     </div>
 </body>
 </html>
