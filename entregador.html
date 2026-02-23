@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marcelo - Entregador</title>
+    <title>Marcelo - Painel Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -11,12 +11,22 @@
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
-        window.mudarStatus = async (s) => await setDoc(doc(db, "config", "status"), { online: s });
+        let ganhosTotal = 0;
+
+        window.mudarStatus = async (tipo, val) => {
+            const ref = doc(db, "config", "status");
+            if(tipo === 'online') await updateDoc(ref, { online: val });
+            if(tipo === 'ocupado') await updateDoc(ref, { ocupado: val });
+        };
+
         onSnapshot(doc(db, "config", "status"), (d) => {
-            const s = d.data()?.online;
+            const s = d.data();
             const b = document.getElementById('btnStatus');
-            b.innerText = s ? "VOCÊ ESTÁ ONLINE 🟢" : "VOCÊ ESTÁ OFFLINE 🔴";
-            b.className = s ? "w-full py-4 bg-green-500 text-white font-black rounded-xl mb-4" : "w-full py-4 bg-red-500 text-white font-black rounded-xl mb-4";
+            const o = document.getElementById('btnOcupado');
+            b.innerText = s?.online ? "ESTOU ONLINE 🟢" : "ESTOU OFFLINE 🔴";
+            b.className = s?.online ? "flex-1 py-4 bg-green-500 text-white font-black rounded-2xl shadow-lg" : "flex-1 py-4 bg-red-500 text-white font-black rounded-2xl shadow-lg";
+            o.innerText = s?.ocupado ? "EM ROTA 🛵" : "LIVRE ✅";
+            o.className = s?.ocupado ? "flex-1 py-4 bg-orange-500 text-white font-black rounded-2xl shadow-lg" : "flex-1 py-4 bg-gray-400 text-white font-black rounded-2xl shadow-lg";
         });
 
         onSnapshot(query(collection(db, "chamados"), orderBy("timestamp", "desc")), (snaps) => {
@@ -24,13 +34,11 @@
             snaps.forEach(d => {
                 const c = d.data();
                 if(c.status === "Pendente") {
-                    cDiv.innerHTML += `<div class="bg-yellow-100 p-4 rounded-xl mb-2 border-l-8 border-yellow-500">
-                        <p class="font-bold">LOJA: ${c.loja}</p>
-                        <div class="flex gap-2 mt-2">
-                            <button onclick="responder('${d.id}','5m')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs">5 MIN</button>
-                            <button onclick="responder('${d.id}','15m')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs">15 MIN</button>
-                            <button onclick="responder('${d.id}','30m')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs">30 MIN</button>
-                        </div>
+                    cDiv.innerHTML += `<div class="bg-white p-6 rounded-[30px] shadow-2xl mb-4 border-l-[12px] border-yellow-400 animate-pulse">
+                        <p class="font-black text-blue-900 uppercase mb-3">${c.loja} CHAMOU!</p>
+                        <div class="grid grid-cols-3 gap-2"><button onclick="responder('${d.id}','5m')" class="bg-blue-600 text-white py-3 rounded-xl font-black">5m</button>
+                        <button onclick="responder('${d.id}','15m')" class="bg-blue-600 text-white py-3 rounded-xl font-black">15m</button>
+                        <button onclick="responder('${d.id}','30m')" class="bg-blue-600 text-white py-3 rounded-xl font-black">30m</button></div>
                     </div>`;
                 }
             });
@@ -40,27 +48,40 @@
             const pDiv = document.getElementById('pedidos'); pDiv.innerHTML = "";
             snaps.forEach(d => {
                 const p = d.data();
-                pDiv.innerHTML += `<div class="bg-white p-4 rounded-xl mb-2 shadow border-l-8 border-blue-600">
-                    <p class="text-[10px] font-black uppercase text-gray-400">${p.loja}</p>
-                    <p class="font-bold mb-2">${p.local}</p>
+                pDiv.innerHTML += `<div class="bg-white p-6 rounded-[30px] shadow-xl mb-4 border-l-[12px] border-blue-700">
+                    <p class="text-[10px] font-black text-blue-600 uppercase mb-1">${p.loja}</p>
+                    <p class="font-black text-gray-800 mb-4">${p.local}</p>
+                    <div class="flex items-center gap-2 mb-4 bg-gray-100 p-3 rounded-2xl border-2 border-dashed border-gray-300">
+                        <span class="font-black text-gray-400">R$</span><input id="val-${d.id}" type="number" value="7" class="w-full bg-transparent font-black text-xl text-green-600 outline-none">
+                    </div>
                     <div class="flex gap-2">
-                        <a href="https://www.google.com/maps/search/${encodeURIComponent(p.local)}" target="_blank" class="bg-gray-100 p-2 rounded text-xs font-bold">MAPA 📍</a>
-                        <button onclick="finalizar('${d.id}')" class="bg-green-500 text-white px-3 py-1 rounded text-xs font-bold">CONCLUIR ✅</button>
+                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.local)}" target="_blank" class="bg-slate-100 p-4 rounded-2xl font-black text-xs uppercase">MAPA 📍</a>
+                        <button onclick="finalizar('${d.id}', document.getElementById('val-${d.id}').value)" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg">CONCLUIR ✅</button>
                     </div>
                 </div>`;
             });
         });
 
         window.responder = async (id, t) => await updateDoc(doc(db, "chamados", id), { status: "Respondido", tempo: t });
-        window.finalizar = async (id) => await deleteDoc(doc(db, "pedidos", id));
+        window.finalizar = async (id, v) => {
+            ganhosTotal += parseFloat(v);
+            document.getElementById('ganhoDia').innerText = `R$ ${ganhosTotal.toFixed(2)}`;
+            await deleteDoc(doc(db, "pedidos", id));
+        };
     </script>
 </head>
-<body class="bg-gray-200 p-4">
+<body class="bg-gray-100 p-4 pb-20">
     <div class="max-w-md mx-auto">
-        <button id="btnStatus" onclick="mudarStatus(this.innerText.includes('OFFLINE'))"></button>
+        <div class="flex gap-2 mb-6">
+            <button id="btnStatus" onclick="mudarStatus('online', this.innerText.includes('OFFLINE'))"></button>
+            <button id="btnOcupado" onclick="mudarStatus('ocupado', this.innerText.includes('LIVRE'))"></button>
+        </div>
         <div id="chamadas"></div>
-        <h3 class="font-black text-xs text-gray-500 mb-2 uppercase">Entregas para Fazer</h3>
         <div id="pedidos"></div>
+        <div class="bg-blue-900 text-white p-8 rounded-[40px] shadow-2xl mt-8 text-center italic">
+            <p class="text-[10px] font-bold uppercase opacity-60 mb-2 tracking-widest">Ganhos de Hoje</p>
+            <h1 id="ganhoDia" class="text-4xl font-black italic uppercase">R$ 0,00</h1>
+        </div>
     </div>
 </body>
 </html>
