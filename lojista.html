@@ -12,11 +12,15 @@
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
         const perfil = JSON.parse(localStorage.getItem('perfilLoja'));
 
-        window.chamarPresenca = async () => {
-            await addDoc(collection(db, "chamados"), { loja: perfil.nome, status: "Pendente", tempo: "", timestamp: Date.now() });
+        // Chamar o Marcelo (Apenas quando clicar)
+        window.chamarAgora = async () => {
+            if(!perfil) return alert("Configure seu nome primeiro!");
+            await addDoc(collection(db, "chamados"), { 
+                loja: perfil.nome, status: "Pendente", tempo: "", timestamp: Date.now() 
+            });
         };
 
-        window.responderChamado = async (id, acao) => {
+        window.aceitarTempo = async (id, acao) => {
             if(acao === 'OK') await updateDoc(doc(db, "chamados", id), { status: "Confirmado" });
             else await deleteDoc(doc(db, "chamados", id));
         };
@@ -24,40 +28,41 @@
         window.onload = () => {
             if(!perfil) return document.getElementById('reg').classList.remove('hidden');
             document.getElementById('app').classList.remove('hidden');
+            document.getElementById('exibirLoja').innerText = perfil.nome;
+
             onSnapshot(query(collection(db, "chamados"), where("loja", "==", perfil.nome)), (snaps) => {
-                const div = document.getElementById('statusChamado'); div.innerHTML = "";
+                const painel = document.getElementById('statusChamado'); painel.innerHTML = "";
                 snaps.forEach(d => {
                     const c = d.data();
                     if(c.status === "Respondido") {
-                        div.innerHTML = `<div class="bg-blue-100 p-4 rounded-2xl border-2 border-blue-500 text-center">
-                            <p class="font-bold">Marcelo chega em ${c.tempo}?</p>
-                            <div class="flex gap-2 mt-2">
-                                <button onclick="responderChamado('${d.id}', 'OK')" class="flex-1 bg-green-500 text-white font-bold py-2 rounded-xl">SIM, PODE VIR</button>
-                                <button onclick="responderChamado('${d.id}', 'NAO')" class="flex-1 bg-red-500 text-white font-bold py-2 rounded-xl">AGORA NÃO</button>
+                        painel.innerHTML = `<div class="bg-blue-600 text-white p-6 rounded-3xl shadow-xl text-center">
+                            <p class="font-bold mb-4">Marcelo chega em ${c.tempo}?</p>
+                            <div class="flex gap-2">
+                                <button onclick="aceitarTempo('${d.id}', 'OK')" class="flex-1 bg-green-400 text-blue-900 font-black py-3 rounded-2xl">SIM</button>
+                                <button onclick="aceitarTempo('${d.id}', 'NAO')" class="flex-1 bg-red-400 text-white font-black py-3 rounded-2xl">NÃO</button>
                             </div>
                         </div>`;
                     } else if(c.status === "Confirmado") {
-                        div.innerHTML = `<div class="bg-green-500 text-white p-4 rounded-2xl font-bold text-center italic animate-pulse">MARCELO A CAMINHO!</div>`;
-                    } else {
-                        div.innerHTML = `<div class="bg-gray-100 p-4 rounded-2xl text-center text-gray-500 font-bold">Chamada enviada...</div>`;
+                        painel.innerHTML = `<div class="bg-green-500 text-white p-6 rounded-3xl font-black text-center animate-pulse shadow-lg">MOTOBOY A CAMINHO! 🛵</div>`;
                     }
                 });
             });
         };
 
         window.salvarPerfil = () => {
-            localStorage.setItem('perfilLoja', JSON.stringify({ nome: document.getElementById('n').value, zap: document.getElementById('z').value }));
+            localStorage.setItem('perfilLoja', JSON.stringify({ nome: document.getElementById('n').value }));
             location.reload();
         };
     </script>
 </head>
-<body class="bg-slate-50 p-4 font-sans">
+<body class="bg-gray-100 p-4">
     <div id="reg" class="max-w-md mx-auto bg-white p-8 rounded-3xl hidden shadow-xl text-center">
-        <input id="n" placeholder="Nome da Loja" class="w-full p-4 mb-4 bg-gray-50 rounded-2xl border">
-        <button onclick="salvarPerfil()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl">ENTRAR</button>
+        <input id="n" placeholder="Nome da sua Loja" class="w-full p-4 mb-4 bg-gray-50 rounded-2xl border">
+        <button onclick="salvarPerfil()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg">COMEÇAR</button>
     </div>
-    <div id="app" class="max-w-md mx-auto hidden space-y-4">
-        <button onclick="chamarPresenca()" class="w-full bg-blue-600 text-white font-black py-6 rounded-3xl shadow-xl text-xl uppercase italic">SOLICITAR MOTOBOY 🛵</button>
+    <div id="app" class="max-w-md mx-auto hidden space-y-6">
+        <div class="text-center"><h1 id="exibirLoja" class="font-black text-blue-900 italic uppercase text-2xl"></h1></div>
+        <button onclick="chamarAgora()" class="w-full bg-blue-600 text-white font-black py-8 rounded-[40px] shadow-2xl text-2xl active:scale-95 transition-all">CHAMAR MARCELO 🛵</button>
         <div id="statusChamado"></div>
     </div>
 </body>
