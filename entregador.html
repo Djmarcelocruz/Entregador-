@@ -3,68 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Marcelo - Gestão KM</title>
+    <title>Painel Marcelo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy, deleteDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
-        // CONFIGURAÇÃO DE PREÇOS (Você pode mudar aqui)
-        const PRECO_BASE = 7.00;
-        const KM_LIMITE = 6;
-        const VALOR_KM_EXTRA = 2.00;
-
         let fechamento = {};
 
+        window.toggleStatus = async (s) => await setDoc(doc(db, "config", "status"), { online: s });
+        
+        onSnapshot(doc(db, "config", "status"), (d) => {
+            const s = d.data()?.online;
+            const b = document.getElementById('btnStatus');
+            b.innerText = s ? "ESTOU ONLINE 🟢" : "ESTOU OFFLINE 🔴";
+            b.className = s ? "w-full py-4 bg-green-500 text-white font-black rounded-2xl mb-4 shadow-lg" : "w-full py-4 bg-red-500 text-white font-black rounded-2xl mb-4 shadow-lg";
+        });
+
         onSnapshot(query(collection(db, "pedidos"), orderBy("timestamp", "asc")), (snaps) => {
-            const rota = document.getElementById('rota');
-            let totalDia = 0; rota.innerHTML = "";
+            const rota = document.getElementById('rota'); rota.innerHTML = "";
             snaps.forEach(d => {
                 const p = d.data();
                 rota.innerHTML += `
-                    <div class="bg-white p-6 rounded-3xl shadow-xl mb-4 border-l-[12px] border-blue-600">
-                        <div class="flex justify-between font-black text-lg uppercase mb-2">
-                            <span>${p.loja}</span>
-                            <span id="valExibicao-${d.id}" class="text-green-600">R$ ${p.valor.toFixed(2)}</span>
-                        </div>
-                        <p class="text-blue-900 font-bold mb-4 italic text-sm">📍 ${p.destino}</p>
+                    <div class="bg-white p-5 rounded-3xl shadow-lg mb-4 border-l-[12px] border-blue-600">
+                        <h3 class="font-black uppercase text-blue-900">${p.loja}</h3>
+                        <p class="font-bold text-sm mb-4">${p.destino}</p>
                         
-                        <div class="bg-gray-50 p-3 rounded-2xl mb-4 border border-gray-200">
-                            <p class="text-[10px] font-bold text-gray-400 uppercase mb-2 text-center text-red-500">Calculadora de KM (Base 6km)</p>
-                            <div class="flex items-center gap-2">
-                                <input id="km-${d.id}" type="number" placeholder="KM Total" oninput="calcularFrete('${d.id}')" class="w-full p-3 rounded-xl border-2 border-blue-200 text-center font-bold">
-                            </div>
+                        <div class="grid grid-cols-3 gap-1 mb-4">
+                            <button onclick="atender('${d.id}', '5m')" class="bg-gray-100 p-2 rounded-lg text-[10px] font-bold">5 MIN</button>
+                            <button onclick="atender('${d.id}', '15m')" class="bg-gray-100 p-2 rounded-lg text-[10px] font-bold">15 MIN</button>
+                            <button onclick="atender('${d.id}', '30m')" class="bg-gray-100 p-2 rounded-lg text-[10px] font-bold">30 MIN</button>
                         </div>
 
-                        <input id="rec-${d.id}" placeholder="Quem recebeu?" class="w-full p-3 bg-gray-100 rounded-xl mb-3 font-bold uppercase text-xs">
-                        <button onclick="concluir('${d.id}', '${p.loja}', '${p.zap}', '${p.destino}')" class="w-full bg-green-600 text-white py-4 rounded-2xl font-black shadow-lg">FINALIZAR ✅</button>
+                        <div class="flex items-center gap-2 mb-4 bg-gray-50 p-2 rounded-xl">
+                            <span class="text-xs font-bold text-gray-400">VALOR R$:</span>
+                            <input id="val-${d.id}" type="number" value="${p.valor}" class="w-full bg-transparent font-black text-green-600 outline-none">
+                        </div>
+
+                        <button onclick="concluir('${d.id}', '${p.loja}', '${p.zap}', '${p.destino}', document.getElementById('val-${d.id}').value)" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg">CONCLUIR ENTREGA</button>
                     </div>`;
             });
         });
 
-        window.calcularFrete = (id) => {
-            const kmInput = document.getElementById(`km-${id}`).value;
-            let novoValor = PRECO_BASE;
-            
-            if (kmInput > KM_LIMITE) {
-                const kmExtra = kmInput - KM_LIMITE;
-                novoValor = PRECO_BASE + (kmExtra * VALOR_KM_EXTRA);
-            }
-            
-            document.getElementById(`valExibicao-${id}`).innerText = `R$ ${novoValor.toFixed(2)}`;
-            return novoValor;
-        };
-
-        window.concluir = async (id, loja, zap, dest) => {
-            const rec = document.getElementById(`rec-${id}`).value || "Não informado";
-            const valorFinal = window.calcularFrete(id);
-
+        window.atender = async (id, tempo) => await updateDoc(doc(db, "pedidos", id), { status: "A caminho", tempo: tempo });
+        
+        window.concluir = async (id, loja, zap, dest, valor) => {
             if(!fechamento[loja]) fechamento[loja] = { zap: zap, itens: [], total: 0 };
-            fechamento[loja].itens.push(`🏁 ${dest} (KM: ${document.getElementById(`km-${id}`).value || 'N/A'}) - Rec: ${rec}`);
-            fechamento[loja].total += valorFinal;
-
+            fechamento[loja].itens.push(dest);
+            fechamento[loja].total += parseFloat(valor);
             await deleteDoc(doc(db, "pedidos", id));
             renderResumos();
         };
@@ -72,28 +61,21 @@
         const renderResumos = () => {
             const div = document.getElementById('resumos'); div.innerHTML = "";
             for (let l in fechamento) {
-                div.innerHTML += `<button onclick="zap('${l}')" class="w-full bg-blue-900 text-white p-5 rounded-3xl mb-3 font-black shadow-xl uppercase italic text-xs">Enviar Fechamento: ${l} (R$${fechamento[l].total.toFixed(2)})</button>`;
+                div.innerHTML += `<button onclick="zap('${l}')" class="w-full bg-white border-2 border-green-500 text-green-600 p-4 rounded-2xl mb-2 font-black shadow-sm">ZAP FECHAMENTO: ${l} (R$ ${fechamento[l].total.toFixed(2)})</button>`;
             }
         };
 
         window.zap = (l) => {
             const d = fechamento[l];
-            const msg = window.encodeURIComponent(`*FECHAMENTO MARCELO ENTREGAS*\n\n✅ Loja: *${l}*\n\n${d.itens.join('\n')}\n\n*VALOR TOTAL: R$ ${d.total.toFixed(2)}*`);
+            const msg = window.encodeURIComponent(`*FECHAMENTO MARCELO ENTREGAS*\n\n✅ *${l}*\n- ${d.itens.join('\n- ')}\n\n*TOTAL: R$ ${d.total.toFixed(2)}*`);
             window.open(`https://api.whatsapp.com/send?phone=55${d.zap}&text=${msg}`);
             delete fechamento[l]; renderResumos();
         };
     </script>
 </head>
-<body class="bg-gray-100 p-4">
+<body class="bg-gray-100 p-4 pb-20">
     <div class="max-w-md mx-auto">
-        <div class="bg-white p-4 rounded-2xl mb-6 shadow-sm border-2 border-dashed border-blue-400">
-            <h4 class="text-[10px] font-black text-blue-500 uppercase mb-2">Tabela de Cobrança</h4>
-            <div class="flex justify-between text-xs font-bold text-gray-700">
-                <span>Até 6km: <b class="text-blue-600">R$ 7,00</b></span>
-                <span>Extra: <b class="text-red-500">R$ 2,00/km</b></span>
-            </div>
-        </div>
-
+        <button id="btnStatus" onclick="toggleStatus(this.innerText.includes('OFFLINE'))"></button>
         <div id="resumos"></div>
         <div id="rota"></div>
     </div>
