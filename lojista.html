@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loja - Sistema Marcelo</title>
+    <title>Loja - Entrega</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -11,50 +11,37 @@
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
         const perfil = JSON.parse(localStorage.getItem('perfilMarcelo'));
-
-        onSnapshot(doc(db, "config", "status"), (d) => {
-            const s = d.data();
-            const label = document.getElementById('statusMoto');
-            label.innerText = s?.online ? (s.ocupado ? "MARCELO EM ROTA 🛵" : "MARCELO ONLINE 🟢") : "MARCELO OFFLINE 🔴";
-            document.getElementById('btnChamar').disabled = !s?.online || s?.chamadoAtivo;
-        });
+        let rascunho = [];
 
         window.chamarMoto = async () => {
             await addDoc(collection(db, "chamados"), { loja: perfil.nome, status: "Pendente", timestamp: Date.now() });
-            await updateDoc(doc(db, "config", "status"), { chamadoAtivo: true });
         };
 
-        window.addEndereco = async () => {
-            const d = document.getElementById('end').value;
-            if(!d) return;
-            await addDoc(collection(db, "pedidos"), { loja: perfil.nome, local: d, status: "Fila", timestamp: Date.now(), zap: perfil.zap });
-            document.getElementById('end').value = "";
+        window.addLista = () => {
+            const e = document.getElementById('end').value;
+            if(e) { rascunho.push(e); document.getElementById('end').value = ""; render(); }
         };
 
-        window.decidir = async (id, acao) => {
-            if(acao === 'OK') await updateDoc(doc(db, "chamados", id), { status: "Confirmado" });
-            else { 
-                await deleteDoc(doc(db, "chamados", id));
-                await updateDoc(doc(db, "config", "status"), { chamadoAtivo: false });
+        window.render = () => {
+            document.getElementById('lista').innerHTML = rascunho.map(t => `<div class="p-2 bg-gray-100 mb-1 rounded text-sm">${t}</div>`).join('');
+            document.getElementById('btnEnviar').classList.toggle('hidden', rascunho.length === 0);
+        };
+
+        window.enviarTudo = async () => {
+            for (const l of rascunho) {
+                await addDoc(collection(db, "pedidos"), { loja: perfil.nome, local: l, status: "Fila", timestamp: Date.now(), zap: perfil.zap });
             }
+            rascunho = []; render(); alert("Lote enviado!");
         };
 
         window.onload = () => {
-            if(!perfil) return document.getElementById('cadastro').classList.remove('hidden');
-            document.getElementById('main').classList.remove('hidden');
-            document.getElementById('nomeLoja').innerText = perfil.nome;
-            onSnapshot(query(collection(db, "chamados"), where("loja", "==", perfil.nome)), (snaps) => {
-                const box = document.getElementById('alerta'); box.innerHTML = "";
-                snaps.forEach(d => {
-                    const c = d.data();
-                    if(c.status === "Respondido") {
-                        box.innerHTML = `<div class="bg-blue-600 text-white p-5 rounded-3xl shadow-xl text-center">
-                            <p class="font-black mb-3">Chego em ${c.tempo}?</p>
-                            <div class="flex gap-2"><button onclick="decidir('${d.id}', 'OK')" class="flex-1 bg-green-400 text-black font-black py-3 rounded-2xl">ACEITO</button>
-                            <button onclick="decidir('${d.id}', 'NO')" class="flex-1 bg-red-400 text-white font-black py-3 rounded-2xl">NÃO</button></div>
-                        </div>`;
-                    }
-                });
+            if(!perfil) return document.getElementById('cad').classList.remove('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            document.getElementById('nLoja').innerText = perfil.nome;
+            onSnapshot(doc(db, "config", "status"), (d) => {
+                const s = d.data();
+                const st = document.getElementById('st');
+                st.innerText = s?.ocupado ? "ENTREGADOR EM ROTA 🛵" : (s?.online ? "ENTREGADOR ONLINE 🟢" : "ENTREGADOR OFFLINE 🔴");
             });
         };
 
@@ -64,19 +51,20 @@
         };
     </script>
 </head>
-<body class="bg-gray-50 p-4">
-    <div id="cadastro" class="max-w-md mx-auto bg-white p-8 rounded-[40px] hidden shadow-2xl">
-        <input id="n" placeholder="Nome da Loja" class="w-full p-4 mb-2 bg-gray-100 rounded-2xl border-none">
-        <input id="z" placeholder="WhatsApp (DDD+Número)" class="w-full p-4 mb-4 bg-gray-100 rounded-2xl border-none">
-        <button onclick="salvar()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl">SALVAR</button>
+<body class="bg-gray-50 p-4 font-sans">
+    <div id="cad" class="max-w-md mx-auto hidden bg-white p-6 rounded-3xl shadow-xl">
+        <input id="n" placeholder="Nome da Loja" class="w-full p-4 mb-2 bg-gray-100 rounded-xl">
+        <input id="z" placeholder="WhatsApp" class="w-full p-4 mb-4 bg-gray-100 rounded-xl">
+        <button onclick="salvar()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl">CONFIGURAR</button>
     </div>
-    <div id="main" class="max-w-md mx-auto hidden space-y-4">
-        <div class="flex justify-between items-center"><h1 id="nomeLoja" class="font-black text-blue-900 uppercase"></h1><span id="statusMoto" class="text-[10px] font-bold"></span></div>
-        <button id="btnChamar" onclick="chamarMoto()" class="w-full bg-blue-600 text-white font-black py-8 rounded-[40px] shadow-2xl text-xl">CHAMAR MARCELO 🛵</button>
-        <div id="alerta"></div>
-        <div class="bg-white p-5 rounded-[30px] shadow-lg">
-            <input id="end" placeholder="Rua, Número e Bairro" class="w-full p-4 bg-gray-50 rounded-2xl mb-2 font-bold">
-            <button onclick="addEndereco()" class="w-full bg-slate-800 text-white font-black py-3 rounded-2xl">ENVIAR ENTREGA ✅</button>
+    <div id="app" class="max-w-md mx-auto hidden space-y-4">
+        <div class="flex justify-between items-center px-2"><span id="nLoja" class="font-black text-blue-900 uppercase"></span> <span id="st" class="text-[10px] font-bold"></span></div>
+        <button onclick="chamarMoto()" class="w-full bg-blue-600 text-white font-bold py-6 rounded-3xl shadow-lg uppercase italic">Solicitar Entregador</button>
+        <div class="bg-white p-5 rounded-3xl shadow">
+            <input id="end" placeholder="Endereço da Entrega" class="w-full p-4 bg-gray-50 rounded-xl mb-2 font-bold">
+            <button onclick="addLista()" class="w-full bg-gray-200 text-gray-700 font-bold py-3 rounded-xl">+ ADICIONAR ENDEREÇO</button>
+            <div id="lista" class="mt-4"></div>
+            <button id="btnEnviar" onclick="enviarTudo()" class="w-full bg-green-600 text-white font-black py-4 rounded-xl mt-4 hidden shadow-md">ENVIAR LOTE COMPLETO ✅</button>
         </div>
     </div>
 </body>
