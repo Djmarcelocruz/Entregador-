@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Painel de Entregas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE",
+            authDomain: "meuappentregas.firebaseapp.com",
+            projectId: "meuappentregas",
+            storageBucket: "meuappentregas.firebasestorage.app",
+            messagingSenderId: "442484186787",
+            appId: "1:442484186787:web:ac914827ebebda987f2916"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const q = query(collection(db, "pedidos"), orderBy("timestamp", "asc"));
+        onSnapshot(q, (snapshot) => {
+            const lista = document.getElementById('minhaRota');
+            lista.innerHTML = "";
+            snapshot.forEach((docSnap) => {
+                const item = docSnap.data();
+                const id = docSnap.id;
+                lista.innerHTML += `
+                    <div class="bg-white p-5 rounded-2xl shadow-md mb-4 border-l-8 border-green-500">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-black text-gray-800 text-lg uppercase">${item.loja}</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4 text-sm font-medium leading-relaxed">${item.endereco}</p>
+                        <div class="flex gap-3">
+                            <button onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.endereco)}')" 
+                                class="flex-1 bg-gray-800 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-1">📍 VER MAPA</button>
+                            <button onclick="finalizarEntrega('${id}')" 
+                                class="flex-1 bg-green-600 text-white font-bold py-3 rounded-xl text-xs">✅ ENTREGUE</button>
+                        </div>
+                    </div>`;
+            });
+        });
+
+        window.finalizarEntrega = async (id) => {
+            if(confirm("Deseja finalizar esta entrega e remover da lista?")) {
+                await deleteDoc(doc(db, "pedidos", id));
+            }
+        };
+    </script>
+</head>
+<body class="bg-gray-900 p-4 min-h-screen">
+    <div class="max-w-md mx-auto">
+        <h1 class="text-white text-2xl font-black mb-6 flex justify-between items-center">
+            MINHA ROTA 🏍️
+            <span class="text-[10px] bg-green-500 text-white px-2 py-1 rounded-full uppercase tracking-widest animate-pulse">Online</span>
+        </h1>
+        <div id="minhaRota">
+            </div>
+    </div>
+</body>
+</html>
