@@ -3,53 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Entregador</title>
+    <title>Painel Marcelo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
+        import { getFirestore, collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
+
+        let fechamento = {};
+
+        window.toggleStatus = async (s) => await setDoc(doc(db, "config", "status"), { online: s }, { merge: true });
+
+        onSnapshot(doc(db, "config", "status"), (d) => {
+            const s = d.data()?.online;
+            document.getElementById('statusBtn').innerText = s ? "ESTOU TRABALHANDO" : "ESTOU EM DESCANSO";
+            document.getElementById('statusBtn').className = s ? "w-full py-4 bg-green-500 text-white font-black rounded-2xl shadow-lg mb-6" : "w-full py-4 bg-red-500 text-white font-black rounded-2xl shadow-lg mb-6";
+        });
 
         onSnapshot(query(collection(db, "pedidos"), orderBy("timestamp", "asc")), (snaps) => {
-            const lista = document.getElementById('rota');
-            let total = 0;
-            lista.innerHTML = "";
+            const rota = document.getElementById('rota');
+            let t = 0; rota.innerHTML = "";
             snaps.forEach(d => {
-                const p = d.data();
-                total += p.valor;
-                lista.innerHTML += `
-                    <div class="bg-white p-5 rounded-3xl shadow-lg mb-4 border-l-8 border-blue-600">
-                        <h3 class="font-black text-lg uppercase">${p.loja} <span class="text-green-600 italic">R$${p.valor}</span></h3>
-                        <p class="text-xs text-gray-400 mb-2 font-bold italic">RECOLHER: ${p.retirada}</p>
-                        <p class="text-blue-800 font-bold mb-3">${p.destino}</p>
-                        <input id="rec-${d.id}" placeholder="Quem recebeu?" class="w-full p-2 bg-gray-50 rounded mb-2 border text-sm italic">
-                        <div class="flex gap-2 text-[10px] font-bold">
-                            <button onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.retirada)}')" class="flex-1 bg-gray-200 p-2 rounded-lg">📍 LOJA</button>
-                            <button onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.destino)}')" class="flex-1 bg-gray-200 p-2 rounded-lg">📍 CLIENTE</button>
-                            <button onclick="concluir('${d.id}', '${p.zap}', '${p.loja}', '${p.destino}', '${p.valor}')" class="flex-1 bg-green-500 text-white p-2 rounded-lg">CONCLUIR</button>
+                const p = d.data(); t += p.valor;
+                rota.innerHTML += `
+                    <div class="bg-white p-5 rounded-3xl shadow-lg mb-4 border-l-[10px] ${p.status === 'Buscando' ? 'border-blue-500' : 'border-gray-300'}">
+                        <div class="flex justify-between font-black mb-2 uppercase"><span>${p.loja}</span> <span class="text-green-600">R$${p.valor}</span></div>
+                        <p class="text-xs font-bold text-gray-400 mb-1">LOJA: ${p.retirada}</p>
+                        <p class="text-blue-900 font-bold mb-4">CLI: ${p.destino}</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="updateStatus('${d.id}', 'Buscando')" class="bg-blue-600 text-white p-3 rounded-xl font-bold text-xs">🛵 VOU BUSCAR</button>
+                            <button onclick="concluir('${d.id}', '${p.loja}', '${p.zap}', '${p.destino}', ${p.valor})" class="bg-green-600 text-white p-3 rounded-xl font-bold text-xs">✅ ENTREGUE</button>
                         </div>
                     </div>`;
             });
-            document.getElementById('caixa').innerText = `R$ ${total.toFixed(2)}`;
+            document.getElementById('total').innerText = `R$ ${t.toFixed(2)}`;
         });
 
-        window.concluir = async (id, zap, loja, dest, valor) => {
-            const rec = document.getElementById(`rec-${id}`).value || "Não informado";
-            const msg = window.encodeURIComponent(`*ENTREGA CONCLUÍDA* ✅\n\n📍 *Origem:* ${loja}\n🏁 *Destino:* ${dest}\n👤 *Recebido por:* ${rec}\n💰 *Valor:* R$ ${valor}\n\nObrigado!`);
-            window.open(`https://api.whatsapp.com/send?phone=55${zap}&text=${msg}`);
+        window.updateStatus = async (id, s) => await updateDoc(doc(db, "pedidos", id), { status: s });
+
+        window.concluir = async (id, loja, zap, dest, valor) => {
+            if(!fechamento[loja]) fechamento[loja] = { zap: zap, itens: [] };
+            fechamento[loja].itens.push(dest);
             await deleteDoc(doc(db, "pedidos", id));
+            renderResumos();
+        };
+
+        const renderResumos = () => {
+            const div = document.getElementById('resumos'); div.innerHTML = "";
+            for (let l in fechamento) {
+                div.innerHTML += `<button onclick="zap('${l}')" class="w-full bg-white border-2 border-green-500 text-green-600 p-4 rounded-2xl mb-2 font-black">ENVIAR FECHAMENTO: ${l}</button>`;
+            }
+        };
+
+        window.zap = (l) => {
+            const d = fechamento[l];
+            const msg = window.encodeURIComponent(`*FECHAMENTO MARCELO*\n\n✅ Entregas feitas para *${l}*:\n- ${d.itens.join('\n- ')}\n\n*VALOR TOTAL: R$ ${d.itens.length * 7}*`);
+            window.open(`https://api.whatsapp.com/send?phone=55${d.zap}&text=${msg}`);
+            delete fechamento[l]; renderResumos();
         };
     </script>
 </head>
-<body class="bg-gray-900 p-4">
+<body class="bg-slate-100 p-4 pb-20">
     <div class="max-w-md mx-auto">
-        <div class="bg-blue-600 text-white p-6 rounded-3xl mb-6 flex justify-between items-center shadow-xl">
-            <div><p class="text-[10px] uppercase font-bold opacity-70">A receber hoje</p><h1 id="caixa" class="text-3xl font-black">R$ 0,00</h1></div>
-            <button onclick="if(confirm('Limpar dia?')) location.reload()" class="bg-white/20 p-2 rounded-xl text-xs">NOVO DIA</button>
+        <button id="statusBtn" onclick="toggleStatus(document.getElementById('statusBtn').innerText.includes('DESCANSO'))"></button>
+        <div class="bg-blue-900 text-white p-6 rounded-3xl mb-6 shadow-xl flex justify-between items-center italic">
+            <div><p class="text-xs font-bold opacity-50 uppercase">Caixa</p><h1 id="total" class="text-3xl font-black">R$ 0,00</h1></div>
+            <button onclick="location.reload()" class="bg-white/10 p-3 rounded-2xl text-xs font-bold">LIMPAR</button>
         </div>
+        <div id="resumos"></div>
         <div id="rota"></div>
     </div>
 </body>
