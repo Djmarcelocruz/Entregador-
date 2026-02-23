@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Painel de Entregas</title>
+    <title>Painel Entregador - Quintana</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE",
@@ -21,44 +21,61 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const q = query(collection(db, "pedidos"), orderBy("timestamp", "asc"));
-        onSnapshot(q, (snapshot) => {
+        onSnapshot(query(collection(db, "pedidos"), orderBy("timestamp", "asc")), (snapshot) => {
             const lista = document.getElementById('minhaRota');
+            let totalDia = 0;
             lista.innerHTML = "";
+            
             snapshot.forEach((docSnap) => {
                 const item = docSnap.data();
                 const id = docSnap.id;
+                totalDia += item.valor;
+
                 lista.innerHTML += `
-                    <div class="bg-white p-5 rounded-2xl shadow-md mb-4 border-l-8 border-green-500">
+                    <div class="bg-white p-5 rounded-3xl shadow-lg mb-6 border-l-[12px] border-blue-600">
                         <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-black text-gray-800 text-lg uppercase">${item.loja}</h3>
+                            <h3 class="font-black text-xl text-gray-800 uppercase">${item.loja}</h3>
+                            <span class="font-bold text-green-600 text-lg">R$ ${item.valor.toFixed(2)}</span>
                         </div>
-                        <p class="text-gray-600 mb-4 text-sm font-medium leading-relaxed">${item.endereco}</p>
-                        <div class="flex gap-3">
-                            <button onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.endereco)}')" 
-                                class="flex-1 bg-gray-800 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-1">📍 VER MAPA</button>
-                            <button onclick="finalizarEntrega('${id}')" 
-                                class="flex-1 bg-green-600 text-white font-bold py-3 rounded-xl text-xs">✅ ENTREGUE</button>
+                        <p class="text-sm text-gray-500 mb-1 font-bold">📍 BUSCAR EM: ${item.retirada}</p>
+                        <p class="text-sm text-blue-700 font-black mb-4 leading-tight">🏁 ENTREGAR EM: ${item.destino}</p>
+                        
+                        <div class="space-y-3">
+                            <input id="rec-${id}" type="text" placeholder="Quem recebeu?" class="w-full p-3 bg-gray-50 rounded-xl border italic">
+                            <div class="flex gap-2">
+                                <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item.destino)}')" class="flex-1 bg-black text-white py-3 rounded-xl font-bold text-xs uppercase">Mapa</button>
+                                <button onclick="concluir('${id}', '${item.loja}', '${item.zap}', '${item.valor}', '${item.retirada}', '${item.destino}')" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">Concluir</button>
+                            </div>
                         </div>
                     </div>`;
             });
+            document.getElementById('totalGeral').innerText = `R$ ${totalDia.toFixed(2)}`;
+            document.getElementById('count').innerText = snapshot.size;
         });
 
-        window.finalizarEntrega = async (id) => {
-            if(confirm("Deseja finalizar esta entrega e remover da lista?")) {
-                await deleteDoc(doc(db, "pedidos", id));
-            }
+        window.concluir = async (id, loja, zap, valor, ret, dest) => {
+            const recebedor = document.getElementById(`rec-${id}`).value || "Não informado";
+            if(!confirm("Finalizar entrega?")) return;
+
+            // Link para o WhatsApp com o comprovante
+            const msg = window.encodeURIComponent(`*COMPROVANTE DE ENTREGA* 🛵\n\n📍 *De:* ${loja}\n🏁 *Para:* ${dest}\n👤 *Recebido por:* ${recebedor}\n💰 *Valor:* R$ ${valor}\n\nObrigado pelo trabalho!`);
+            window.open(`https://api.whatsapp.com/send?phone=55${zap}&text=${msg}`);
+
+            await deleteDoc(doc(db, "pedidos", id));
         };
     </script>
 </head>
-<body class="bg-gray-900 p-4 min-h-screen">
+<body class="bg-gray-100 p-4 pb-20">
     <div class="max-w-md mx-auto">
-        <h1 class="text-white text-2xl font-black mb-6 flex justify-between items-center">
-            MINHA ROTA 🏍️
-            <span class="text-[10px] bg-green-500 text-white px-2 py-1 rounded-full uppercase tracking-widest animate-pulse">Online</span>
-        </h1>
-        <div id="minhaRota">
+        <div class="bg-blue-900 text-white p-6 rounded-3xl mb-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-2">
+                <p class="text-blue-200 font-bold uppercase tracking-widest text-xs">Meu Caixa Hoje</p>
+                <span id="count" class="bg-blue-600 px-3 py-1 rounded-full font-black text-sm">0</span>
             </div>
+            <h1 id="totalGeral" class="text-4xl font-black italic">R$ 0,00</h1>
+        </div>
+
+        <div id="minhaRota"></div>
     </div>
 </body>
 </html>
