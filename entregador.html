@@ -7,44 +7,48 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
         let fechamento = {};
 
-        window.toggleStatus = async (s) => await setDoc(doc(db, "config", "status"), { online: s }, { merge: true });
-
-        onSnapshot(doc(db, "config", "status"), (d) => {
-            const s = d.data()?.online;
-            document.getElementById('statusBtn').innerText = s ? "ESTOU TRABALHANDO" : "ESTOU EM DESCANSO";
-            document.getElementById('statusBtn').className = s ? "w-full py-4 bg-green-500 text-white font-black rounded-2xl shadow-lg mb-6" : "w-full py-4 bg-red-500 text-white font-black rounded-2xl shadow-lg mb-6";
-        });
-
         onSnapshot(query(collection(db, "pedidos"), orderBy("timestamp", "asc")), (snaps) => {
             const rota = document.getElementById('rota');
             let t = 0; rota.innerHTML = "";
             snaps.forEach(d => {
-                const p = d.data(); t += p.valor;
+                const p = d.data(); t += 7; // Valor padrão fixo Quintana
                 rota.innerHTML += `
-                    <div class="bg-white p-5 rounded-3xl shadow-lg mb-4 border-l-[10px] ${p.status === 'Buscando' ? 'border-blue-500' : 'border-gray-300'}">
-                        <div class="flex justify-between font-black mb-2 uppercase"><span>${p.loja}</span> <span class="text-green-600">R$${p.valor}</span></div>
-                        <p class="text-xs font-bold text-gray-400 mb-1">LOJA: ${p.retirada}</p>
-                        <p class="text-blue-900 font-bold mb-4">CLI: ${p.destino}</p>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="updateStatus('${d.id}', 'Buscando')" class="bg-blue-600 text-white p-3 rounded-xl font-bold text-xs">🛵 VOU BUSCAR</button>
-                            <button onclick="concluir('${d.id}', '${p.loja}', '${p.zap}', '${p.destino}', ${p.valor})" class="bg-green-600 text-white p-3 rounded-xl font-bold text-xs">✅ ENTREGUE</button>
+                    <div class="bg-white p-6 rounded-3xl shadow-lg mb-4 border-l-[12px] ${p.status === 'Buscando' ? 'border-blue-500' : 'border-gray-300'}">
+                        <div class="flex justify-between font-black text-xl mb-2"><span>${p.loja}</span> <span class="text-green-600 text-sm">R$7,00</span></div>
+                        <p class="text-xs font-bold text-gray-400 mb-2 uppercase">RECOLHER: ${p.retirada}</p>
+                        <p class="text-blue-900 font-black mb-4 uppercase">DESTINO: ${p.destino}</p>
+                        
+                        <div class="space-y-3">
+                            <div class="flex gap-1">
+                                <button onclick="atender('${d.id}', '5 min')" class="bg-blue-100 text-blue-700 px-2 py-2 rounded-lg text-[10px] font-black italic">5 MIN</button>
+                                <button onclick="atender('${d.id}', '15 min')" class="bg-blue-100 text-blue-700 px-2 py-2 rounded-lg text-[10px] font-black italic">15 MIN</button>
+                                <button onclick="atender('${d.id}', '30 min')" class="bg-blue-100 text-blue-700 px-2 py-2 rounded-lg text-[10px] font-black italic">30 MIN</button>
+                            </div>
+                            <input id="rec-${d.id}" placeholder="Quem recebeu? (NOME)" class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 font-bold uppercase text-center">
+                            <button onclick="concluir('${d.id}', '${p.loja}', '${p.zap}', '${p.destino}', 7)" class="w-full bg-green-600 text-white p-4 rounded-2xl font-black shadow-lg">FINALIZAR ENTREGA ✅</button>
                         </div>
                     </div>`;
             });
             document.getElementById('total').innerText = `R$ ${t.toFixed(2)}`;
         });
 
-        window.updateStatus = async (id, s) => await updateDoc(doc(db, "pedidos", id), { status: s });
+        window.atender = async (id, tempo) => {
+            await updateDoc(doc(db, "pedidos", id), { status: "Buscando", tempo: tempo });
+            alert("Lojista avisado: você chega em " + tempo);
+        };
 
         window.concluir = async (id, loja, zap, dest, valor) => {
+            const rec = document.getElementById(`rec-${id}`).value;
+            if(!rec) return alert("Por favor, digite quem recebeu!");
+            
             if(!fechamento[loja]) fechamento[loja] = { zap: zap, itens: [] };
-            fechamento[loja].itens.push(dest);
+            fechamento[loja].itens.push(`📍 ${dest} (Rec: ${rec})`);
             await deleteDoc(doc(db, "pedidos", id));
             renderResumos();
         };
@@ -52,24 +56,23 @@
         const renderResumos = () => {
             const div = document.getElementById('resumos'); div.innerHTML = "";
             for (let l in fechamento) {
-                div.innerHTML += `<button onclick="zap('${l}')" class="w-full bg-white border-2 border-green-500 text-green-600 p-4 rounded-2xl mb-2 font-black">ENVIAR FECHAMENTO: ${l}</button>`;
+                div.innerHTML += `<button onclick="zap('${l}')" class="w-full bg-green-500 text-white p-4 rounded-2xl mb-2 font-black shadow-lg uppercase text-sm italic">ENVIAR RESUMO NO WHATSAPP: ${l}</button>`;
             }
         };
 
         window.zap = (l) => {
             const d = fechamento[l];
-            const msg = window.encodeURIComponent(`*FECHAMENTO MARCELO*\n\n✅ Entregas feitas para *${l}*:\n- ${d.itens.join('\n- ')}\n\n*VALOR TOTAL: R$ ${d.itens.length * 7}*`);
+            const msg = window.encodeURIComponent(`*FECHAMENTO MARCELO ENTREGAS*\n\n✅ Finalizadas para: *${l}*\n\n${d.itens.join('\n')}\n\n*TOTAL A RECEBER: R$ ${d.itens.length * 7}*`);
             window.open(`https://api.whatsapp.com/send?phone=55${d.zap}&text=${msg}`);
             delete fechamento[l]; renderResumos();
         };
     </script>
 </head>
-<body class="bg-slate-100 p-4 pb-20">
+<body class="bg-gray-900 p-4 pb-24">
     <div class="max-w-md mx-auto">
-        <button id="statusBtn" onclick="toggleStatus(document.getElementById('statusBtn').innerText.includes('DESCANSO'))"></button>
-        <div class="bg-blue-900 text-white p-6 rounded-3xl mb-6 shadow-xl flex justify-between items-center italic">
-            <div><p class="text-xs font-bold opacity-50 uppercase">Caixa</p><h1 id="total" class="text-3xl font-black">R$ 0,00</h1></div>
-            <button onclick="location.reload()" class="bg-white/10 p-3 rounded-2xl text-xs font-bold">LIMPAR</button>
+        <div class="bg-blue-600 text-white p-8 rounded-3xl mb-6 shadow-2xl flex justify-between items-center italic">
+            <div><p class="text-xs font-bold opacity-70 uppercase tracking-widest">Ganhos do Lote</p><h1 id="total" class="text-4xl font-black">R$ 0,00</h1></div>
+            <button onclick="location.reload()" class="bg-white/20 p-4 rounded-2xl text-[10px] font-black uppercase">Novo Lote</button>
         </div>
         <div id="resumos"></div>
         <div id="rota"></div>
