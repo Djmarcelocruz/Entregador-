@@ -7,11 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, query, orderBy, deleteDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
-        let ganhosTotal = 0;
+        let fechamentoLote = {};
 
         window.mudarStatus = async (tipo, val) => {
             const ref = doc(db, "config", "status");
@@ -21,67 +21,90 @@
 
         onSnapshot(doc(db, "config", "status"), (d) => {
             const s = d.data();
-            const b = document.getElementById('btnStatus');
-            const o = document.getElementById('btnOcupado');
-            b.innerText = s?.online ? "ESTOU ONLINE 🟢" : "ESTOU OFFLINE 🔴";
-            b.className = s?.online ? "flex-1 py-4 bg-green-500 text-white font-black rounded-2xl shadow-lg" : "flex-1 py-4 bg-red-500 text-white font-black rounded-2xl shadow-lg";
-            o.innerText = s?.ocupado ? "EM ROTA 🛵" : "LIVRE ✅";
-            o.className = s?.ocupado ? "flex-1 py-4 bg-orange-500 text-white font-black rounded-2xl shadow-lg" : "flex-1 py-4 bg-gray-400 text-white font-black rounded-2xl shadow-lg";
+            document.getElementById('btnStatus').innerText = s?.online ? "ONLINE 🟢" : "OFFLINE 🔴";
+            document.getElementById('btnStatus').className = s?.online ? "flex-1 py-4 bg-green-500 text-white font-black rounded-2xl" : "flex-1 py-4 bg-red-500 text-white font-black rounded-2xl";
+            document.getElementById('btnOcupado').innerText = s?.ocupado ? "EM ROTA 🛵" : "LIVRE ✅";
+            document.getElementById('btnOcupado').className = s?.ocupado ? "flex-1 py-4 bg-orange-500 text-white font-black rounded-2xl" : "flex-1 py-4 bg-gray-400 text-white font-black rounded-2xl";
         });
 
         onSnapshot(query(collection(db, "chamados"), orderBy("timestamp", "desc")), (snaps) => {
-            const cDiv = document.getElementById('chamadas'); cDiv.innerHTML = "";
+            const div = document.getElementById('chamadas'); div.innerHTML = "";
             snaps.forEach(d => {
                 const c = d.data();
                 if(c.status === "Pendente") {
-                    cDiv.innerHTML += `<div class="bg-white p-6 rounded-[30px] shadow-2xl mb-4 border-l-[12px] border-yellow-400 animate-pulse">
-                        <p class="font-black text-blue-900 uppercase mb-3">${c.loja} CHAMOU!</p>
-                        <div class="grid grid-cols-3 gap-2"><button onclick="responder('${d.id}','5m')" class="bg-blue-600 text-white py-3 rounded-xl font-black">5m</button>
-                        <button onclick="responder('${d.id}','15m')" class="bg-blue-600 text-white py-3 rounded-xl font-black">15m</button>
-                        <button onclick="responder('${d.id}','30m')" class="bg-blue-600 text-white py-3 rounded-xl font-black">30m</button></div>
+                    div.innerHTML += `<div class="bg-white p-6 rounded-[30px] shadow-xl mb-4 border-l-[12px] border-yellow-400">
+                        <p class="font-black text-blue-900 mb-3">${c.loja} CHAMOU!</p>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="responder('${d.id}','5m')" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-xs">5m</button>
+                            <button onclick="responder('${d.id}','15m')" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-xs">15m</button>
+                            <button onclick="responder('${d.id}','30m')" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-xs">30m</button>
+                        </div>
+                    </div>`;
+                } else if(c.status === "Confirmado") {
+                    div.innerHTML += `<div class="bg-blue-900 text-white p-6 rounded-3xl mb-4 flex justify-between items-center italic">
+                        <span class="font-black uppercase">IR PARA: ${c.loja}</span>
+                        <button onclick="cheguei('${d.id}')" class="bg-green-500 px-4 py-2 rounded-xl text-[10px] font-black">CHEGUEI</button>
                     </div>`;
                 }
             });
         });
 
         onSnapshot(query(collection(db, "pedidos"), orderBy("timestamp", "asc")), (snaps) => {
-            const pDiv = document.getElementById('pedidos'); pDiv.innerHTML = "";
+            const div = document.getElementById('pedidos'); div.innerHTML = "";
             snaps.forEach(d => {
                 const p = d.data();
-                pDiv.innerHTML += `<div class="bg-white p-6 rounded-[30px] shadow-xl mb-4 border-l-[12px] border-blue-700">
-                    <p class="text-[10px] font-black text-blue-600 uppercase mb-1">${p.loja}</p>
+                div.innerHTML += `<div class="bg-white p-6 rounded-[35px] shadow-xl mb-4 border-l-[12px] border-blue-700">
+                    <p class="text-[10px] font-black text-blue-500 uppercase mb-1">${p.loja}</p>
                     <p class="font-black text-gray-800 mb-4">${p.local}</p>
-                    <div class="flex items-center gap-2 mb-4 bg-gray-100 p-3 rounded-2xl border-2 border-dashed border-gray-300">
-                        <span class="font-black text-gray-400">R$</span><input id="val-${d.id}" type="number" value="7" class="w-full bg-transparent font-black text-xl text-green-600 outline-none">
+                    <input id="rec-${d.id}" placeholder="Nome de quem recebeu" class="w-full p-3 bg-gray-100 rounded-xl mb-3 text-xs font-bold outline-none border-2 border-dashed border-gray-300">
+                    <div class="flex items-center gap-2 mb-4 bg-gray-50 p-2 rounded-xl">
+                        <span class="text-xs font-bold text-gray-400">R$</span><input id="val-${d.id}" type="number" value="7" class="w-full bg-transparent font-black text-green-600 outline-none">
                     </div>
                     <div class="flex gap-2">
-                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.local)}" target="_blank" class="bg-slate-100 p-4 rounded-2xl font-black text-xs uppercase">MAPA 📍</a>
-                        <button onclick="finalizar('${d.id}', document.getElementById('val-${d.id}').value)" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg">CONCLUIR ✅</button>
+                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.local + ', Quintana')}" target="_blank" class="bg-slate-100 p-4 rounded-2xl font-black text-[10px]">MAPA 📍</a>
+                        <button onclick="finalizar('${d.id}', '${p.loja}', '${p.local}', document.getElementById('val-${d.id}').value, document.getElementById('rec-${d.id}').value, '${p.zap}')" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl">CONCLUIR ✅</button>
                     </div>
                 </div>`;
             });
         });
 
         window.responder = async (id, t) => await updateDoc(doc(db, "chamados", id), { status: "Respondido", tempo: t });
-        window.finalizar = async (id, v) => {
-            ganhosTotal += parseFloat(v);
-            document.getElementById('ganhoDia').innerText = `R$ ${ganhosTotal.toFixed(2)}`;
+        window.cheguei = async (id) => { 
+            await deleteDoc(doc(db, "chamados", id));
+            await updateDoc(doc(db, "config", "status"), { chamadoAtivo: false });
+        };
+        
+        window.finalizar = async (id, loja, local, valor, recebedor, zap) => {
+            const hora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            if(!fechamentoLote[loja]) fechamentoLote[loja] = { zap: zap, itens: [], total: 0 };
+            fechamentoLote[loja].itens.push(`📍 ${local} | 👤 ${recebedor || 'S/ Nome'} | ⏰ ${hora} | R$ ${valor}`);
+            fechamentoLote[loja].total += parseFloat(valor);
             await deleteDoc(doc(db, "pedidos", id));
+            renderBotoes();
+        };
+
+        const renderBotoes = () => {
+            const res = document.getElementById('resumos'); res.innerHTML = "";
+            for (let l in fechamentoLote) {
+                res.innerHTML += `<button onclick="enviarZap('${l}')" class="w-full bg-green-100 border-2 border-green-600 text-green-700 p-4 rounded-2xl mb-2 font-black text-xs uppercase shadow-sm">FECHAR LOTE: ${l} (R$ ${fechamentoLote[l].total.toFixed(2)})</button>`;
+            }
+        };
+
+        window.enviarZap = (l) => {
+            const d = fechamentoLote[l];
+            const msg = window.encodeURIComponent(`*RELATÓRIO DE ENTREGAS - MARCELO*\n\n✅ *LOJA: ${l}*\n\n${d.itens.join('\n')}\n\n*TOTAL DO LOTE: R$ ${d.total.toFixed(2)}*`);
+            window.open(`https://api.whatsapp.com/send?phone=55${d.zap}&text=${msg}`);
+            delete fechamentoLote[l]; renderBotoes();
         };
     </script>
 </head>
 <body class="bg-gray-100 p-4 pb-20">
     <div class="max-w-md mx-auto">
-        <div class="flex gap-2 mb-6">
-            <button id="btnStatus" onclick="mudarStatus('online', this.innerText.includes('OFFLINE'))"></button>
-            <button id="btnOcupado" onclick="mudarStatus('ocupado', this.innerText.includes('LIVRE'))"></button>
-        </div>
+        <div class="flex gap-2 mb-4"><button id="btnStatus" onclick="mudarStatus('online', this.innerText.includes('OFFLINE'))"></button>
+        <button id="btnOcupado" onclick="mudarStatus('ocupado', this.innerText.includes('LIVRE'))"></button></div>
+        <div id="resumos"></div>
         <div id="chamadas"></div>
         <div id="pedidos"></div>
-        <div class="bg-blue-900 text-white p-8 rounded-[40px] shadow-2xl mt-8 text-center italic">
-            <p class="text-[10px] font-bold uppercase opacity-60 mb-2 tracking-widest">Ganhos de Hoje</p>
-            <h1 id="ganhoDia" class="text-4xl font-black italic uppercase">R$ 0,00</h1>
-        </div>
     </div>
 </body>
 </html>
