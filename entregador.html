@@ -158,23 +158,51 @@
             } else { div.classList.add('hidden'); }
         }
 
-        window.concluir = async (id, loja, local, zap, pag) => {
-            const quem = document.getElementById(`rec-${id}`).value || "Não informado";
+                window.concluir = async (id, loja, local, zap, pag) => {
+            const quemInput = document.getElementById(`rec-${id}`);
+            const quem = quemInput ? quemInput.value || "Não informado" : "Não informado";
             const hora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            
+            // 1. Alimenta o relatório na memória
             if(!relatorio[loja]) relatorio[loja] = { zap, itens: [] };
             relatorio[loja].itens.push(`✅ *${local}*\n💰 Pag: ${pag}\n👤 Rec: ${quem} | ⏰ ${hora}`);
+            
+            // 2. Atualiza o seu contador geral
             contador++;
             localStorage.setItem('contadorMarcelo', contador);
             document.getElementById('totalDia').innerText = contador;
+
+            // 3. Deleta a entrega atual do banco de dados
             await deleteDoc(doc(db, "pedidos", id));
-            document.getElementById(`btnRel-${loja.replace(/\s+/g, '')}`).classList.remove('hidden');
+
+            // 4. VERIFICAÇÃO: Ainda tem algum pedido dessa loja aberto?
+            import { getDocs, query, collection, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+            const q = query(collection(db, "pedidos"), where("loja", "==", loja));
+            const snapshot = await getDocs(q);
+
+            // 5. Só mostra o botão se não houver mais pedidos (size === 0)
+            if (snapshot.size === 0) {
+                const btnId = `btnRel-${loja.replace(/\s+/g, '')}`;
+                const btn = document.getElementById(btnId);
+                if(btn) {
+                    btn.classList.remove('hidden');
+                    btn.innerText = `FINALIZAR LOTE: ENVIAR ${relatorio[loja].itens.length} ENTREGAS`;
+                }
+            }
         };
 
         window.enviarRelatorio = (loja) => {
             const r = relatorio[loja];
-            const msg = `*FECHAMENTO MARCELO*\n*LOJA:* ${loja.toUpperCase()}\n\n${r.itens.join('\n\n')}\n\n*Total de entregas: ${contador}*`;
+            if(!r) return alert("Erro ao gerar relatório.");
+
+            const dataHoje = new Date().toLocaleDateString('pt-BR');
+            const msg = `*FECHAMENTO MARCELO - ${dataHoje}*\n*LOJA:* ${loja.toUpperCase()}\n\n${r.itens.join('\n\n')}\n\n*Total de hoje: ${contador} entregas* 🏍️`;
+            
             window.open(`https://wa.me/55${r.zap}?text=${encodeURIComponent(msg)}`);
+            
+            // Limpa o relatório da memória para a próxima vez
             delete relatorio[loja];
+            // Recarrega para limpar a tela
             setTimeout(() => location.reload(), 500);
         };
     </script>
