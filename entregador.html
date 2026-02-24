@@ -6,60 +6,61 @@
     <title>Painel Marcelo</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-4 pb-20">
+<body class="bg-gray-100 p-4 pb-24 font-sans">
     <div class="max-w-md mx-auto">
-        <div class="flex gap-2 mb-6">
-            <button onclick="mudarStatus('online')" id="btnOn" class="flex-1 py-4 rounded-2xl font-black text-sm"></button>
-            <button onclick="mudarStatus('ocupado')" id="btnOcu" class="flex-1 py-4 rounded-2xl font-black text-sm"></button>
+        <div class="flex gap-2 mb-6 shadow-xl">
+            <button onclick="mudarSt('online')" id="btnOn" class="flex-1 py-4 rounded-2xl font-black text-sm uppercase"></button>
+            <button onclick="mudarSt('ocupado')" id="btnOcu" class="flex-1 py-4 rounded-2xl font-black text-sm uppercase"></button>
         </div>
 
-        <div id="notificacoes" class="space-y-2 mb-4"></div>
+        <div id="chamados" class="space-y-2 mb-6"></div>
 
-        <div id="listaPedidos" class="space-y-6"></div>
+        <div id="entregas" class="space-y-6"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, query, where, orderBy, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, query, where, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
-        let status = { online: false, ocupado: false };
-        let fechamentoGlobal = {};
+        let stLocal = { online: false, ocupado: false };
+        let fechamento = {};
 
-        // Monitorar Status
-        onSnapshot(doc(db, "sistema", "status"), (d) => {
-            status = d.data() || { online: false, ocupado: false };
+        // Monitor de Status
+        onSnapshot(doc(db, "config", "status"), (d) => {
+            stLocal = d.data() || { online: false, ocupado: false };
             const bOn = document.getElementById('btnOn');
             const bOc = document.getElementById('btnOcu');
-            bOn.innerText = status.online ? "🟢 ONLINE" : "⚪ OFFLINE";
-            bOn.className = status.online ? "flex-1 py-4 bg-green-500 text-white font-black rounded-2xl" : "flex-1 py-4 bg-gray-300 text-gray-600 font-black rounded-2xl";
-            bOc.innerText = status.ocupado ? "🛵 OCUPADO" : "✅ LIVRE";
-            bOc.className = status.ocupado ? "flex-1 py-4 bg-orange-500 text-white font-black rounded-2xl" : "flex-1 py-4 bg-blue-100 text-blue-600 font-black rounded-2xl";
+            bOn.innerText = stLocal.online ? "🟢 Online" : "⚪ Offline";
+            bOn.className = stLocal.online ? "flex-1 py-4 bg-green-500 text-white font-black rounded-2xl" : "flex-1 py-4 bg-gray-300 text-gray-500 font-black rounded-2xl";
+            bOc.innerText = stLocal.ocupado ? "🛵 Ocupado" : "✅ Livre";
+            bOc.className = stLocal.ocupado ? "flex-1 py-4 bg-orange-500 text-white font-black rounded-2xl" : "flex-1 py-4 bg-blue-100 text-blue-600 font-black rounded-2xl";
         });
 
-        window.mudarStatus = async (tipo) => {
-            const novoStatus = { ...status, [tipo]: !status[tipo] };
-            await setDoc(doc(db, "sistema", "status"), novoStatus);
+        window.mudarSt = (tipo) => {
+            const novo = { ...stLocal, [tipo]: !stLocal[tipo] };
+            setDoc(doc(db, "config", "status"), novo);
         };
 
-        // Monitorar Chamados
-        onSnapshot(query(collection(db, "chamados"), where("status", "==", "Pendente")), (snaps) => {
-            const container = document.getElementById('notificacoes');
-            container.innerHTML = '';
+        // Monitor de Chamados
+        onSnapshot(collection(db, "chamados"), (snaps) => {
+            const div = document.getElementById('chamados');
+            div.innerHTML = '';
             snaps.forEach(d => {
                 const c = d.data();
-                container.innerHTML += `<div class="bg-red-600 text-white p-4 rounded-2xl flex justify-between items-center shadow-lg">
-                    <span class="font-black italic uppercase">🚨 ${c.loja}</span>
-                    <button onclick="aceitarChamado('${d.id}')" class="bg-white text-red-600 px-4 py-2 rounded-xl font-black">OK</button>
+                div.innerHTML += `<div class="bg-red-600 text-white p-4 rounded-2xl flex justify-between items-center shadow-lg">
+                    <span class="font-black italic uppercase text-sm">🚨 ${c.loja} (${c.tipo})</span>
+                    <button onclick="limparChamado('${d.id}')" class="bg-white text-red-600 px-4 py-1 rounded-xl font-black">OK</button>
                 </div>`;
             });
         });
 
-        // Monitorar Pedidos
-        onSnapshot(query(collection(db, "pedidos"), where("status", "==", "Fila")), (snaps) => {
-            const container = document.getElementById('listaPedidos');
+        window.limparChamado = (id) => deleteDoc(doc(db, "chamados", id));
+
+        // Monitor de Pedidos
+        onSnapshot(collection(db, "pedidos"), (snaps) => {
             let lojas = {};
             snaps.forEach(d => {
                 const p = d.data();
@@ -67,44 +68,55 @@
                 lojas[p.loja].push({id: d.id, ...p});
             });
 
-            container.innerHTML = '';
-            for (let loja in lojas) {
-                const cardId = loja.replace(/\s+/g, '');
-                container.innerHTML += `
-                    <div class="bg-white rounded-3xl shadow-xl overflow-hidden mb-4 border-t-8 border-blue-600">
-                        <div class="p-4 bg-blue-50 flex justify-between items-center">
-                            <h2 class="font-black text-blue-900 uppercase">${loja}</h2>
-                            <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-black italic">R$ ${lojas[loja].length * 7}</span>
-                        </div>
-                        <div class="p-4 space-y-3">
-                            ${lojas[loja].map(ent => `
-                                <div class="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
-                                    <span class="flex-1 text-xs font-bold text-gray-700">${ent.local}</span>
-                                    <button onclick="concluir('${ent.id}', '${loja}', '${ent.local}', '${ent.zap}')" class="bg-green-500 text-white p-2 rounded-xl font-black">✓</button>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <button onclick="fecharLote('${loja}')" id="btnZap-${cardId}" class="hidden w-full bg-purple-600 text-white font-black py-4 uppercase italic">Finalizar e Zap</button>
-                    </div>`;
+            const div = document.getElementById('entregas');
+            div.innerHTML = '';
+            for (let l in lojas) {
+                const cardId = l.replace(/\s+/g, '');
+                div.innerHTML += `
+                <div class="bg-white rounded-[30px] shadow-xl mb-6 overflow-hidden border-t-8 border-blue-600">
+                    <div class="p-4 bg-blue-50 flex justify-between items-center">
+                        <h2 class="font-black text-blue-900 uppercase italic">${l}</h2>
+                        <span id="txtTot-${cardId}" class="bg-blue-600 text-white px-4 py-1 rounded-full font-black italic text-xs">R$ 0.00</span>
+                    </div>
+                    <div class="p-4 border-b">
+                        <input type="number" placeholder="Valor total do lote" oninput="ratear('${cardId}', this.value)" class="w-full p-3 rounded-xl border-2 border-blue-100 text-center font-black text-blue-600 outline-none">
+                    </div>
+                    <div id="lista-${cardId}" class="p-4 space-y-3">
+                        ${lojas[l].map(p => `
+                            <div class="flex items-center gap-2 p-3 bg-gray-50 rounded-2xl">
+                                <span class="flex-1 text-xs font-bold text-gray-600">${p.local}</span>
+                                <input type="number" id="v-${p.id}" value="7.00" class="w-16 p-2 rounded-lg text-center font-black text-green-600 text-xs border">
+                                <button onclick="concluir('${p.id}', '${l}', '${p.local}', '${p.zap}')" class="bg-green-500 text-white p-2 rounded-xl font-black">✓</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button onclick="enviarZap('${l}')" id="z-${cardId}" class="hidden w-full bg-purple-600 text-white font-black py-4 uppercase italic">Finalizar e Zap</button>
+                </div>`;
             }
         });
 
-        window.aceitarChamado = async (id) => { await deleteDoc(doc(db, "chamados", id)); };
-
-        window.concluir = async (id, loja, local, zap) => {
-            const hora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-            if(!fechamentoGlobal[loja]) fechamentoGlobal[loja] = { zap, itens: [], total: 0 };
-            fechamentoGlobal[loja].itens.push(`📍 ${local} | ⏰ ${hora} | R$ 7.00`);
-            fechamentoGlobal[loja].total += 7;
-            await deleteDoc(doc(db, "pedidos", id));
-            document.getElementById(`btnZap-${loja.replace(/\s+/g, '')}`).classList.remove('hidden');
+        window.ratear = (cardId, val) => {
+            const inputs = document.querySelectorAll(`#lista-${cardId} input[type="number"]`);
+            if(val && inputs.length) {
+                inputs.forEach(i => i.value = (val / inputs.length).toFixed(2));
+                document.getElementById(`txtTot-${cardId}`).innerText = `R$ ${parseFloat(val).toFixed(2)}`;
+            }
         };
 
-        window.fecharLote = (loja) => {
-            const d = fechamentoGlobal[loja];
-            const msg = window.encodeURIComponent(`*FECHAMENTO MARCELO*\n\n✅ *LOJA: ${loja}*\n\n${d.itens.join('\n')}\n\n*TOTAL: R$ ${d.total.toFixed(2)}*`);
-            window.open(`https://wa.me/55${d.zap}?text=${msg}`);
-            delete fechamentoGlobal[loja]; location.reload();
+        window.concluir = async (id, loja, local, zap) => {
+            const v = document.getElementById(`v-${id}`).value;
+            if(!fechamento[loja]) fechamento[loja] = { zap, itens: [], total: 0 };
+            fechamento[loja].itens.push(`📍 ${local} - R$ ${v}`);
+            fechamento[loja].total += parseFloat(v);
+            await deleteDoc(doc(db, "pedidos", id));
+            document.getElementById(`z-${loja.replace(/\s+/g, '')}`).classList.remove('hidden');
+        };
+
+        window.enviarZap = (l) => {
+            const f = fechamento[l];
+            const msg = window.encodeURIComponent(`*FECHAMENTO MARCELO*\n\n✅ *LOJA: ${l}*\n\n${f.itens.join('\n')}\n\n*TOTAL: R$ ${f.total.toFixed(2)}*`);
+            window.open(`https://wa.me/55${f.zap}?text=${msg}`);
+            delete fechamento[l]; location.reload();
         };
     </script>
 </body>
