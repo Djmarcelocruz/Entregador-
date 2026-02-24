@@ -3,18 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Marcelo</title>
+    <title>Painel Marcelo PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4 pb-24 font-sans">
     <div class="max-w-md mx-auto">
-        <div class="flex gap-2 mb-6 shadow-xl">
-            <button onclick="mudarSt('online')" id="btnOn" class="flex-1 py-4 rounded-2xl font-black text-sm uppercase"></button>
-            <button onclick="mudarSt('ocupado')" id="btnOcu" class="flex-1 py-4 rounded-2xl font-black text-sm uppercase"></button>
+        <div class="bg-white p-4 rounded-3xl shadow-lg mb-4 flex justify-around border-b-4 border-blue-600">
+            <div class="text-center">
+                <p class="text-[9px] font-black text-gray-400 uppercase">Hoje</p>
+                <p id="totalDia" class="text-2xl font-black text-blue-600">0</p>
+            </div>
+            <div class="border-l pl-6 text-center">
+                <p class="text-[9px] font-black text-gray-400 uppercase">Status</p>
+                <div id="stTrabalho" class="text-xs font-black uppercase mt-1">Verificando...</div>
+            </div>
+        </div>
+
+        <div class="flex gap-2 mb-4">
+            <button onclick="mudarSt('online')" id="btnOn" class="flex-1 py-4 rounded-2xl font-black text-sm uppercase transition-all"></button>
+            <button onclick="mudarSt('ocupado')" id="btnOcu" class="flex-1 py-4 rounded-2xl font-black text-sm uppercase transition-all"></button>
+        </div>
+
+        <div id="proximaParada" class="hidden sticky top-2 z-50 mb-6">
+            <div class="bg-blue-900 text-white p-5 rounded-[25px] shadow-2xl border-4 border-blue-400">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-[9px] font-black uppercase text-blue-300">Próxima Entrega 🏍️</span>
+                    <span id="destBairro" class="bg-blue-400 text-blue-900 px-2 py-1 rounded font-black text-[9px]"></span>
+                </div>
+                <p id="destEnd" class="text-sm font-black uppercase italic mb-3"></p>
+                <a id="destMaps" href="#" target="_blank" class="block bg-green-500 text-center py-4 rounded-xl font-black text-sm italic shadow-inner">ABRIR MAPA AGORA 📍</a>
+            </div>
         </div>
 
         <div id="chamados" class="space-y-2 mb-6"></div>
-
         <div id="entregas" class="space-y-6"></div>
     </div>
 
@@ -26,97 +47,135 @@
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
         let stLocal = { online: false, ocupado: false };
-        let fechamento = {};
+        let relatorio = {};
+        let contador = parseInt(localStorage.getItem('contadorMarcelo')) || 0;
+        document.getElementById('totalDia').innerText = contador;
 
-        // Monitor de Status
+        // Ordem: Rural para o Centro
+        const ordemFiltro = { "OUTROS/RURAL": 1, "JD. EUROPA": 2, "JD. AMÉRICA": 3, "JD. DAS FLORES": 4, "VILA SÃO JOSÉ": 5, "VILA CAMPANTE": 6, "CENTRO": 7 };
+
         onSnapshot(doc(db, "config", "status"), (d) => {
             stLocal = d.data() || { online: false, ocupado: false };
             const bOn = document.getElementById('btnOn');
             const bOc = document.getElementById('btnOcu');
-            bOn.innerText = stLocal.online ? "🟢 Online" : "⚪ Offline";
-            bOn.className = stLocal.online ? "flex-1 py-4 bg-green-500 text-white font-black rounded-2xl" : "flex-1 py-4 bg-gray-300 text-gray-500 font-black rounded-2xl";
-            bOc.innerText = stLocal.ocupado ? "🛵 Ocupado" : "✅ Livre";
-            bOc.className = stLocal.ocupado ? "flex-1 py-4 bg-orange-500 text-white font-black rounded-2xl" : "flex-1 py-4 bg-blue-100 text-blue-600 font-black rounded-2xl";
+            document.getElementById('stTrabalho').innerText = stLocal.online ? (stLocal.ocupado ? "EM ROTA 🛵" : "LIVRE ✅") : "OFFLINE 🔴";
+            bOn.innerText = stLocal.online ? "🟢 ONLINE" : "⚪ OFFLINE";
+            bOn.className = `flex-1 py-4 font-black rounded-2xl ${stLocal.online ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`;
+            bOc.innerText = stLocal.ocupado ? "🛵 OCUPADO" : "✅ LIVRE";
+            bOc.className = `flex-1 py-4 font-black rounded-2xl ${stLocal.ocupado ? 'bg-orange-500 text-white' : 'bg-blue-100 text-blue-600'}`;
         });
 
-        window.mudarSt = (tipo) => {
-            const novo = { ...stLocal, [tipo]: !stLocal[tipo] };
-            setDoc(doc(db, "config", "status"), novo);
-        };
+        window.mudarSt = (tipo) => setDoc(doc(db, "config", "status"), { ...stLocal, [tipo]: !stLocal[tipo] });
 
-        // Monitor de Chamados
         onSnapshot(collection(db, "chamados"), (snaps) => {
             const div = document.getElementById('chamados');
             div.innerHTML = '';
             snaps.forEach(d => {
                 const c = d.data();
-                div.innerHTML += `<div class="bg-red-600 text-white p-4 rounded-2xl flex justify-between items-center shadow-lg">
-                    <span class="font-black italic uppercase text-sm">🚨 ${c.loja} (${c.tipo})</span>
-                    <button onclick="limparChamado('${d.id}')" class="bg-white text-red-600 px-4 py-1 rounded-xl font-black">OK</button>
+                div.innerHTML += `<div class="bg-red-600 text-white p-4 rounded-2xl shadow-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-black italic text-xs">🚨 ${c.loja}</span>
+                        <button onclick="limparChamado('${d.id}')" class="bg-white text-red-600 px-3 py-1 rounded-lg font-black text-[9px]">OK</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="avisar('${c.loja}', '5 min')" class="flex-1 bg-red-700 py-2 rounded-lg font-bold text-[9px]">CHEGO EM 5 MIN</button>
+                        <button onclick="avisar('${c.loja}', '15 min')" class="flex-1 bg-red-700 py-2 rounded-lg font-bold text-[9px]">CHEGO EM 15 MIN</button>
+                    </div>
                 </div>`;
             });
         });
 
         window.limparChamado = (id) => deleteDoc(doc(db, "chamados", id));
+        window.avisar = async (loja, tempo) => {
+            await addDoc(collection(db, "avisos"), { loja, msg: `Marcelo chega em ${tempo} 🛵`, lido: false });
+            alert("Aviso enviado!");
+        };
 
-        // Monitor de Pedidos
         onSnapshot(collection(db, "pedidos"), (snaps) => {
             let lojas = {};
+            let todosPedidosParaDestaque = [];
+            
             snaps.forEach(d => {
-                const p = d.data();
+                const p = { id: d.id, ...d.data() };
                 if(!lojas[p.loja]) lojas[p.loja] = [];
-                lojas[p.loja].push({id: d.id, ...p});
+                lojas[p.loja].push(p);
+                todosPedidosParaDestaque.push(p);
             });
 
+            // Ordenar todos os pedidos para o destaque
+            todosPedidosParaDestaque.sort((a, b) => (ordemFiltro[a.bairro] || 99) - (ordemFiltro[b.bairro] || 99));
+            atualizarDestaque(todosPedidosParaDestaque);
+
             const div = document.getElementById('entregas');
-            div.innerHTML = '';
+            div.innerHTML = snaps.size ? '' : '<div class="text-center py-20 text-gray-400 font-bold italic">Sem entregas no momento...</div>';
+            
             for (let l in lojas) {
                 const cardId = l.replace(/\s+/g, '');
+                const agrupados = lojas[l].reduce((acc, obj) => {
+                    const key = obj.bairro || 'CENTRO';
+                    if (!acc[key]) acc[key] = [];
+                    acc[key].push(obj);
+                    return acc;
+                }, {});
+
+                const bairrosOrdenados = Object.keys(agrupados).sort((a, b) => (ordemFiltro[a] || 99) - (ordemFiltro[b] || 99));
+
                 div.innerHTML += `
                 <div class="bg-white rounded-[30px] shadow-xl mb-6 overflow-hidden border-t-8 border-blue-600">
                     <div class="p-4 bg-blue-50 flex justify-between items-center">
-                        <h2 class="font-black text-blue-900 uppercase italic">${l}</h2>
-                        <span id="txtTot-${cardId}" class="bg-blue-600 text-white px-4 py-1 rounded-full font-black italic text-xs">R$ 0.00</span>
+                        <h2 class="font-black text-blue-900 uppercase italic text-sm">${l}</h2>
                     </div>
-                    <div class="p-4 border-b">
-                        <input type="number" placeholder="Valor total do lote" oninput="ratear('${cardId}', this.value)" class="w-full p-3 rounded-xl border-2 border-blue-100 text-center font-black text-blue-600 outline-none">
-                    </div>
-                    <div id="lista-${cardId}" class="p-4 space-y-3">
-                        ${lojas[l].map(p => `
-                            <div class="flex items-center gap-2 p-3 bg-gray-50 rounded-2xl">
-                                <span class="flex-1 text-xs font-bold text-gray-600">${p.local}</span>
-                                <input type="number" id="v-${p.id}" value="7.00" class="w-16 p-2 rounded-lg text-center font-black text-green-600 text-xs border">
-                                <button onclick="concluir('${p.id}', '${l}', '${p.local}', '${p.zap}')" class="bg-green-500 text-white p-2 rounded-xl font-black">✓</button>
+                    <div class="p-4">
+                        ${bairrosOrdenados.map(b => `
+                            <div class="mb-4">
+                                <p class="text-[9px] font-black text-gray-400 border-b mb-2 uppercase">${b}</p>
+                                ${agrupados[b].map(p => `
+                                    <div class="p-3 bg-gray-50 rounded-2xl border-l-4 ${p.pag.includes('PAGO') ? 'border-green-500' : 'border-orange-500'} mb-3 shadow-sm">
+                                        <p class="text-[11px] font-black text-gray-700 uppercase italic mb-1">${p.local}</p>
+                                        <div class="text-[9px] font-black italic mb-2 ${p.pag.includes('PAGO') ? 'text-green-600' : 'text-orange-600'}">💰 ${p.pag}</div>
+                                        <div class="flex gap-2">
+                                            <input type="text" id="rec-${p.id}" placeholder="Quem recebeu?" class="flex-1 p-2 rounded-xl border border-gray-200 text-[10px] font-bold outline-none">
+                                            <button onclick="concluir('${p.id}', '${l}', '${p.local}', '${p.zap}', '${p.pag}')" class="bg-green-500 text-white px-4 rounded-xl font-black italic">✓</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
                             </div>
                         `).join('')}
                     </div>
-                    <button onclick="enviarZap('${l}')" id="z-${cardId}" class="hidden w-full bg-purple-600 text-white font-black py-4 uppercase italic">Finalizar e Zap</button>
+                    <button onclick="enviarRelatorio('${l}')" id="btnRel-${cardId}" class="hidden w-full bg-purple-600 text-white font-black py-5 uppercase italic text-xs tracking-widest">Enviar Fechamento Zap</button>
                 </div>`;
             }
         });
 
-        window.ratear = (cardId, val) => {
-            const inputs = document.querySelectorAll(`#lista-${cardId} input[type="number"]`);
-            if(val && inputs.length) {
-                inputs.forEach(i => i.value = (val / inputs.length).toFixed(2));
-                document.getElementById(`txtTot-${cardId}`).innerText = `R$ ${parseFloat(val).toFixed(2)}`;
-            }
-        };
+        function atualizarDestaque(pedidos) {
+            const div = document.getElementById('proximaParada');
+            if(pedidos.length > 0) {
+                const p = pedidos[0];
+                document.getElementById('destBairro').innerText = p.bairro;
+                document.getElementById('destEnd').innerText = p.local;
+                document.getElementById('destMaps').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.local + ' Quintana SP')}`;
+                div.classList.remove('hidden');
+            } else { div.classList.add('hidden'); }
+        }
 
-        window.concluir = async (id, loja, local, zap) => {
-            const v = document.getElementById(`v-${id}`).value;
-            if(!fechamento[loja]) fechamento[loja] = { zap, itens: [], total: 0 };
-            fechamento[loja].itens.push(`📍 ${local} - R$ ${v}`);
-            fechamento[loja].total += parseFloat(v);
+        window.concluir = async (id, loja, local, zap, pag) => {
+            const quem = document.getElementById(`rec-${id}`).value || "Não informado";
+            const hora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            if(!relatorio[loja]) relatorio[loja] = { zap, itens: [] };
+            relatorio[loja].itens.push(`✅ *${local}*\n💰 Pag: ${pag}\n👤 Rec: ${quem} | ⏰ ${hora}`);
+            contador++;
+            localStorage.setItem('contadorMarcelo', contador);
+            document.getElementById('totalDia').innerText = contador;
             await deleteDoc(doc(db, "pedidos", id));
-            document.getElementById(`z-${loja.replace(/\s+/g, '')}`).classList.remove('hidden');
+            document.getElementById(`btnRel-${loja.replace(/\s+/g, '')}`).classList.remove('hidden');
         };
 
-        window.enviarZap = (l) => {
-            const f = fechamento[l];
-            const msg = window.encodeURIComponent(`*FECHAMENTO MARCELO*\n\n✅ *LOJA: ${l}*\n\n${f.itens.join('\n')}\n\n*TOTAL: R$ ${f.total.toFixed(2)}*`);
-            window.open(`https://wa.me/55${f.zap}?text=${msg}`);
-            delete fechamento[l]; location.reload();
+        window.enviarRelatorio = (loja) => {
+            const r = relatorio[loja];
+            const msg = `*FECHAMENTO MARCELO*\n*LOJA:* ${loja.toUpperCase()}\n\n${r.itens.join('\n\n')}\n\n*Total de entregas: ${contador}*`;
+            window.open(`https://wa.me/55${r.zap}?text=${encodeURIComponent(msg)}`);
+            delete relatorio[loja];
+            setTimeout(() => location.reload(), 500);
         };
     </script>
 </body>
