@@ -3,395 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Entregador</title>
+    <title>Painel Marcelo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .novo-pedido { animation: slideIn 0.3s ease-out; }
-        @keyframes slideIn {
-            from { transform: translateX(-20px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4">
-    <div class="max-w-md mx-auto pb-24">
-        
-        <!-- Header Fixo -->
-        <div class="sticky top-0 z-40 bg-white rounded-2xl shadow-lg p-4 mb-4">
-            <div class="flex justify-between items-center mb-4">
-                <div>
-                    <h1 class="text-xl font-black text-gray-800">🛵 Painel</h1>
-                    <p class="text-xs text-gray-500" id="dataAtual"></p>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="toggleOnline()" id="btnOnline" class="px-4 py-2 rounded-xl font-bold text-sm transition bg-gray-200 text-gray-600">
-                        ⚪ OFFLINE
-                    </button>
-                </div>
+<body class="bg-gray-100 min-h-screen p-4 pb-24">
+    <div class="max-w-md mx-auto">
+        <div class="sticky top-0 z-40 bg-white rounded-2xl shadow-lg p-4 mb-6">
+            <div class="flex justify-between items-center gap-2">
+                <button onclick="toggleOnline()" id="btnOnline" class="flex-1 py-4 rounded-xl font-black text-sm uppercase transition"></button>
+                <button onclick="toggleOcupado()" id="btnOcupado" class="flex-1 py-4 rounded-xl font-black text-sm uppercase transition"></button>
             </div>
-
-            <button onclick="toggleOcupado()" id="btnOcupado" class="w-full py-3 rounded-xl font-bold text-sm transition bg-gray-200 text-gray-600 hidden">
-                🛵 LIVRE
-            </button>
         </div>
 
-        <!-- Notificações de Chamado -->
         <div id="notificacoes" class="space-y-2 mb-4"></div>
-
-        <!-- Lista de Pedidos por Loja -->
-        <div id="listaPedidos" class="space-y-4">
-            <div class="text-center py-12 text-gray-400">
-                <div class="text-4xl mb-2">📭</div>
-                <p>Aguardando pedidos...</p>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Modal de Confirmação -->
-    <div id="modalConfirmar" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 w-full max-w-sm">
-            <h3 class="text-xl font-black text-center mb-4">Confirmar Entrega?</h3>
-            <div id="modalDetalhes" class="bg-gray-50 p-4 rounded-xl mb-4 text-sm"></div>
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="fecharModal()" class="py-3 bg-gray-200 rounded-xl font-bold">Cancelar</button>
-                <button onclick="confirmarEntrega()" class="py-3 bg-green-500 text-white rounded-xl font-bold">✓ Confirmar</button>
-            </div>
-        </div>
+        <div id="listaPedidos" class="space-y-6"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { 
-            getFirestore, collection, onSnapshot, doc, setDoc, 
-            deleteDoc, updateDoc, serverTimestamp, query, orderBy, where
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, query, orderBy, where, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE",
-            authDomain: "meuappentregas.firebaseapp.com",
-            projectId: "meuappentregas",
-            storageBucket: "meuappentregas.firebasestorage.app",
-            messagingSenderId: "442484186787",
-            appId: "1:442484186787:web:ac914827ebebda987f2916"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
+        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        let status = {};
+        let fechamentoGlobal = {};
 
-        // Estado
-        let status = { online: false, ocupado: false };
-        let pedidosAtuais = new Map();
-        let pedidoSelecionado = null;
-        let unsubscribeChamados = null;
-        let unsubscribePedidos = null;
+        onSnapshot(doc(db, "sistema", "status"), (d) => {
+            status = d.data() || { online: false, ocupado: false };
+            const bOn = document.getElementById('btnOnline');
+            const bOc = document.getElementById('btnOcupado');
+            bOn.innerText = status.online ? "🟢 ONLINE" : "⚪ OFFLINE";
+            bOn.className = status.online ? "flex-1 py-4 bg-green-500 text-white font-black rounded-2xl shadow-md" : "flex-1 py-4 bg-gray-200 text-gray-500 font-black rounded-2xl";
+            bOc.innerText = status.ocupado ? "🛵 EM ROTA" : "✅ LIVRE";
+            bOc.className = status.ocupado ? "flex-1 py-4 bg-orange-500 text-white font-black rounded-2xl shadow-md" : "flex-1 py-4 bg-blue-100 text-blue-600 font-black rounded-2xl";
+        });
 
-        // Inicialização
-        window.onload = () => {
-            document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR', { 
-                weekday: 'long', day: 'numeric', month: 'long' 
-            });
-            
-            // Ouvir meu próprio status
-            onSnapshot(doc(db, "sistema", "status"), (doc) => {
-                status = doc.data() || { online: false, ocupado: false };
-                atualizarBotoesStatus();
-            });
-
-            // Ouvir CHAMADOS em tempo real (solicitações urgentes)
-            const qChamados = query(
-                collection(db, "chamados"),
-                where("status", "==", "Pendente"),
-                orderBy("timestamp", "desc")
-            );
-
-            unsubscribeChamados = onSnapshot(qChamados, (snapshot) => {
-                snapshot.docChanges().forEach(change => {
-                    if (change.type === 'added') {
-                        mostrarNotificacaoChamado(change.doc.id, change.doc.data());
-                    }
-                });
-            });
-
-            // Ouvir PEDIDOS em tempo real
-            const qPedidos = query(
-                collection(db, "pedidos"),
-                where("status", "in", ["Fila", "Pendente"]),
-                orderBy("timestamp", "asc")
-            );
-
-            unsubscribePedidos = onSnapshot(qPedidos, (snapshot) => {
-                snapshot.docChanges().forEach(change => {
-                    if (change.type === 'added' || change.type === 'modified') {
-                        pedidosAtuais.set(change.doc.id, { id: change.doc.id, ...change.doc.data() });
-                    } else if (change.type === 'removed') {
-                        pedidosAtuais.delete(change.doc.id);
-                    }
-                });
-                renderizarPedidos();
-            });
-        };
-
-        function atualizarBotoesStatus() {
-            const btnOn = document.getElementById('btnOnline');
-            const btnOcu = document.getElementById('btnOcupado');
-
-            if (status.online) {
-                btnOn.className = 'px-4 py-2 rounded-xl font-bold text-sm transition bg-green-500 text-white shadow-lg';
-                btnOn.innerHTML = '🟢 ONLINE';
-                btnOcu.classList.remove('hidden');
-            } else {
-                btnOn.className = 'px-4 py-2 rounded-xl font-bold text-sm transition bg-gray-200 text-gray-600';
-                btnOn.innerHTML = '⚪ OFFLINE';
-                btnOcu.classList.add('hidden');
-            }
-
-            if (status.ocupado) {
-                btnOcu.className = 'w-full py-3 rounded-xl font-bold text-sm transition bg-orange-500 text-white shadow-lg';
-                btnOcu.innerHTML = '🛵 EM ROTA';
-            } else {
-                btnOcu.className = 'w-full py-3 rounded-xl font-bold text-sm transition bg-blue-100 text-blue-600';
-                btnOcu.innerHTML = '✓ LIVRE';
-            }
-        }
-
-        window.toggleOnline = async () => {
-            try {
-                await setDoc(doc(db, "sistema", "status"), {
-                    online: !status.online,
-                    ocupado: false, // Resetar ocupado ao ficar offline
-                    atualizadoEm: serverTimestamp()
-                }, { merge: true });
-            } catch (e) {
-                console.error('Erro:', e);
-            }
-        };
-
-        window.toggleOcupado = async () => {
-            if (!status.online) return;
-            
-            try {
-                await setDoc(doc(db, "sistema", "status"), {
-                    ocupado: !status.ocupado,
-                    atualizadoEm: serverTimestamp()
-                }, { merge: true });
-            } catch (e) {
-                console.error('Erro:', e);
-            }
-        };
-
-        function mostrarNotificacaoChamado(id, dados) {
+        onSnapshot(query(collection(db, "chamados"), where("status", "==", "Pendente"), orderBy("timestamp", "desc")), (snaps) => {
             const container = document.getElementById('notificacoes');
-            
-            const div = document.createElement('div');
-            div.id = 'chamado_' + id;
-            div.className = 'bg-red-500 text-white p-4 rounded-2xl shadow-lg novo-pedido flex justify-between items-center';
-            div.innerHTML = `
-                <div>
-                    <p class="font-bold">🚨 CHAMADO URGENTE</p>
-                    <p class="text-sm opacity-90">${dados.loja}</p>
-                </div>
-                <button onclick="aceitarChamado('${id}', '${dados.lojaId}', '${dados.loja}', '${dados.zap}')" 
-                    class="bg-white text-red-500 px-4 py-2 rounded-xl font-bold text-sm hover:bg-gray-100 transition">
-                    ACEITAR
-                </button>
-            `;
-            
-            container.appendChild(div);
-            
-            // Remover após 30 segundos se não aceito
-            setTimeout(() => {
-                if (document.getElementById('chamado_' + id)) {
-                    div.remove();
-                }
-            }, 30000);
-        }
+            container.innerHTML = '';
+            snaps.forEach(d => {
+                const c = d.data();
+                container.innerHTML += `<div class="bg-red-600 text-white p-4 rounded-2xl shadow-lg flex justify-between items-center animate-bounce">
+                    <div><p class="font-black italic uppercase">${c.tipo === 'urgente' ? '🚨 URGENTE' : '🏍️ CHAMADO'}</p><p class="text-xs font-bold uppercase">${c.loja}</p></div>
+                    <button onclick="aceitarChamado('${d.id}')" class="bg-white text-red-600 px-4 py-2 rounded-xl font-black text-sm">OK</button>
+                </div>`;
+            });
+        });
 
-        window.aceitarChamado = async (chamadoId, lojaId, loja, zap) => {
-            try {
-                // Atualizar chamado
-                await updateDoc(doc(db, "chamados", chamadoId), {
-                    status: "Aceito",
-                    aceitoEm: serverTimestamp()
-                });
-
-                // Criar pedido vinculado
-                await addDoc(collection(db, "pedidos"), {
-                    lojaId,
-                    loja,
-                    zap,
-                    tipo: 'urgente',
-                    status: "Pendente",
-                    origem: 'chamado',
-                    chamadoId,
-                    timestamp: serverTimestamp()
-                });
-
-                // Ficar ocupado automaticamente
-                await setDoc(doc(db, "sistema", "status"), {
-                    ocupado: true,
-                    atualizadoEm: serverTimestamp()
-                }, { merge: true });
-
-                // Remover notificação
-                document.getElementById('chamado_' + chamadoId)?.remove();
-
-            } catch (e) {
-                console.error('Erro ao aceitar:', e);
-                alert('Erro ao aceitar chamado');
-            }
-        };
-
-        function renderizarPedidos() {
+        onSnapshot(query(collection(db, "pedidos"), where("status", "==", "Fila"), orderBy("timestamp", "asc")), (snaps) => {
             const container = document.getElementById('listaPedidos');
+            container.innerHTML = snaps.docs.length ? '' : '<div class="text-center py-20 text-gray-400 font-bold uppercase italic">Aguardando Lotes...</div>';
             
-            if (pedidosAtuais.size === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-12 text-gray-400">
-                        <div class="text-4xl mb-2">📭</div>
-                        <p>Aguardando pedidos...</p>
-                    </div>
-                `;
-                return;
-            }
-
-            // Agrupar por loja
-            const porLoja = {};
-            pedidosAtuais.forEach(pedido => {
-                if (!porLoja[pedido.loja]) porLoja[pedido.loja] = [];
-                porLoja[pedido.loja].push(pedido);
+            let lojas = {};
+            snaps.forEach(d => {
+                const p = d.data();
+                if(!lojas[p.loja]) lojas[p.loja] = [];
+                lojas[p.loja].push({id: d.id, ...p});
             });
 
-            container.innerHTML = '';
-            Object.entries(porLoja).forEach(([loja, pedidos]) => {
-                const card = document.createElement('div');
-                card.className = 'bg-white rounded-3xl shadow-lg overflow-hidden mb-4';
-                
-                const total = pedidos.reduce((sum, p) => sum + (p.valorEstimado || 7), 0);
-                
-                card.innerHTML = `
-                    <div class="p-4 bg-blue-50 border-b border-blue-100 flex justify-between items-center">
-                        <div>
-                            <h3 class="font-black text-blue-900 uppercase">${loja}</h3>
-                            <p class="text-xs text-blue-600">${pedidos.length} entrega(s)</p>
-                        </div>
-                        <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-bold">
-                            R$ ${total.toFixed(2)}
-                        </span>
+            for (let loja in lojas) {
+                const cardId = loja.replace(/\s+/g, '');
+                container.innerHTML += `
+                <div class="bg-white rounded-[35px] shadow-xl overflow-hidden mb-6 border-t-8 border-blue-600">
+                    <div class="p-4 bg-blue-50 flex justify-between items-center">
+                        <h2 class="font-black text-blue-900 uppercase">${loja}</h2>
+                        <span id="total_${cardId}" class="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-black italic">R$ 0.00</span>
                     </div>
-                    <div class="p-4 space-y-3">
-                        ${pedidos.map(p => `
-                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl ${p.tipo === 'urgente' ? 'border-l-4 border-red-500' : ''}">
-                                <div class="flex-1 min-w-0 mr-3">
-                                    <p class="font-medium text-gray-700 text-sm truncate">${p.local || 'Endereço não informado'}</p>
-                                    <p class="text-xs text-gray-400">${p.tipo === 'urgente' ? '🚨 Urgente' : '📦 Normal'}</p>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <input type="number" id="val_${p.id}" value="${p.valorEstimado || 7}" 
-                                        class="w-16 bg-white p-2 rounded-lg text-center font-bold text-green-600 text-sm border">
-                                    <button onclick="abrirModal('${p.id}')" 
-                                        class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition">
-                                        ✓
-                                    </button>
-                                </div>
+                    <div class="p-4 bg-gray-50 border-b">
+                        <input type="number" placeholder="Valor total do lote" oninput="ajustarLote('${cardId}', this.value)" class="w-full bg-white p-3 rounded-xl text-center font-black text-blue-600 outline-none border-2 border-blue-100">
+                    </div>
+                    <div id="lista-${cardId}" class="p-4 space-y-3">
+                        ${lojas[loja].map(ent => `
+                            <div class="flex items-center gap-2 p-3 bg-white rounded-2xl border border-gray-100">
+                                <span class="flex-1 text-xs font-bold text-gray-700">${ent.local}</span>
+                                <input type="number" id="val-${ent.id}" value="7.00" class="w-16 p-2 bg-gray-50 rounded-lg text-center font-black text-green-600 text-xs border">
+                                <button onclick="concluir('${ent.id}', '${loja}', '${ent.local}', '${ent.zap}')" class="bg-green-500 text-white p-3 rounded-xl font-black text-xs">✓</button>
                             </div>
                         `).join('')}
                     </div>
-                    <div class="p-4 border-t bg-gray-50">
-                        <button onclick="finalizarLote('${loja}')" 
-                            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl transition">
-                            Finalizar Lote + WhatsApp
-                        </button>
-                    </div>
-                `;
-                
-                container.appendChild(card);
-            });
-        }
+                    <button onclick="fecharLote('${loja}')" id="btnZap-${cardId}" class="hidden w-full bg-purple-600 text-white font-black py-4 uppercase italic">Finalizar e Zap</button>
+                </div>`;
+            }
+        });
 
-        window.abrirModal = (pedidoId) => {
-            pedidoSelecionado = pedidoId;
-            const pedido = pedidosAtuais.get(pedidoId);
-            const valor = document.getElementById(`val_${pedidoId}`).value;
-            
-            document.getElementById('modalDetalhes').innerHTML = `
-                <p class="font-bold text-gray-700 mb-1">${pedido.loja}</p>
-                <p class="text-gray-600 mb-2">${pedido.local}</p>
-                <p class="text-2xl font-black text-green-600">R$ ${parseFloat(valor).toFixed(2)}</p>
-            `;
-            
-            document.getElementById('modalConfirmar').classList.remove('hidden');
-        };
-
-        window.fecharModal = () => {
-            document.getElementById('modalConfirmar').classList.add('hidden');
-            pedidoSelecionado = null;
-        };
-
-        window.confirmarEntrega = async () => {
-            if (!pedidoSelecionado) return;
-            
-            const pedido = pedidosAtuais.get(pedidoSelecionado);
-            const valor = parseFloat(document.getElementById(`val_${pedidoSelecionado}`).value) || 7;
-            
-            try {
-                // Salvar no histórico (coleção entregues)
-                await addDoc(collection(db, "entregues"), {
-                    ...pedido,
-                    valorFinal: valor,
-                    entregueEm: serverTimestamp(),
-                    pedidoId: pedidoSelecionado
-                });
-                
-                // Remover da fila
-                await deleteDoc(doc(db, "pedidos", pedidoSelecionado));
-                
-                fecharModal();
-                
-            } catch (e) {
-                console.error('Erro:', e);
-                alert('Erro ao confirmar entrega');
+        window.ajustarLote = (cardId, valorTotal) => {
+            const inputs = document.querySelectorAll(`#lista-${cardId} input[type="number"]`);
+            if (valorTotal && inputs.length > 0) {
+                const unitario = (valorTotal / inputs.length).toFixed(2);
+                inputs.forEach(i => i.value = unitario);
+                document.getElementById(`total_${cardId}`).innerText = `R$ ${parseFloat(valorTotal).toFixed(2)}`;
             }
         };
 
-        window.finalizarLote = async (loja) => {
-            const pedidosLoja = Array.from(pedidosAtuais.values()).filter(p => p.loja === loja);
-            if (pedidosLoja.length === 0) return;
-            
-            const zap = pedidosLoja[0].zap;
-            let mensagem = `*FECHAMENTO - ${new Date().toLocaleDateString('pt-BR')}*\n\n*Loja: ${loja}*\n\n`;
-            let total = 0;
-            
-            // Processar todos
-            for (const pedido of pedidosLoja) {
-                const valor = parseFloat(document.getElementById(`val_${pedido.id}`)?.value) || 7;
-                total += valor;
-                
-                mensagem += `📍 ${pedido.local}\n💰 R$ ${valor.toFixed(2)}\n\n`;
-                
-                // Salvar como entregue
-                await addDoc(collection(db, "entregues"), {
-                    ...pedido,
-                    valorFinal: valor,
-                    entregueEm: serverTimestamp()
-                });
-                
-                // Remover da fila
-                await deleteDoc(doc(db, "pedidos", pedido.id));
-            }
-            
-            mensagem += `*TOTAL: R$ ${total.toFixed(2)}*`;
-            
-            // Abrir WhatsApp
-            window.open(`https://wa.me/55${zap}?text=${encodeURIComponent(mensagem)}`, '_blank');
+        window.toggleOnline = () => setDoc(doc(db, "sistema", "status"), { online: !status.online, ocupado: false }, { merge: true });
+        window.toggleOcupado = () => setDoc(doc(db, "sistema", "status"), { ocupado: !status.ocupado }, { merge: true });
+        window.aceitarChamado = (id) => deleteDoc(doc(db, "chamados", id));
+
+        window.concluir = async (id, loja, local, zap) => {
+            const valor = document.getElementById(`val-${id}`).value;
+            const hora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            if(!fechamentoGlobal[loja]) fechamentoGlobal[loja] = { zap, itens: [], total: 0 };
+            fechamentoGlobal[loja].itens.push(`📍 ${local} | ⏰ ${hora} | R$ ${valor}`);
+            fechamentoGlobal[loja].total += parseFloat(valor);
+            await deleteDoc(doc(db, "pedidos", id));
+            document.getElementById(`btnZap-${loja.replace(/\s+/g, '')}`).classList.remove('hidden');
         };
 
-        // Cleanup
-        window.onbeforeunload = () => {
-            if (unsubscribeChamados) unsubscribeChamados();
-            if (unsubscribePedidos) unsubscribePedidos();
+        window.fecharLote = (loja) => {
+            const d = fechamentoGlobal[loja];
+            const msg = window.encodeURIComponent(`*FECHAMENTO MARCELO*\n\n✅ *LOJA: ${loja}*\n\n${d.itens.join('\n')}\n\n*TOTAL: R$ ${d.total.toFixed(2)}*`);
+            window.open(`https://wa.me/55${d.zap}?text=${msg}`);
+            delete fechamentoGlobal[loja]; location.reload();
         };
     </script>
 </body>
