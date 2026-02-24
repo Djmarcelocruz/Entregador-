@@ -6,16 +6,16 @@
     <title>Painel Marcelo Entregas PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-4 pb-24 font-sans">
+<body class="bg-gray-100 p-4 pb-24 font-sans text-slate-900">
     <div class="max-w-md mx-auto">
         
         <div class="bg-white p-4 rounded-3xl shadow-lg mb-4 flex justify-around border-b-4 border-blue-600">
             <div class="text-center">
-                <p class="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Entregas Hoje</p>
+                <p class="text-[9px] font-black text-gray-400 uppercase">Entregas Hoje</p>
                 <p id="totalDia" class="text-2xl font-black text-blue-600">0</p>
             </div>
             <div class="border-l pl-6 text-center">
-                <p class="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Meu Status</p>
+                <p class="text-[9px] font-black text-gray-400 uppercase">Status</p>
                 <div id="stTrabalho" class="text-xs font-black uppercase mt-1 italic">...</div>
             </div>
         </div>
@@ -36,17 +36,13 @@
             </div>
         </div>
 
-        <div id="entregas" class="space-y-6">
-            <div class="text-center py-20 text-gray-400 font-bold italic uppercase text-xs">Aguardando pedidos...</div>
-        </div>
-
+        <div id="entregas" class="space-y-6"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // CONFIGURAÇÃO FIREBASE (A mesma que usas no lojista)
         const firebaseConfig = { 
             apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
             authDomain: "meuappentregas.firebaseapp.com", 
@@ -59,38 +55,25 @@
         const db = getFirestore(app);
 
         let stLocal = { online: false, ocupado: false };
-        let relatorioMemoria = {};
+        let relatorioMemoria = JSON.parse(localStorage.getItem('relatorioMemoria')) || {};
         let contador = parseInt(localStorage.getItem('contadorMarcelo')) || 0;
         document.getElementById('totalDia').innerText = contador;
 
-        // ORDEM DE LOGÍSTICA: Do mais longe para o Centro
-        const ordemFiltro = { 
-            "OUTROS/RURAL": 1, 
-            "JD. EUROPA": 2, 
-            "JD. AMÉRICA": 3, 
-            "JD. DAS FLORES": 4, 
-            "VILA SÃO JOSÉ": 5, 
-            "VILA CAMPANTE": 6, 
-            "CENTRO": 7 
-        };
+        const ordemFiltro = { "OUTROS/RURAL": 1, "JD. EUROPA": 2, "JD. AMÉRICA": 3, "JD. DAS FLORES": 4, "VILA SÃO JOSÉ": 5, "VILA CAMPANTE": 6, "CENTRO": 7 };
 
-        // GESTÃO DE STATUS (ONLINE/OCUPADO)
         onSnapshot(doc(db, "config", "status"), (d) => {
             stLocal = d.data() || { online: false, ocupado: false };
             const bOn = document.getElementById('btnOn');
             const bOc = document.getElementById('btnOcu');
             document.getElementById('stTrabalho').innerText = stLocal.online ? (stLocal.ocupado ? "EM ROTA 🛵" : "LIVRE ✅") : "OFFLINE 🔴";
-            
             bOn.innerText = stLocal.online ? "🟢 ONLINE" : "⚪ OFFLINE";
             bOn.className = `flex-1 py-4 font-black rounded-2xl ${stLocal.online ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-300 text-gray-500'}`;
-            
             bOc.innerText = stLocal.ocupado ? "🛵 EM ROTA" : "✅ LIVRE";
             bOc.className = `flex-1 py-4 font-black rounded-2xl ${stLocal.ocupado ? 'bg-orange-500 text-white shadow-lg' : 'bg-blue-100 text-blue-600'}`;
         });
 
         window.mudarSt = (tipo) => setDoc(doc(db, "config", "status"), { ...stLocal, [tipo]: !stLocal[tipo] });
 
-        // MONITORIZAÇÃO DE ENTREGAS EM TEMPO REAL
         onSnapshot(collection(db, "pedidos"), (snaps) => {
             let lojas = {};
             let listaOrdenadaParaDestaque = [];
@@ -102,17 +85,14 @@
                 listaOrdenadaParaDestaque.push(p);
             });
 
-            // Ordena todos os pedidos pela distância para o quadro de destaque
             listaOrdenadaParaDestaque.sort((a, b) => (ordemFiltro[a.bairro] || 99) - (ordemFiltro[b.bairro] || 99));
             atualizarQuadroDestaque(listaOrdenadaParaDestaque);
 
             const divGeral = document.getElementById('entregas');
-            divGeral.innerHTML = snaps.size ? '' : '<div class="text-center py-20 text-gray-400 font-bold italic uppercase text-xs">Sem entregas no momento...</div>';
+            divGeral.innerHTML = snaps.size ? '' : '<div class="text-center py-20 text-gray-400 font-bold italic text-xs uppercase">Aguardando novos pedidos...</div>';
             
             for (let l in lojas) {
                 const cardId = l.replace(/\s+/g, '');
-                
-                // Agrupa por bairro dentro de cada loja para facilitar a visão
                 const agrupados = lojas[l].reduce((acc, obj) => {
                     const key = obj.bairro || 'CENTRO';
                     if (!acc[key]) acc[key] = [];
@@ -126,34 +106,34 @@
                 <div class="bg-white rounded-[30px] shadow-xl mb-6 overflow-hidden border-t-8 border-blue-600">
                     <div class="p-4 bg-blue-50 flex justify-between items-center">
                         <h2 class="font-black text-blue-900 uppercase italic text-sm">${l}</h2>
-                        <span class="text-[9px] font-black bg-blue-600 text-white px-2 py-1 rounded-full">${lojas[l].length} VOL</span>
                     </div>
                     <div class="p-4">
                         ${bairrosNaTela.map(b => `
                             <div class="mb-4">
-                                <p class="text-[8px] font-black text-gray-400 border-b mb-2 uppercase italic tracking-widest">${b}</p>
+                                <p class="text-[8px] font-black text-gray-400 border-b mb-2 uppercase">${b}</p>
                                 ${agrupados[b].map(p => `
-                                    <div class="p-3 bg-gray-50 rounded-2xl border-l-4 ${p.pag.includes('PAGO') ? 'border-green-500' : 'border-orange-500'} mb-3 shadow-sm">
+                                    <div class="p-3 bg-gray-50 rounded-2xl border-l-4 ${p.pag.includes('PAGO') ? 'border-green-500' : 'border-orange-500'} mb-3">
                                         <div class="flex justify-between items-start mb-1">
                                             <p class="text-[11px] font-black text-gray-700 uppercase italic flex-1">${p.local}</p>
-                                            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.local + ', Quintana - SP')}" target="_blank" class="ml-2 bg-blue-600 text-white p-2 rounded-lg text-[9px] font-black shadow-md">MAPA</a>
+                                            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.local + ', Quintana - SP')}" target="_blank" class="ml-2 bg-blue-600 text-white p-2 rounded-lg text-[9px] font-black">MAPA</a>
                                         </div>
                                         <div class="text-[9px] font-black italic mb-2 ${p.pag.includes('PAGO') ? 'text-green-600' : 'text-orange-600'}">💰 ${p.pag}</div>
                                         <div class="flex gap-2">
-                                            <input type="text" id="rec-${p.id}" placeholder="Quem recebeu?" class="flex-1 p-2 rounded-xl border border-gray-200 text-[10px] font-bold outline-none focus:border-blue-500">
-                                            <button onclick="concluirEntrega('${p.id}', '${l}', '${p.local}', '${p.zap}', '${p.pag}')" class="bg-green-500 text-white px-5 rounded-xl font-black italic shadow-md active:scale-90 transition-all">✓</button>
+                                            <input type="text" id="rec-${p.id}" placeholder="Quem recebeu?" class="flex-1 p-2 rounded-xl border border-gray-200 text-[10px] font-bold outline-none">
+                                            <button onclick="concluirEntrega('${p.id}', '${l}', '${p.local}', '${p.zap}', '${p.pag}')" class="bg-green-500 text-white px-5 rounded-xl font-black italic shadow-md">✓</button>
                                         </div>
                                     </div>
                                 `).join('')}
                             </div>
                         `).join('')}
                     </div>
-                    <button onclick="enviarRelatorioZap('${l}')" id="btnRel-${cardId}" class="hidden w-full bg-purple-600 text-white font-black py-5 uppercase italic text-xs tracking-widest active:bg-purple-800 transition-all">Enviar Fechamento WhatsApp</button>
+                    <div id="containerBtn-${cardId}" class="p-2 ${relatorioMemoria[l] && (!lojas[l] || lojas[l].length === 0) ? '' : 'hidden'}">
+                        <button onclick="enviarRelatorioZap('${l}')" class="w-full bg-purple-600 text-white font-black py-5 uppercase italic text-xs rounded-2xl">Finalizar e Enviar WhatsApp</button>
+                    </div>
                 </div>`;
             }
         });
 
-        // ATUALIZA O QUADRO DE "PRÓXIMA PARADA" NO TOPO
         function atualizarQuadroDestaque(pedidos) {
             const quadro = document.getElementById('proximaParada');
             if(pedidos.length > 0) {
@@ -162,54 +142,36 @@
                 document.getElementById('destEnd').innerText = p.local;
                 document.getElementById('destMaps').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.local + ', Quintana - SP')}`;
                 quadro.classList.remove('hidden');
-            } else { 
-                quadro.classList.add('hidden'); 
-            }
+            } else { quadro.classList.add('hidden'); }
         }
 
-        // CONCLUIR ENTREGA COM TRAVA DE RELATÓRIO
         window.concluirEntrega = async (id, loja, local, zap, pag) => {
             const inputQuem = document.getElementById(`rec-${id}`);
             const quem = inputQuem ? inputQuem.value || "Não informado" : "Não informado";
             const hora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
             
-            // Salva no relatório da memória
             if(!relatorioMemoria[loja]) relatorioMemoria[loja] = { zap, itens: [] };
             relatorioMemoria[loja].itens.push(`✅ *${local}*\n💰 Pag: ${pag}\n👤 Rec: ${quem} | ⏰ ${hora}`);
             
-            // Atualiza contador
+            localStorage.setItem('relatorioMemoria', JSON.stringify(relatorioMemoria));
+            
             contador++;
             localStorage.setItem('contadorMarcelo', contador);
             document.getElementById('totalDia').innerText = contador;
 
-            // Elimina do Firebase
             await deleteDoc(doc(db, "pedidos", id));
-
-            // VERIFICAÇÃO DE FIM DE LOTE: Se não houver mais nada desta loja, mostra o botão
-            const q = query(collection(db, "pedidos"), where("loja", "==", loja));
-            const snapshot = await getDocs(q);
-
-            if (snapshot.size === 0) {
-                const btnId = `btnRel-${loja.replace(/\s+/g, '')}`;
-                const btn = document.getElementById(btnId);
-                if(btn) {
-                    btn.classList.remove('hidden');
-                    btn.innerText = `FINALIZAR LOTE: ENVIAR ${relatorioMemoria[loja].itens.length} ENTREGAS`;
-                }
-            }
+            // A própria atualização do onSnapshot cuidará de mostrar o botão se a lista estiver vazia agora.
         };
 
-        // ENVIAR RELATÓRIO PARA O WHATSAPP
         window.enviarRelatorioZap = (loja) => {
             const r = relatorioMemoria[loja];
-            if(!r) return alert("Erro no relatório.");
-
             const dataHoje = new Date().toLocaleDateString('pt-BR');
             const msg = `*FECHAMENTO MARCELO - ${dataHoje}*\n*LOJA:* ${loja.toUpperCase()}\n\n${r.itens.join('\n\n')}\n\n*Total de hoje: ${contador} entregas* 🏍️`;
             
             window.open(`https://wa.me/55${r.zap}?text=${encodeURIComponent(msg)}`);
             
             delete relatorioMemoria[loja];
+            localStorage.setItem('relatorioMemoria', JSON.stringify(relatorioMemoria));
             setTimeout(() => location.reload(), 500);
         };
     </script>
