@@ -3,147 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#059669">
-    <title>Entregador Pro - Painel</title>
+    <title>Painel do Entregador</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    animation: {
-                        'slide-in': 'slideIn 0.3s ease-out',
-                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    },
-                    keyframes: {
-                        slideIn: {
-                            '0%': { transform: 'translateX(-20px)', opacity: '0' },
-                            '100%': { transform: 'translateX(0)', opacity: '1' }
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; touch-action: manipulation; }
-        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-        .dark .glass { background: rgba(15, 23, 42, 0.95); }
-        .swipe-item { transition: transform 0.2s; }
-        .swipe-item.swiping { transition: none; }
-        
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .novo-pedido { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-slate-900 transition-colors duration-300">
-    <div id="app" class="max-w-lg mx-auto min-h-screen pb-24">
+<body class="bg-gray-100 min-h-screen p-4">
+    <div class="max-w-md mx-auto pb-24">
         
         <!-- Header Fixo -->
-        <header class="sticky top-0 z-50 glass border-b dark:border-slate-700 shadow-sm">
-            <div class="p-4">
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h1 class="text-xl font-black text-gray-800 dark:text-white">🛵 Painel</h1>
-                        <p class="text-xs text-gray-500 dark:text-gray-400" id="dataAtual"></p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition">
-                            <span id="themeIcon">🌙</span>
-                        </button>
-                        <button onclick="abrirEstatisticas()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition relative">
-                            📊
-                            <span id="badgeStats" class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full hidden"></span>
-                        </button>
-                    </div>
+        <div class="sticky top-0 z-40 bg-white rounded-2xl shadow-lg p-4 mb-4">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h1 class="text-xl font-black text-gray-800">🛵 Painel</h1>
+                    <p class="text-xs text-gray-500" id="dataAtual"></p>
                 </div>
-
-                <!-- Controles de Status -->
-                <div class="grid grid-cols-2 gap-2">
-                    <button id="btnOnline" onclick="toggleStatus('online')" class="relative overflow-hidden py-3 px-4 rounded-xl font-bold text-sm transition-all transform active:scale-95 flex items-center justify-center gap-2 bg-gray-200 text-gray-600">
-                        <span class="relative z-10 flex items-center gap-2">
-                            <span id="iconOnline">⚪</span>
-                            <span id="textOnline">OFFLINE</span>
-                        </span>
+                <div class="flex gap-2">
+                    <button onclick="toggleOnline()" id="btnOnline" class="px-4 py-2 rounded-xl font-bold text-sm transition bg-gray-200 text-gray-600">
+                        ⚪ OFFLINE
                     </button>
-                    
-                    <button id="btnOcupado" onclick="toggleStatus('ocupado')" class="relative overflow-hidden py-3 px-4 rounded-xl font-bold text-sm transition-all transform active:scale-95 flex items-center justify-center gap-2 bg-gray-200 text-gray-600">
-                        <span class="relative z-10 flex items-center gap-2">
-                            <span id="iconOcupado">🛵</span>
-                            <span id="textOcupado">LIVRE</span>
-                        </span>
-                    </button>
-                </div>
-
-                <!-- Stats Rápidas -->
-                <div class="grid grid-cols-3 gap-2 mt-3 text-center">
-                    <div class="bg-blue-50 dark:bg-blue-900/30 p-2 rounded-lg">
-                        <div class="text-lg font-black text-blue-600 dark:text-blue-400" id="statPendentes">0</div>
-                        <div class="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Pendentes</div>
-                    </div>
-                    <div class="bg-green-50 dark:bg-green-900/30 p-2 rounded-lg">
-                        <div class="text-lg font-black text-green-600 dark:text-green-400" id="statHoje">0</div>
-                        <div class="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Hoje</div>
-                    </div>
-                    <div class="bg-purple-50 dark:bg-purple-900/30 p-2 rounded-lg">
-                        <div class="text-lg font-black text-purple-600 dark:text-purple-400" id="statTotal">R$0</div>
-                        <div class="text-[10px] text-gray-500 dark:text-gray-400 uppercase">Total</div>
-                    </div>
                 </div>
             </div>
-        </header>
 
-        <!-- Lista de Pedidos -->
-        <main class="p-4 space-y-4" id="mainContent">
-            <div id="listaPedidos" class="space-y-3">
-                <div class="text-center py-12 text-gray-400">
-                    <div class="animate-spin text-4xl mb-4">⏳</div>
-                    <p>Carregando pedidos...</p>
-                </div>
-            </div>
-        </main>
+            <button onclick="toggleOcupado()" id="btnOcupado" class="w-full py-3 rounded-xl font-bold text-sm transition bg-gray-200 text-gray-600 hidden">
+                🛵 LIVRE
+            </button>
+        </div>
 
-        <!-- Modal de Fechamento -->
-        <div id="modalFechamento" class="fixed inset-0 z-50 hidden">
-            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="fecharModal()"></div>
-            <div class="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-3xl p-6 transform transition-transform translate-y-full" id="modalContent">
-                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
-                
-                <h3 class="text-xl font-black text-gray-800 dark:text-white mb-4">📱 Fechamento</h3>
-                
-                <div id="resumoFechamento" class="space-y-2 mb-4 max-h-[50vh] overflow-y-auto">
-                    <!-- Conteúdo dinâmico -->
-                </div>
+        <!-- Notificações de Chamado -->
+        <div id="notificacoes" class="space-y-2 mb-4"></div>
 
-                <div class="border-t dark:border-slate-700 pt-4 mb-4">
-                    <div class="flex justify-between items-center text-xl font-black">
-                        <span class="text-gray-600 dark:text-gray-300">TOTAL</span>
-                        <span class="text-green-600 dark:text-green-400" id="totalFechamento">R$ 0,00</span>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="copiarResumo()" class="py-3 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-xl font-bold">
-                        📋 Copiar
-                    </button>
-                    <button onclick="enviarWhatsApp()" class="py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold flex items-center justify-center gap-2">
-                        <span>Enviar</span>
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                    </button>
-                </div>
+        <!-- Lista de Pedidos por Loja -->
+        <div id="listaPedidos" class="space-y-4">
+            <div class="text-center py-12 text-gray-400">
+                <div class="text-4xl mb-2">📭</div>
+                <p>Aguardando pedidos...</p>
             </div>
         </div>
 
-        <!-- Toast Container -->
-        <div id="toastContainer" class="fixed top-20 left-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div id="modalConfirmar" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-black text-center mb-4">Confirmar Entrega?</h3>
+            <div id="modalDetalhes" class="bg-gray-50 p-4 rounded-xl mb-4 text-sm"></div>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="fecharModal()" class="py-3 bg-gray-200 rounded-xl font-bold">Cancelar</button>
+                <button onclick="confirmarEntrega()" class="py-3 bg-green-500 text-white rounded-xl font-bold">✓ Confirmar</button>
+            </div>
+        </div>
     </div>
 
     <script type="module">
-        // ===== CONFIGURAÇÃO =====
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getFirestore, collection, onSnapshot, doc, setDoc, 
+            deleteDoc, updateDoc, serverTimestamp, query, orderBy, where
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE",
             authDomain: "meuappentregas.firebaseapp.com",
@@ -153,357 +78,321 @@
             appId: "1:442484186787:web:ac914827ebebda987f2916"
         };
 
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { 
-            getFirestore, collection, onSnapshot, query, orderBy, 
-            deleteDoc, doc, updateDoc, setDoc, serverTimestamp,
-            enableIndexedDbPersistence, where, getDocs, writeBatch 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        enableIndexedDbPersistence(db).catch(console.warn);
 
-        // ===== ESTADO =====
-        const State = {
-            pedidos: new Map(),
-            fechamentos: {},
-            estatisticas: { hoje: 0, totalDinheiro: 0, entregas: [] },
-            status: { online: false, ocupado: false },
-            config: { taxaPadrao: 7, taxaUrgente: 12 },
-            lojaAtual: null
+        // Estado
+        let status = { online: false, ocupado: false };
+        let pedidosAtuais = new Map();
+        let pedidoSelecionado = null;
+        let unsubscribeChamados = null;
+        let unsubscribePedidos = null;
+
+        // Inicialização
+        window.onload = () => {
+            document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR', { 
+                weekday: 'long', day: 'numeric', month: 'long' 
+            });
+            
+            // Ouvir meu próprio status
+            onSnapshot(doc(db, "sistema", "status"), (doc) => {
+                status = doc.data() || { online: false, ocupado: false };
+                atualizarBotoesStatus();
+            });
+
+            // Ouvir CHAMADOS em tempo real (solicitações urgentes)
+            const qChamados = query(
+                collection(db, "chamados"),
+                where("status", "==", "Pendente"),
+                orderBy("timestamp", "desc")
+            );
+
+            unsubscribeChamados = onSnapshot(qChamados, (snapshot) => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        mostrarNotificacaoChamado(change.doc.id, change.doc.data());
+                    }
+                });
+            });
+
+            // Ouvir PEDIDOS em tempo real
+            const qPedidos = query(
+                collection(db, "pedidos"),
+                where("status", "in", ["Fila", "Pendente"]),
+                orderBy("timestamp", "asc")
+            );
+
+            unsubscribePedidos = onSnapshot(qPedidos, (snapshot) => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added' || change.type === 'modified') {
+                        pedidosAtuais.set(change.doc.id, { id: change.doc.id, ...change.doc.data() });
+                    } else if (change.type === 'removed') {
+                        pedidosAtuais.delete(change.doc.id);
+                    }
+                });
+                renderizarPedidos();
+            });
         };
 
-        // ===== UTILITÁRIOS =====
-        const utils = {
-            formatCurrency: (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val),
-            formatTime: (timestamp) => {
-                if (!timestamp) return '--:--';
-                const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-                return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            },
-            sanitize: (str) => {
-                const div = document.createElement('div');
-                div.textContent = String(str);
-                return div.innerHTML;
-            },
-            hoje: () => new Date().toISOString().split('T')[0]
-        };
+        function atualizarBotoesStatus() {
+            const btnOn = document.getElementById('btnOnline');
+            const btnOcu = document.getElementById('btnOcupado');
 
-        // ===== UI =====
-        const ui = {
-            toast: (msg, type = 'success') => {
-                const container = document.getElementById('toastContainer');
-                const el = document.createElement('div');
-                const colors = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-orange-500', info: 'bg-blue-500' };
-                el.className = `${colors[type]} text-white px-4 py-3 rounded-xl shadow-lg font-medium transform transition-all duration-300 translate-y-[-20px] opacity-0`;
-                el.textContent = msg;
-                container.appendChild(el);
-                requestAnimationFrame(() => el.classList.remove('translate-y-[-20px]', 'opacity-0'));
-                setTimeout(() => {
-                    el.classList.add('translate-y-[-20px]', 'opacity-0');
-                    setTimeout(() => el.remove(), 300);
-                }, 3000);
-            },
+            if (status.online) {
+                btnOn.className = 'px-4 py-2 rounded-xl font-bold text-sm transition bg-green-500 text-white shadow-lg';
+                btnOn.innerHTML = '🟢 ONLINE';
+                btnOcu.classList.remove('hidden');
+            } else {
+                btnOn.className = 'px-4 py-2 rounded-xl font-bold text-sm transition bg-gray-200 text-gray-600';
+                btnOn.innerHTML = '⚪ OFFLINE';
+                btnOcu.classList.add('hidden');
+            }
 
-            updateStats: () => {
-                document.getElementById('statPendentes').textContent = State.pedidos.size;
-                document.getElementById('statHoje').textContent = State.estatisticas.hoje;
-                document.getElementById('statTotal').textContent = utils.formatCurrency(State.estatisticas.totalDinheiro);
-            },
+            if (status.ocupado) {
+                btnOcu.className = 'w-full py-3 rounded-xl font-bold text-sm transition bg-orange-500 text-white shadow-lg';
+                btnOcu.innerHTML = '🛵 EM ROTA';
+            } else {
+                btnOcu.className = 'w-full py-3 rounded-xl font-bold text-sm transition bg-blue-100 text-blue-600';
+                btnOcu.innerHTML = '✓ LIVRE';
+            }
+        }
 
-            updateStatusButtons: () => {
-                const btnOn = document.getElementById('btnOnline');
-                const btnOcu = document.getElementById('btnOcupado');
-                
-                if (State.status.online) {
-                    btnOn.className = 'relative overflow-hidden py-3 px-4 rounded-xl font-bold text-sm transition-all transform active:scale-95 flex items-center justify-center gap-2 bg-green-500 text-white shadow-lg';
-                    btnOn.innerHTML = '<span>🟢</span><span>ONLINE</span>';
-                } else {
-                    btnOn.className = 'relative overflow-hidden py-3 px-4 rounded-xl font-bold text-sm transition-all transform active:scale-95 flex items-center justify-center gap-2 bg-gray-200 text-gray-600';
-                    btnOn.innerHTML = '<span>⚪</span><span>OFFLINE</span>';
-                }
-
-                if (State.status.ocupado) {
-                    btnOcu.className = 'relative overflow-hidden py-3 px-4 rounded-xl font-bold text-sm transition-all transform active:scale-95 flex items-center justify-center gap-2 bg-orange-500 text-white shadow-lg';
-                    btnOcu.innerHTML = '<span>🛵</span><span>EM ROTA</span>';
-                } else {
-                    btnOcu.className = 'relative overflow-hidden py-3 px-4 rounded-xl font-bold text-sm transition-all transform active:scale-95 flex items-center justify-center gap-2 bg-gray-200 text-gray-600';
-                    btnOcu.innerHTML = '<span>🛵</span><span>LIVRE</span>';
-                }
+        window.toggleOnline = async () => {
+            try {
+                await setDoc(doc(db, "sistema", "status"), {
+                    online: !status.online,
+                    ocupado: false, // Resetar ocupado ao ficar offline
+                    atualizadoEm: serverTimestamp()
+                }, { merge: true });
+            } catch (e) {
+                console.error('Erro:', e);
             }
         };
 
-        // ===== CONTROLLERS =====
-        const init = () => {
-            // Tema
-            const isDark = localStorage.getItem('theme') === 'dark';
-            document.documentElement.classList.toggle('dark', isDark);
-            document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+        window.toggleOcupado = async () => {
+            if (!status.online) return;
             
-            // Data
-            document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR', { 
-                weekday: 'long', day: 'numeric', month: 'short' 
-            });
-
-            // Carregar estatísticas locais
-            const saved = localStorage.getItem('statsEntregador');
-            if (saved) State.estatisticas = JSON.parse(saved);
-
-            setupListeners();
+            try {
+                await setDoc(doc(db, "sistema", "status"), {
+                    ocupado: !status.ocupado,
+                    atualizadoEm: serverTimestamp()
+                }, { merge: true });
+            } catch (e) {
+                console.error('Erro:', e);
+            }
         };
 
-        const setupListeners = () => {
-            // Status
-            onSnapshot(doc(db, "config", "status"), (doc) => {
-                State.status = doc.data() || { online: false, ocupado: false };
-                ui.updateStatusButtons();
-            });
-
-            // Pedidos
-            onSnapshot(
-                query(collection(db, "pedidos"), orderBy("prioridade", "desc"), orderBy("timestamp", "asc")),
-                (snapshot) => {
-                    State.pedidos.clear();
-                    snapshot.forEach(doc => State.pedidos.set(doc.id, { id: doc.id, ...doc.data() }));
-                    renderPedidos();
-                    ui.updateStats();
-                    
-                    // Notificação sonora se novo pedido
-                    if (snapshot.docChanges().some(change => change.type === 'added')) {
-                        playNotificationSound();
-                    }
+        function mostrarNotificacaoChamado(id, dados) {
+            const container = document.getElementById('notificacoes');
+            
+            const div = document.createElement('div');
+            div.id = 'chamado_' + id;
+            div.className = 'bg-red-500 text-white p-4 rounded-2xl shadow-lg novo-pedido flex justify-between items-center';
+            div.innerHTML = `
+                <div>
+                    <p class="font-bold">🚨 CHAMADO URGENTE</p>
+                    <p class="text-sm opacity-90">${dados.loja}</p>
+                </div>
+                <button onclick="aceitarChamado('${id}', '${dados.lojaId}', '${dados.loja}', '${dados.zap}')" 
+                    class="bg-white text-red-500 px-4 py-2 rounded-xl font-bold text-sm hover:bg-gray-100 transition">
+                    ACEITAR
+                </button>
+            `;
+            
+            container.appendChild(div);
+            
+            // Remover após 30 segundos se não aceito
+            setTimeout(() => {
+                if (document.getElementById('chamado_' + id)) {
+                    div.remove();
                 }
-            );
+            }, 30000);
+        }
+
+        window.aceitarChamado = async (chamadoId, lojaId, loja, zap) => {
+            try {
+                // Atualizar chamado
+                await updateDoc(doc(db, "chamados", chamadoId), {
+                    status: "Aceito",
+                    aceitoEm: serverTimestamp()
+                });
+
+                // Criar pedido vinculado
+                await addDoc(collection(db, "pedidos"), {
+                    lojaId,
+                    loja,
+                    zap,
+                    tipo: 'urgente',
+                    status: "Pendente",
+                    origem: 'chamado',
+                    chamadoId,
+                    timestamp: serverTimestamp()
+                });
+
+                // Ficar ocupado automaticamente
+                await setDoc(doc(db, "sistema", "status"), {
+                    ocupado: true,
+                    atualizadoEm: serverTimestamp()
+                }, { merge: true });
+
+                // Remover notificação
+                document.getElementById('chamado_' + chamadoId)?.remove();
+
+            } catch (e) {
+                console.error('Erro ao aceitar:', e);
+                alert('Erro ao aceitar chamado');
+            }
         };
 
-        const renderPedidos = () => {
+        function renderizarPedidos() {
             const container = document.getElementById('listaPedidos');
             
-            if (State.pedidos.size === 0) {
+            if (pedidosAtuais.size === 0) {
                 container.innerHTML = `
-                    <div class="text-center py-12 text-gray-400 dark:text-gray-500">
-                        <div class="text-6xl mb-4">📭</div>
-                        <p class="font-bold">Nenhum pedido na fila</p>
-                        <p class="text-sm mt-2">Aguardando novas entregas...</p>
+                    <div class="text-center py-12 text-gray-400">
+                        <div class="text-4xl mb-2">📭</div>
+                        <p>Aguardando pedidos...</p>
                     </div>
                 `;
                 return;
             }
 
             // Agrupar por loja
-            const lojas = {};
-            State.pedidos.forEach(pedido => {
-                if (!lojas[pedido.loja]) lojas[pedido.loja] = [];
-                lojas[pedido.loja].push(pedido);
+            const porLoja = {};
+            pedidosAtuais.forEach(pedido => {
+                if (!porLoja[pedido.loja]) porLoja[pedido.loja] = [];
+                porLoja[pedido.loja].push(pedido);
             });
 
             container.innerHTML = '';
-            Object.entries(lojas).forEach(([nomeLoja, pedidos]) => {
-                const card = createLojaCard(nomeLoja, pedidos);
-                container.appendChild(card);
-            });
-        };
-
-        const createLojaCard = (loja, pedidos) => {
-            const div = document.createElement('div');
-            div.className = 'bg-white dark:bg-slate-800 rounded-3xl shadow-lg overflow-hidden animate-slide-in';
-            
-            const temUrgente = pedidos.some(p => p.tipo === 'urgente');
-            const totalLoja = pedidos.length;
-            
-            div.innerHTML = `
-                <div class="p-4 border-b dark:border-slate-700 ${temUrgente ? 'bg-red-50 dark:bg-red-900/20' : ''}">
-                    <div class="flex justify-between items-center">
+            Object.entries(porLoja).forEach(([loja, pedidos]) => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-3xl shadow-lg overflow-hidden mb-4';
+                
+                const total = pedidos.reduce((sum, p) => sum + (p.valorEstimado || 7), 0);
+                
+                card.innerHTML = `
+                    <div class="p-4 bg-blue-50 border-b border-blue-100 flex justify-between items-center">
                         <div>
-                            <h3 class="font-black text-gray-800 dark:text-white uppercase flex items-center gap-2">
-                                ${utils.sanitize(loja)}
-                                ${temUrgente ? '<span class="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">URGENTE</span>' : ''}
-                            </h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">${totalLoja} entrega${totalLoja > 1 ? 's' : ''}</p>
+                            <h3 class="font-black text-blue-900 uppercase">${loja}</h3>
+                            <p class="text-xs text-blue-600">${pedidos.length} entrega(s)</p>
                         </div>
-                        <button onclick="prepararFechamento('${utils.sanitize(loja)}')" 
-                            class="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-200 transition">
-                            💰 Fechar
-                        </button>
+                        <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-bold">
+                            R$ ${total.toFixed(2)}
+                        </span>
                     </div>
-                </div>
-                
-                <div class="p-4 space-y-3" id="lista-${loja}">
-                    ${pedidos.map((p, idx) => `
-                        <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700 rounded-xl ${p.tipo === 'urgente' ? 'border-l-4 border-red-500' : ''}" data-id="${p.id}">
-                            <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                                ${idx + 1}
+                    <div class="p-4 space-y-3">
+                        ${pedidos.map(p => `
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl ${p.tipo === 'urgente' ? 'border-l-4 border-red-500' : ''}">
+                                <div class="flex-1 min-w-0 mr-3">
+                                    <p class="font-medium text-gray-700 text-sm truncate">${p.local || 'Endereço não informado'}</p>
+                                    <p class="text-xs text-gray-400">${p.tipo === 'urgente' ? '🚨 Urgente' : '📦 Normal'}</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" id="val_${p.id}" value="${p.valorEstimado || 7}" 
+                                        class="w-16 bg-white p-2 rounded-lg text-center font-bold text-green-600 text-sm border">
+                                    <button onclick="abrirModal('${p.id}')" 
+                                        class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition">
+                                        ✓
+                                    </button>
+                                </div>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="font-medium text-gray-700 dark:text-gray-200 text-sm truncate">${utils.sanitize(p.local)}</p>
-                                <p class="text-xs text-gray-400">${utils.formatTime(p.timestamp)} • ${p.tipo === 'urgente' ? '🚨 Urgente' : '📦 Normal'}</p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <input type="number" id="val-${p.id}" value="${p.valorEstimado || State.config.taxaPadrao}" 
-                                    class="w-20 bg-white dark:bg-slate-600 p-2 rounded-lg font-bold text-green-600 dark:text-green-400 text-sm border-0 text-center"
-                                    onchange="atualizarTotal('${loja}')">
-                                <button onclick="finalizarPedido('${p.id}', '${utils.sanitize(loja)}', '${utils.sanitize(p.local)}', '${p.zap}')" 
-                                    class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition">
-                                    ✓
-                                </button>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-                
-                <div class="px-4 pb-4">
-                    <div class="flex gap-2">
-                        <input type="number" id="total-${loja}" placeholder="Total do lote" 
-                            class="flex-1 bg-gray-100 dark:bg-slate-700 p-3 rounded-xl text-sm dark:text-white"
-                            onchange="distribuirTotal('${loja}', this.value)">
-                        <button onclick="finalizarLote('${utils.sanitize(loja)}')" class="bg-purple-600 hover:bg-purple-700 text-white px-4 rounded-xl font-bold text-sm">
-                            Lote ✓
-                        </button>
+                        `).join('')}
                     </div>
-                </div>
-            `;
-            
-            return div;
-        };
-
-        // ===== AÇÕES =====
-        window.toggleTheme = () => {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
-        };
-
-        window.toggleStatus = async (tipo) => {
-            const ref = doc(db, "config", "status");
-            try {
-                await setDoc(ref, { 
-                    [tipo]: !State.status[tipo],
-                    lastUpdate: serverTimestamp()
-                }, { merge: true });
-            } catch (e) {
-                ui.toast('Erro ao atualizar status', 'error');
-            }
-        };
-
-        window.distribuirTotal = (loja, total) => {
-            const inputs = document.querySelectorAll(`#lista-${loja} input[type="number"]`);
-            const qtd = inputs.length;
-            if (!total || qtd === 0) return;
-            
-            const unitario = (parseFloat(total) / qtd).toFixed(2);
-            inputs.forEach(input => input.value = unitario);
-        };
-
-        window.finalizarPedido = async (id, loja, local, zap) => {
-            const valor = parseFloat(document.getElementById(`val-${id}`).value) || 0;
-            if (valor <= 0) {
-                ui.toast('Valor inválido', 'error');
-                return;
-            }
-
-            try {
-                await deleteDoc(doc(db, "pedidos", id));
-                
-                // Atualizar estatísticas
-                State.estatisticas.hoje++;
-                State.estatisticas.totalDinheiro += valor;
-                State.estatisticas.entregas.push({
-                    local, valor, data: new Date().toISOString()
-                });
-                localStorage.setItem('statsEntregador', JSON.stringify(State.estatisticas));
-                
-                ui.toast('✓ Entrega concluída!', 'success');
-            } catch (e) {
-                ui.toast('Erro ao finalizar', 'error');
-            }
-        };
-
-        window.prepararFechamento = (loja) => {
-            State.lojaAtual = loja;
-            const modal = document.getElementById('modalFechamento');
-            const content = document.getElementById('modalContent');
-            
-            // Simular fechamento dos pedidos visíveis
-            const pedidosLoja = Array.from(State.pedidos.values()).filter(p => p.loja === loja);
-            let total = 0;
-            
-            const html = pedidosLoja.map((p, idx) => {
-                const valor = p.valorEstimado || State.config.taxaPadrao;
-                total += valor;
-                return `
-                    <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-slate-700 rounded-xl">
-                        <div>
-                            <p class="font-medium text-sm text-gray-700 dark:text-gray-200">${idx + 1}. ${utils.sanitize(p.local)}</p>
-                            <p class="text-xs text-gray-400">${utils.formatTime(p.timestamp)}</p>
-                        </div>
-                        <span class="font-bold text-green-600 dark:text-green-400">${utils.formatCurrency(valor)}</span>
+                    <div class="p-4 border-t bg-gray-50">
+                        <button onclick="finalizarLote('${loja}')" 
+                            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl transition">
+                            Finalizar Lote + WhatsApp
+                        </button>
                     </div>
                 `;
-            }).join('');
+                
+                container.appendChild(card);
+            });
+        }
+
+        window.abrirModal = (pedidoId) => {
+            pedidoSelecionado = pedidoId;
+            const pedido = pedidosAtuais.get(pedidoId);
+            const valor = document.getElementById(`val_${pedidoId}`).value;
             
-            document.getElementById('resumoFechamento').innerHTML = html || '<p class="text-center text-gray-400 py-4">Nenhum pedido pendente</p>';
-            document.getElementById('totalFechamento').textContent = utils.formatCurrency(total);
+            document.getElementById('modalDetalhes').innerHTML = `
+                <p class="font-bold text-gray-700 mb-1">${pedido.loja}</p>
+                <p class="text-gray-600 mb-2">${pedido.local}</p>
+                <p class="text-2xl font-black text-green-600">R$ ${parseFloat(valor).toFixed(2)}</p>
+            `;
             
-            modal.classList.remove('hidden');
-            setTimeout(() => content.classList.remove('translate-y-full'), 10);
+            document.getElementById('modalConfirmar').classList.remove('hidden');
         };
 
         window.fecharModal = () => {
-            const content = document.getElementById('modalContent');
-            content.classList.add('translate-y-full');
-            setTimeout(() => document.getElementById('modalFechamento').classList.add('hidden'), 300);
+            document.getElementById('modalConfirmar').classList.add('hidden');
+            pedidoSelecionado = null;
         };
 
-        window.copiarResumo = () => {
-            const texto = document.getElementById('resumoFechamento').innerText;
-            navigator.clipboard.writeText(texto).then(() => ui.toast('Copiado!'));
-        };
-
-        window.enviarWhatsApp = () => {
-            if (!State.lojaAtual) return;
+        window.confirmarEntrega = async () => {
+            if (!pedidoSelecionado) return;
             
-            const pedidos = Array.from(State.pedidos.values()).filter(p => p.loja === State.lojaAtual);
-            const zap = pedidos[0]?.zap;
+            const pedido = pedidosAtuais.get(pedidoSelecionado);
+            const valor = parseFloat(document.getElementById(`val_${pedidoSelecionado}`).value) || 7;
             
-            let total = 0;
-            const itens = pedidos.map((p, idx) => {
-                const valor = p.valorEstimado || State.config.taxaPadrao;
-                total += valor;
-                return `${idx + 1}️⃣ ${p.local} - ${utils.formatCurrency(valor)}`;
-            }).join('\n');
-
-            const msg = `*FECHAMENTO - ${new Date().toLocaleDateString('pt-BR')}*\n\n*Loja:* ${State.lojaAtual}\n\n${itens}\n\n*Total:* ${utils.formatCurrency(total)}`;
-            
-            window.open(`https://wa.me/55${zap}?text=${encodeURIComponent(msg)}`, '_blank');
-            fecharModal();
-        };
-
-        window.finalizarLote = async (loja) => {
-            const pedidosLoja = Array.from(State.pedidos.values()).filter(p => p.loja === loja);
-            if (pedidosLoja.length === 0) return;
-
             try {
-                const batch = writeBatch(db);
-                pedidosLoja.forEach(p => {
-                    batch.delete(doc(db, "pedidos", p.id));
+                // Salvar no histórico (coleção entregues)
+                await addDoc(collection(db, "entregues"), {
+                    ...pedido,
+                    valorFinal: valor,
+                    entregueEm: serverTimestamp(),
+                    pedidoId: pedidoSelecionado
                 });
-                await batch.commit();
                 
-                ui.toast(`${pedidosLoja.length} pedidos finalizados!`, 'success');
+                // Remover da fila
+                await deleteDoc(doc(db, "pedidos", pedidoSelecionado));
+                
+                fecharModal();
+                
             } catch (e) {
-                ui.toast('Erro ao finalizar lote', 'error');
+                console.error('Erro:', e);
+                alert('Erro ao confirmar entrega');
             }
         };
 
-        const playNotificationSound = () => {
-            const audio = new Audio('data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq');
-            audio.volume = 0.3;
-            audio.play().catch(() => {});
+        window.finalizarLote = async (loja) => {
+            const pedidosLoja = Array.from(pedidosAtuais.values()).filter(p => p.loja === loja);
+            if (pedidosLoja.length === 0) return;
+            
+            const zap = pedidosLoja[0].zap;
+            let mensagem = `*FECHAMENTO - ${new Date().toLocaleDateString('pt-BR')}*\n\n*Loja: ${loja}*\n\n`;
+            let total = 0;
+            
+            // Processar todos
+            for (const pedido of pedidosLoja) {
+                const valor = parseFloat(document.getElementById(`val_${pedido.id}`)?.value) || 7;
+                total += valor;
+                
+                mensagem += `📍 ${pedido.local}\n💰 R$ ${valor.toFixed(2)}\n\n`;
+                
+                // Salvar como entregue
+                await addDoc(collection(db, "entregues"), {
+                    ...pedido,
+                    valorFinal: valor,
+                    entregueEm: serverTimestamp()
+                });
+                
+                // Remover da fila
+                await deleteDoc(doc(db, "pedidos", pedido.id));
+            }
+            
+            mensagem += `*TOTAL: R$ ${total.toFixed(2)}*`;
+            
+            // Abrir WhatsApp
+            window.open(`https://wa.me/55${zap}?text=${encodeURIComponent(mensagem)}`, '_blank');
         };
 
-        // Iniciar
-        init();
+        // Cleanup
+        window.onbeforeunload = () => {
+            if (unsubscribeChamados) unsubscribeChamados();
+            if (unsubscribePedidos) unsubscribePedidos();
+        };
     </script>
 </body>
 </html>
