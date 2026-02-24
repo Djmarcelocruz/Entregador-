@@ -1,36 +1,37 @@
-// Substitua a função buscarBairroAutomatico por esta versão "Local"
+// Adicione os parâmetros viewbox e bounded para focar na sua região
+window.autoCompletar = async (texto) => {
+    const lista = document.getElementById('sugestoes');
+    if (texto.length < 3) { lista.classList.add('hidden'); return; }
 
-window.buscarBairroAutomatico = () => {
-    const end = document.getElementById('inputEnd').value.toUpperCase();
-    const selBairro = document.getElementById('bairro');
-    const status = document.getElementById('statusBusca');
+    try {
+        // Coordenadas aproximadas da região de Quintana/Pompéia para focar a busca
+        const focoRegiao = "&viewbox=-50.35,-22.10,-50.00,-21.85&bounded=1";
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(texto)}${focoRegiao}&limit=5&countrycodes=br`);
+        const data = await res.json();
 
-    // TABELA DE INTELIGÊNCIA LOCAL (Exemplos - Você pode adicionar mais ruas aqui)
-    const ruasQuintana = {
-        "VILA CAMPANTE": ["RUI BARBOSA", "MARECHAL DEODORO", "SETEMBRO"],
-        "JD. EUROPA": ["MADRI", "LISBOA", "PARIS", "LONDRES"],
-        "JD. AMÉRICA": ["NOVA IORQUE", "CHICAGO", "MIAMI"],
-        "CENTRO": ["MATRIZ", "COMÉRCIO", "AVENIDA PRINCIPAL"],
-        "VILA SÃO JOSÉ": ["SÃO PAULO", "SANTO ANTÔNIO"]
-    };
-
-    let bairroEncontrado = false;
-
-    // Varre a tabela para ver se a rua digitada pertence a algum bairro
-    for (const [bairro, ruas] of Object.entries(ruasQuintana)) {
-        ruas.forEach(rua => {
-            if (end.includes(rua)) {
-                selBairro.value = bairro;
-                bairroEncontrado = true;
-            }
-        });
-    }
-
-    if (bairroEncontrado) {
-        status.innerText = "Bairro Identificado! ✅";
-        status.className = "text-[8px] font-black text-green-500 uppercase italic";
-    } else {
-        status.innerText = "Bairro não identificado (Selecione Manual)";
-        status.className = "text-[8px] font-black text-orange-400 uppercase italic";
-    }
+        if (data.length > 0) {
+            lista.innerHTML = data.map(item => {
+                const rua = item.address.road || item.display_name.split(',')[0];
+                const bairro = item.address.suburb || item.address.neighbourhood || 'Centro';
+                const cidade = item.address.city || item.address.town || '';
+                return `
+                <div onclick="selecionarEnd('${rua}', '${bairro}', '${cidade}')" 
+                     class="suggestion-item p-4 border-b border-gray-50 hover:bg-blue-50 cursor-pointer transition-all">
+                    <p class="text-[11px] font-black text-blue-900 uppercase italic">${rua}</p>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase italic">${bairro} - ${cidade}</p>
+                </div>`;
+            }).join('');
+            lista.classList.remove('hidden');
+        } else {
+            // Se não achar nada, esconde a lista para o lojista digitar livre
+            lista.classList.add('hidden');
+        }
+    } catch (e) { console.log("Erro na busca"); }
 };
+
+// Modifique para fechar a lista se clicar fora ou terminar de digitar
+document.addEventListener('click', (e) => {
+    if (!document.getElementById('inputEnd').contains(e.target)) {
+        document.getElementById('sugestoes').classList.add('hidden');
+    }
+});
