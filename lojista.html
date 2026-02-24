@@ -8,170 +8,78 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .pulse-ring { animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4">
     <div class="max-w-md mx-auto">
-        
-        <!-- Tela de Cadastro -->
         <div id="telaCadastro" class="hidden bg-white rounded-3xl shadow-xl p-6 mt-10">
             <h1 class="text-2xl font-black text-center text-blue-900 mb-6">🏪 Configurar Loja</h1>
-            <input id="inputNome" placeholder="Nome da Loja" class="w-full p-4 mb-3 bg-gray-100 rounded-xl border-2 border-transparent focus:border-blue-500 outline-none">
-            <input id="inputZap" placeholder="WhatsApp (com DDD)" class="w-full p-4 mb-6 bg-gray-100 rounded-xl border-2 border-transparent focus:border-blue-500 outline-none" type="tel">
-            <button onclick="salvarPerfil()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition">SALVAR</button>
+            <input id="inputNome" placeholder="Nome da Loja" class="w-full p-4 mb-3 bg-gray-100 rounded-xl outline-none">
+            <input id="inputZap" placeholder="WhatsApp (com DDD)" class="w-full p-4 mb-6 bg-gray-100 rounded-xl outline-none" type="tel">
+            <button onclick="salvarPerfil()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl">SALVAR</button>
         </div>
 
-        <!-- App Principal -->
         <div id="telaApp" class="hidden space-y-4 pb-20">
-            
-            <!-- Header -->
-            <div class="bg-white rounded-2xl shadow p-4 flex justify-between items-center">
+            <div class="bg-white rounded-2xl shadow p-4 flex justify-between items-center border-b-4 border-blue-600">
                 <div>
                     <h1 id="nomeLojaDisplay" class="font-black text-blue-900 text-lg uppercase"></h1>
                     <div class="flex items-center gap-2 mt-1">
                         <span id="statusDot" class="w-2 h-2 rounded-full bg-gray-400"></span>
-                        <span id="statusText" class="text-xs text-gray-500 font-medium">Verificando...</span>
+                        <span id="statusText" class="text-xs text-gray-500 font-bold uppercase">Verificando...</span>
                     </div>
                 </div>
-                <button onclick="sair()" class="text-gray-400 hover:text-red-500 text-sm">Sair</button>
+                <button onclick="sair()" class="text-gray-400 text-xs font-bold uppercase">Sair</button>
             </div>
 
-            <!-- Botão Urgente -->
-            <button onclick="chamarEntregador('urgente')" id="btnUrgente" class="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-5 rounded-2xl shadow-lg transform transition hover:scale-[1.02] active:scale-95 hidden">
-                <div class="flex items-center justify-center gap-3">
-                    <span class="text-2xl">🚨</span>
-                    <div class="text-left">
-                        <div class="text-lg">PRECISO AGORA</div>
-                        <div class="text-xs opacity-90">Entrega urgente</div>
-                    </div>
-                </div>
-            </button>
-
-            <!-- Botão Normal -->
-            <button onclick="chamarEntregador('normal')" id="btnNormal" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold py-5 rounded-2xl shadow-lg transform transition hover:scale-[1.02] active:scale-95 hidden">
-                <div class="flex items-center justify-center gap-3">
-                    <span class="text-2xl">🏍️</span>
-                    <div class="text-left">
-                        <div class="text-lg">SOLICITAR ENTREGADOR</div>
-                        <div class="text-xs opacity-90">Entrega padrão</div>
-                    </div>
-                </div>
-            </button>
-
-            <!-- Mensagem de Status -->
+            <button onclick="chamarEntregador('urgente')" id="btnUrgente" class="w-full bg-red-600 text-white font-black py-5 rounded-2xl shadow-lg hidden italic">🚨 PRECISO AGORA (URGENTE)</button>
+            <button onclick="chamarEntregador('normal')" id="btnNormal" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg hidden italic">🏍️ SOLICITAR ENTREGADOR</button>
+            
             <div id="msgStatus" class="bg-orange-100 border-l-4 border-orange-500 p-4 rounded-r-xl hidden">
-                <p class="text-sm text-orange-700 font-medium">⏳ Aguardando entregador ficar online...</p>
+                <p id="msgTexto" class="text-sm text-orange-700 font-bold"></p>
             </div>
 
-            <!-- Gerenciador de Lote -->
-            <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
-                <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
-                    <h3 class="font-bold text-gray-700">📦 Lote de Entregas</h3>
-                    <span id="contadorLote" class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">0</span>
-                </div>
-                
-                <div class="p-4">
-                    <div class="flex gap-2 mb-3">
-                        <input type="text" id="inputEndereco" placeholder="Endereço completo" 
-                            class="flex-1 p-3 bg-gray-50 rounded-xl border-2 border-transparent focus:border-blue-500 outline-none text-sm"
-                            onkeypress="if(event.key==='Enter') adicionarEndereco()">
-                        <button onclick="adicionarEndereco()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-xl font-bold transition">+</button>
-                    </div>
-
-                    <div id="listaEnderecos" class="space-y-2 mb-4 max-h-60 overflow-y-auto">
-                        <p class="text-gray-400 text-center py-4 text-sm">Nenhum endereço adicionado</p>
-                    </div>
-
-                    <div id="resumoEnvio" class="hidden border-t pt-3">
-                        <div class="flex justify-between items-center mb-3">
-                            <span class="text-sm text-gray-500">Valor estimado:</span>
-                            <span id="valorEstimado" class="font-black text-blue-600">R$ 0,00</span>
-                        </div>
-                        <button onclick="enviarLote()" id="btnEnviar" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2">
-                            <span>ENVIAR LOTE</span>
-                            <span id="qtdEnvio">(0)</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Meus Pedidos Ativos -->
             <div class="bg-white rounded-3xl shadow-lg p-4">
-                <h3 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
-                    <span>📋</span> Meus Pedidos
-                </h3>
-                <div id="meusPedidos" class="space-y-2">
-                    <p class="text-gray-400 text-center py-4 text-sm">Nenhum pedido ativo</p>
+                <h3 class="font-black text-gray-700 mb-3 uppercase text-sm">📦 Montar Lote</h3>
+                <div class="flex gap-2 mb-3">
+                    <input type="text" id="inputEndereco" placeholder="Endereço completo" class="flex-1 p-3 bg-gray-50 rounded-xl border-none outline-none text-sm font-bold">
+                    <button onclick="adicionarEndereco()" class="bg-blue-600 text-white px-5 rounded-xl font-black text-xl">+</button>
                 </div>
+                <div id="listaEnderecos" class="space-y-2 mb-4"></div>
+                <div id="resumoEnvio" class="hidden border-t pt-3">
+                    <button onclick="enviarLote()" id="btnEnviar" class="w-full bg-green-600 text-white font-black py-4 rounded-xl shadow-md">ENVIAR LOTE COMPLETO ✅</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-lg p-4">
+                <h3 class="font-black text-gray-700 mb-3 uppercase text-sm">📋 Meus Pedidos Ativos</h3>
+                <div id="meusPedidos" class="space-y-2"></div>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { 
-            getFirestore, collection, addDoc, onSnapshot, doc, 
-            serverTimestamp, query, where, orderBy, deleteDoc, updateDoc
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, serverTimestamp, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE",
-            authDomain: "meuappentregas.firebaseapp.com",
-            projectId: "meuappentregas",
-            storageBucket: "meuappentregas.firebasestorage.app",
-            messagingSenderId: "442484186787",
-            appId: "1:442484186787:web:ac914827ebebda987f2916"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
+        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Estado global
-        let perfil = null;
+        let perfil = JSON.parse(localStorage.getItem('perfilLoja'));
         let rascunho = [];
-        let unsubscribeStatus = null;
-        let unsubscribePedidos = null;
 
-        // Inicialização
         window.onload = () => {
-            const salvo = localStorage.getItem('perfilLoja');
-            if (salvo) {
-                perfil = JSON.parse(salvo);
-                mostrarApp();
-            } else {
-                document.getElementById('telaCadastro').classList.remove('hidden');
-            }
+            if (perfil) mostrarApp();
+            else document.getElementById('telaCadastro').classList.remove('hidden');
         };
 
         window.salvarPerfil = () => {
-            const nome = document.getElementById('inputNome').value.trim();
+            const nome = document.getElementById('inputNome').value;
             const zap = document.getElementById('inputZap').value.replace(/\D/g, '');
-            
-            if (!nome || zap.length < 10) {
-                alert('Preencha todos os campos corretamente!');
-                return;
+            if (nome && zap) {
+                perfil = { id: 'loja_' + Date.now(), nome, zap };
+                localStorage.setItem('perfilLoja', JSON.stringify(perfil));
+                location.reload();
             }
-
-            perfil = {
-                id: 'loja_' + Date.now(),
-                nome,
-                zap,
-                criadoEm: new Date().toISOString()
-            };
-
-            localStorage.setItem('perfilLoja', JSON.stringify(perfil));
-            location.reload();
-        };
-
-        window.sair = () => {
-            localStorage.removeItem('perfilLoja');
-            location.reload();
         };
 
         function mostrarApp() {
@@ -179,249 +87,73 @@
             document.getElementById('telaApp').classList.remove('hidden');
             document.getElementById('nomeLojaDisplay').textContent = perfil.nome;
 
-            // Carregar rascunho salvo
-            const rascunhoSalvo = localStorage.getItem('rascunho_' + perfil.id);
-            if (rascunhoSalvo) {
-                rascunho = JSON.parse(rascunhoSalvo);
-                renderizarRascunho();
-            }
+            onSnapshot(doc(db, "sistema", "status"), (doc) => {
+                const s = doc.data() || {};
+                const dot = document.getElementById('statusDot');
+                const txt = document.getElementById('statusText');
+                const msg = document.getElementById('msgStatus');
+                const bU = document.getElementById('btnUrgente');
+                const bN = document.getElementById('btnNormal');
 
-            // Ouvir status do entregador em TEMPO REAL
-            unsubscribeStatus = onSnapshot(doc(db, "sistema", "status"), (doc) => {
-                const status = doc.data() || {};
-                atualizarInterfaceStatus(status);
+                if (s.ocupado) {
+                    dot.className = 'w-2 h-2 rounded-full bg-orange-500 animate-pulse';
+                    txt.innerText = 'EM ROTA 🛵';
+                    msg.classList.remove('hidden');
+                    document.getElementById('msgTexto').innerText = "Marcelo está em outra entrega. Já pode enviar seu lote, ele verá em seguida.";
+                    bU.classList.add('hidden'); bN.classList.add('hidden');
+                } else if (s.online) {
+                    dot.className = 'w-2 h-2 rounded-full bg-green-500 animate-pulse';
+                    txt.innerText = 'ONLINE 🟢';
+                    msg.classList.add('hidden');
+                    bU.classList.remove('hidden'); bN.classList.remove('hidden');
+                } else {
+                    dot.className = 'w-2 h-2 rounded-full bg-red-500';
+                    txt.innerText = 'OFFLINE 🔴';
+                    msg.classList.remove('hidden');
+                    document.getElementById('msgTexto').innerText = "O entregador está offline no momento.";
+                    bU.classList.add('hidden'); bN.classList.add('hidden');
+                }
             });
 
-            // Ouvir MEUS pedidos em TEMPO REAL
-            const q = query(
-                collection(db, "pedidos"),
-                where("lojaId", "==", perfil.id),
-                where("status", "in", ["Pendente", "Em rota", "Fila"]),
-                orderBy("timestamp", "desc")
-            );
-
-            unsubscribePedidos = onSnapshot(q, (snapshot) => {
-                renderizarMeusPedidos(snapshot.docs);
+            const q = query(collection(db, "pedidos"), where("lojaId", "==", perfil.id), where("status", "in", ["Fila", "Em rota"]), orderBy("timestamp", "desc"));
+            onSnapshot(q, (snaps) => {
+                const container = document.getElementById('meusPedidos');
+                container.innerHTML = snaps.docs.length ? '' : '<p class="text-center text-gray-400 text-xs">Sem pedidos ativos</p>';
+                snaps.forEach(d => {
+                    const p = d.data();
+                    container.innerHTML += `<div class="p-3 bg-gray-50 rounded-xl flex justify-between border-l-4 ${p.status === 'Em rota' ? 'border-blue-500' : 'border-gray-300'}"><span class="text-xs font-bold text-gray-700">${p.local}</span><span class="text-[10px] font-black uppercase">${p.status}</span></div>`;
+                });
             });
-        }
-
-        function atualizarInterfaceStatus(status) {
-            const dot = document.getElementById('statusDot');
-            const texto = document.getElementById('statusText');
-            const btnUrgente = document.getElementById('btnUrgente');
-            const btnNormal = document.getElementById('btnNormal');
-            const msgStatus = document.getElementById('msgStatus');
-
-            if (status.ocupado) {
-                dot.className = 'w-2 h-2 rounded-full bg-orange-500 animate-pulse';
-                texto.textContent = 'Entregador em rota';
-                texto.className = 'text-xs text-orange-600 font-bold';
-                btnUrgente.classList.add('hidden');
-                btnNormal.classList.add('hidden');
-                msgStatus.classList.remove('hidden');
-                msgStatus.innerHTML = '<p class="text-sm text-orange-700 font-medium">🛵 Entregador ocupado. Aguarde...</p>';
-            } else if (status.online) {
-                dot.className = 'w-2 h-2 rounded-full bg-green-500 animate-pulse';
-                texto.textContent = 'Entregador online';
-                texto.className = 'text-xs text-green-600 font-bold';
-                btnUrgente.classList.remove('hidden');
-                btnNormal.classList.remove('hidden');
-                msgStatus.classList.add('hidden');
-            } else {
-                dot.className = 'w-2 h-2 rounded-full bg-red-500';
-                texto.textContent = 'Entregador offline';
-                texto.className = 'text-xs text-red-600 font-bold';
-                btnUrgente.classList.add('hidden');
-                btnNormal.classList.add('hidden');
-                msgStatus.classList.remove('hidden');
-                msgStatus.innerHTML = '<p class="text-sm text-orange-700 font-medium">⏳ Aguardando entregador ficar online...</p>';
-            }
         }
 
         window.chamarEntregador = async (tipo) => {
-            if (!perfil) return;
-
-            try {
-                await addDoc(collection(db, "chamados"), {
-                    tipo,
-                    lojaId: perfil.id,
-                    loja: perfil.nome,
-                    zap: perfil.zap,
-                    status: "Pendente",
-                    timestamp: serverTimestamp(),
-                    visto: false
-                });
-
-                // Feedback visual
-                const btn = tipo === 'urgente' ? document.getElementById('btnUrgente') : document.getElementById('btnNormal');
-                const originalHTML = btn.innerHTML;
-                btn.innerHTML = '<div class="text-center">✓ SOLICITADO!</div>';
-                btn.classList.add('bg-green-600');
-                
-                setTimeout(() => {
-                    btn.innerHTML = originalHTML;
-                    btn.classList.remove('bg-green-600');
-                }, 2000);
-
-            } catch (erro) {
-                console.error('Erro:', erro);
-                alert('Erro ao chamar entregador. Tente novamente.');
-            }
+            await addDoc(collection(db, "chamados"), { tipo, loja: perfil.nome, zap: perfil.zap, status: "Pendente", timestamp: serverTimestamp() });
+            alert("Chamado enviado!");
         };
 
         window.adicionarEndereco = () => {
             const input = document.getElementById('inputEndereco');
-            const endereco = input.value.trim();
-
-            if (!endereco || endereco.length < 5) {
-                alert('Digite um endereço válido!');
-                return;
+            if(input.value) {
+                rascunho.push(input.value);
+                input.value = '';
+                renderRascunho();
             }
-
-            rascunho.push({
-                id: Date.now(),
-                endereco,
-                tipo: 'normal',
-                adicionadoEm: new Date().toISOString()
-            });
-
-            input.value = '';
-            salvarRascunho();
-            renderizarRascunho();
         };
 
-        window.removerEndereco = (id) => {
-            rascunho = rascunho.filter(e => e.id !== id);
-            salvarRascunho();
-            renderizarRascunho();
-        };
-
-        function salvarRascunho() {
-            localStorage.setItem('rascunho_' + perfil.id, JSON.stringify(rascunho));
-        }
-
-        function renderizarRascunho() {
+        function renderRascunho() {
             const container = document.getElementById('listaEnderecos');
-            const contador = document.getElementById('contadorLote');
-            const resumo = document.getElementById('resumoEnvio');
-            const qtdEnvio = document.getElementById('qtdEnvio');
-            const valorEstimado = document.getElementById('valorEstimado');
-
-            contador.textContent = rascunho.length;
-
-            if (rascunho.length === 0) {
-                container.innerHTML = '<p class="text-gray-400 text-center py-4 text-sm">Nenhum endereço adicionado</p>';
-                resumo.classList.add('hidden');
-                return;
-            }
-
-            container.innerHTML = '';
-            let total = 0;
-
-            rascunho.forEach((item, index) => {
-                const valor = item.tipo === 'urgente' ? 12 : 7;
-                total += valor;
-
-                const div = document.createElement('div');
-                div.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-xl';
-                div.innerHTML = `
-                    <div class="flex items-center gap-3 flex-1 min-w-0">
-                        <span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">${index + 1}</span>
-                        <span class="text-sm text-gray-700 truncate">${item.endereco}</span>
-                    </div>
-                    <button onclick="removerEndereco(${item.id})" class="text-red-500 hover:bg-red-50 p-1 rounded transition ml-2">✕</button>
-                `;
-                container.appendChild(div);
-            });
-
-            valorEstimado.textContent = `R$ ${total.toFixed(2)}`;
-            qtdEnvio.textContent = `(${rascunho.length})`;
-            resumo.classList.remove('hidden');
+            container.innerHTML = rascunho.map((e, i) => `<div class="flex justify-between p-2 bg-blue-50 rounded-lg text-sm font-bold"><span>${e}</span><button onclick="rascunho.splice(${i},1);renderRascunho()" class="text-red-500">X</button></div>`).join('');
+            document.getElementById('resumoEnvio').classList.toggle('hidden', rascunho.length === 0);
         }
 
         window.enviarLote = async () => {
-            if (rascunho.length === 0) return;
-
-            const btn = document.getElementById('btnEnviar');
-            btn.disabled = true;
-            btn.innerHTML = '⏳ Enviando...';
-
-            try {
-                const promessas = rascunho.map(item => 
-                    addDoc(collection(db, "pedidos"), {
-                        lojaId: perfil.id,
-                        loja: perfil.nome,
-                        zap: perfil.zap,
-                        local: item.endereco,
-                        tipo: item.tipo,
-                        status: "Fila",
-                        timestamp: serverTimestamp(),
-                        valorEstimado: item.tipo === 'urgente' ? 12 : 7
-                    })
-                );
-
-                await Promise.all(promessas);
-
-                // Limpar rascunho
-                rascunho = [];
-                salvarRascunho();
-                renderizarRascunho();
-
-                btn.innerHTML = '✓ ENVIADO!';
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<span>ENVIAR LOTE</span><span id="qtdEnvio">(0)</span>';
-                }, 2000);
-
-            } catch (erro) {
-                console.error('Erro:', erro);
-                alert('Erro ao enviar lote');
-                btn.disabled = false;
-                btn.innerHTML = '<span>ENVIAR LOTE</span><span id="qtdEnvio">(' + rascunho.length + ')</span>';
+            for (const local of rascunho) {
+                await addDoc(collection(db, "pedidos"), { lojaId: perfil.id, loja: perfil.nome, zap: perfil.zap, local, status: "Fila", timestamp: serverTimestamp(), valorEstimado: 7 });
             }
+            rascunho = []; renderRascunho();
         };
 
-        function renderizarMeusPedidos(docs) {
-            const container = document.getElementById('meusPedidos');
-            
-            if (docs.length === 0) {
-                container.innerHTML = '<p class="text-gray-400 text-center py-4 text-sm">Nenhum pedido ativo</p>';
-                return;
-            }
-
-            container.innerHTML = '';
-            docs.forEach(docSnap => {
-                const pedido = docSnap.data();
-                const div = document.createElement('div');
-                
-                let statusClass = 'bg-gray-100 text-gray-600';
-                let statusText = 'Na fila';
-                
-                if (pedido.status === 'Em rota') {
-                    statusClass = 'bg-blue-100 text-blue-600';
-                    statusText = '🛵 Em rota';
-                } else if (pedido.status === 'Pendente') {
-                    statusClass = 'bg-yellow-100 text-yellow-600';
-                    statusText = '⏳ Pendente';
-                }
-
-                div.className = 'p-3 bg-gray-50 rounded-xl flex justify-between items-center';
-                div.innerHTML = `
-                    <div class="flex-1 min-w-0 mr-2">
-                        <p class="text-sm font-medium text-gray-700 truncate">${pedido.local}</p>
-                        <p class="text-xs text-gray-400">${statusText}</p>
-                    </div>
-                    <span class="text-xs font-bold ${statusClass} px-2 py-1 rounded-lg">R$ ${pedido.valorEstimado || 7}</span>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // Cleanup
-        window.onbeforeunload = () => {
-            if (unsubscribeStatus) unsubscribeStatus();
-            if (unsubscribePedidos) unsubscribePedidos();
-        };
+        window.sair = () => { localStorage.removeItem('perfilLoja'); location.reload(); };
     </script>
 </body>
 </html>
