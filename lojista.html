@@ -17,33 +17,34 @@
 
         <div id="painel" class="hidden space-y-4">
             <div class="bg-white p-5 rounded-3xl shadow-md flex justify-between items-center border-b-4 border-blue-600">
-                <h1 id="exibirNome" class="font-black text-blue-900 uppercase italic text-sm italic"></h1>
-                <span id="stStatus" class="text-[9px] font-black p-2 rounded-lg italic text-white bg-gray-400 uppercase tracking-tighter">Carregando...</span>
+                <h1 id="exibirNome" class="font-black text-blue-900 uppercase italic text-sm"></h1>
+                <span id="stStatus" class="text-[9px] font-black p-2 rounded-lg italic text-white bg-gray-400 uppercase">...</span>
             </div>
 
-            <div class="bg-white p-6 rounded-[30px] shadow-xl border border-gray-100 relative">
-                <h3 class="font-black text-gray-400 text-[10px] uppercase italic mb-4 tracking-widest italic">Nova Entrega</h3>
+            <button onclick="chamarMarcelo()" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 text-xs uppercase italic animate-pulse">
+                📱 CHAMAR MARCELO NO ZAP
+            </button>
+
+            <div class="bg-white p-6 rounded-[30px] shadow-xl relative">
+                <h3 class="font-black text-gray-400 text-[10px] uppercase italic mb-4">Nova Entrega</h3>
                 
                 <div class="relative mb-3">
                     <input id="inputEnd" autocomplete="off" placeholder="Digite a rua e número..." 
-                        class="w-full p-5 bg-blue-50 rounded-2xl border-2 border-transparent focus:border-blue-500 font-bold outline-none transition-all text-sm"
+                        class="w-full p-5 bg-blue-50 rounded-2xl font-bold outline-none text-sm"
                         oninput="autoCompletar(this.value)">
-                    
                     <div id="sugestoes" class="absolute z-50 w-full bg-white shadow-2xl rounded-2xl mt-1 hidden border border-gray-100 overflow-hidden"></div>
                 </div>
 
-                <div class="flex gap-2 mb-3">
-                    <select id="bairro" class="flex-1 p-4 bg-gray-50 rounded-2xl border-2 border-gray-100 font-black text-blue-900 outline-none text-[10px] uppercase italic">
-                        <option value="CENTRO">📍 CENTRO</option>
-                        <option value="VILA CAMPANTE">📍 VILA CAMPANTE</option>
-                        <option value="VILA SÃO JOSÉ">📍 VILA SÃO JOSÉ</option>
-                        <option value="JD. DAS FLORES">📍 JD. DAS FLORES</option>
-                        <option value="JD. AMÉRICA">📍 JD. AMÉRICA</option>
-                        <option value="JD. EUROPA">📍 JD. EUROPA</option>
-                        <option value="OUTROS/RURAL">📍 OUTROS / RURAL</option>
-                        <option value="POMPÉIA">📍 POMPÉIA (GERAL)</option>
-                    </select>
-                </div>
+                <select id="bairro" class="w-full p-4 mb-3 bg-gray-50 rounded-2xl border-2 border-gray-100 font-black text-blue-900 outline-none text-[10px] uppercase italic">
+                    <option value="CENTRO">📍 CENTRO</option>
+                    <option value="VILA CAMPANTE">📍 VILA CAMPANTE</option>
+                    <option value="VILA SÃO JOSÉ">📍 VILA SÃO JOSÉ</option>
+                    <option value="JD. DAS FLORES">📍 JD. DAS FLORES</option>
+                    <option value="JD. AMÉRICA">📍 JD. AMÉRICA</option>
+                    <option value="JD. EUROPA">📍 JD. EUROPA</option>
+                    <option value="OUTROS/RURAL">📍 OUTROS / RURAL</option>
+                    <option value="POMPÉIA">📍 POMPÉIA (GERAL)</option>
+                </select>
 
                 <div class="grid grid-cols-2 gap-2 mb-4">
                     <select id="pagamento" class="bg-gray-50 p-4 rounded-xl font-black text-[10px] outline-none border-2 border-gray-100 uppercase italic">
@@ -52,14 +53,12 @@
                         <option value="MAQUININHA">MAQUININHA 💳</option>
                         <option value="PIX NA ENTREGA">PIX ENTREGA 📱</option>
                     </select>
-                    <input id="trocoPara" type="number" placeholder="Troco R$?" class="bg-gray-50 p-4 rounded-xl font-bold text-[10px] outline-none border-2 border-gray-100">
+                    <input id="trocoPara" type="number" placeholder="Troco R$?" class="bg-gray-50 p-4 rounded-xl font-bold text-[10px] border-2 border-gray-100">
                 </div>
 
-                <button onclick="addLista()" class="w-full bg-slate-800 text-white font-black py-4 rounded-2xl mb-4 italic hover:bg-black transition-all">+ ADICIONAR NO LOTE</button>
-                
-                <div id="listaRascunho" class="space-y-2 max-h-60 overflow-y-auto"></div>
-                
-                <button id="btnEnviarLote" onclick="enviarLote()" class="hidden w-full bg-green-600 text-white font-black py-5 rounded-2xl mt-4 shadow-lg uppercase italic text-sm animate-pulse">Enviar Tudo para o Marcelo ✅</button>
+                <button onclick="addLista()" class="w-full bg-slate-800 text-white font-black py-4 rounded-2xl mb-4 italic">+ ADICIONAR NO LOTE</button>
+                <div id="listaRascunho" class="space-y-2"></div>
+                <button id="btnEnviarLote" onclick="enviarLote()" class="hidden w-full bg-green-600 text-white font-black py-5 rounded-2xl mt-4 shadow-lg uppercase italic text-sm">Enviar para o Marcelo ✅</button>
             </div>
         </div>
     </div>
@@ -82,67 +81,46 @@
                 onSnapshot(doc(db, "config", "status"), (d) => {
                     const s = d.data() || {};
                     const el = document.getElementById('stStatus');
-                    el.innerText = s.online ? (s.ocupado ? "MARCELO EM ROTA 🛵" : "MARCELO ONLINE 🟢") : "MARCELO OFFLINE 🔴";
-                    el.className = `text-[9px] font-black p-2 rounded-lg italic text-white ${s.online ? 'bg-green-600' : 'bg-red-600'}`;
+                    el.innerText = s.online ? (s.ocupado ? "ROTA 🛵" : "ONLINE 🟢") : "OFFLINE 🔴";
+                    el.className = `text-[9px] font-black p-2 rounded-lg text-white ${s.online ? 'bg-green-600' : 'bg-red-600'}`;
                 });
             }
         };
 
-        // AUTO-COMPLETAR COM TRAVA REGIONAL (Quintana e Pompéia)
+        window.chamarMarcelo = () => {
+            const msg = encodeURIComponent(`Olá Marcelo! Temos entregas aqui na *${dadosLoja.nome}*. Pode vir buscar?`);
+            window.open(`https://wa.me/5514991234567?text=${msg}`); // <-- COLOQUE SEU NÚMERO AQUI
+        };
+
         window.autoCompletar = async (texto) => {
             const lista = document.getElementById('sugestoes');
             if (texto.length < 3) { lista.classList.add('hidden'); return; }
-
             try {
-                // Coordenadas aproximadas para focar a busca na sua região
-                const focoRegiao = "&viewbox=-50.35,-22.10,-50.00,-21.85&bounded=1";
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(texto)}${focoRegiao}&limit=5&countrycodes=br`);
+                const foco = "&viewbox=-50.35,-22.10,-50.00,-21.85&bounded=1";
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(texto)}${foco}&limit=4&countrycodes=br`);
                 const data = await res.json();
-
                 if (data.length > 0) {
                     lista.innerHTML = data.map(item => {
                         const rua = item.address.road || item.display_name.split(',')[0];
                         const bairro = item.address.suburb || item.address.neighbourhood || 'Centro';
-                        const cidade = item.address.city || item.address.town || '';
-                        return `
-                        <div onclick="selecionarEnd('${rua}', '${bairro}', '${cidade}')" 
-                             class="p-4 border-b border-gray-50 hover:bg-blue-50 cursor-pointer transition-all">
-                            <p class="text-[11px] font-black text-blue-900 uppercase italic">${rua}</p>
-                            <p class="text-[9px] font-bold text-gray-400 uppercase italic">${bairro} - ${cidade}</p>
-                        </div>`;
+                        return `<div onclick="selecionarEnd('${rua}', '${bairro}')" class="p-4 border-b border-gray-50 hover:bg-blue-50 cursor-pointer italic text-xs font-black uppercase">${rua} <br><span class="text-[9px] text-gray-400">${bairro}</span></div>`;
                     }).join('');
                     lista.classList.remove('hidden');
-                } else {
-                    lista.classList.add('hidden');
-                }
-            } catch (e) { console.log("Erro na busca"); }
+                } else { lista.classList.add('hidden'); }
+            } catch (e) { }
         };
 
-        window.selecionarEnd = (rua, bairro, cidade) => {
+        window.selecionarEnd = (rua, bairro) => {
             document.getElementById('inputEnd').value = rua + ", ";
             const selBairro = document.getElementById('bairro');
-            const bUpper = bairro.toUpperCase();
-            
-            // Busca automática de bairro no seletor
-            let achou = false;
             for (let i = 0; i < selBairro.options.length; i++) {
-                if (bUpper.includes(selBairro.options[i].value)) {
-                    selBairro.selectedIndex = i;
-                    achou = true; break;
+                if (bairro.toUpperCase().includes(selBairro.options[i].value)) {
+                    selBairro.selectedIndex = i; break;
                 }
             }
-            if (!achou && cidade.toUpperCase().includes("POMPÉIA")) selBairro.value = "POMPÉIA";
-            
             document.getElementById('sugestoes').classList.add('hidden');
             document.getElementById('inputEnd').focus();
         };
-
-        // Fecha a lista se clicar fora do campo
-        document.addEventListener('click', (e) => {
-            if (!document.getElementById('inputEnd').contains(e.target)) {
-                document.getElementById('sugestoes').classList.add('hidden');
-            }
-        });
 
         window.salvarLoja = () => {
             const n = document.getElementById('nLoja').value;
@@ -155,43 +133,28 @@
             const bairro = document.getElementById('bairro').value;
             const pag = document.getElementById('pagamento').value;
             const troco = document.getElementById('trocoPara').value;
-            
             if(rua) {
                 let infoPag = pag;
                 if(pag === "DINHEIRO" && troco) infoPag += ` (Troco R$ ${troco})`;
                 rascunho.push({ local: `${rua}, ${bairro}`, bairro, pag: infoPag });
-                document.getElementById('inputEnd').value = '';
-                document.getElementById('trocoPara').value = '';
-                render();
+                document.getElementById('inputEnd').value = ''; render();
             }
         };
 
         function render() {
-            const listaDiv = document.getElementById('listaRascunho');
-            listaDiv.innerHTML = rascunho.map((e, i) => `
-                <div class="p-3 bg-gray-50 rounded-xl border-l-4 border-blue-600 flex justify-between items-center shadow-sm">
-                    <div>
-                        <p class="font-black text-[11px] uppercase italic">${e.local}</p>
-                        <p class="text-[9px] font-black text-blue-500 italic">${e.pag}</p>
-                    </div>
-                    <button onclick="rascunho.splice(${i},1);render()" class="text-red-500 font-black px-3 py-1">X</button>
+            document.getElementById('listaRascunho').innerHTML = rascunho.map((e, i) => `
+                <div class="p-3 bg-gray-50 rounded-xl border-l-4 border-blue-600 flex justify-between items-center text-[10px] font-black uppercase italic">
+                    <span>${e.local} (${e.pag})</span>
+                    <button onclick="rascunho.splice(${i},1);render()" class="text-red-500 px-2">X</button>
                 </div>`).join('');
             document.getElementById('btnEnviarLote').classList.toggle('hidden', rascunho.length === 0);
         }
 
         window.enviarLote = async () => {
-            const btn = document.getElementById('btnEnviarLote');
-            btn.innerText = "ENVIANDO..."; btn.disabled = true;
             for (const item of rascunho) {
-                await addDoc(collection(db, "pedidos"), {
-                    loja: dadosLoja.nome, zap: dadosLoja.zap,
-                    local: item.local, bairro: item.bairro,
-                    pag: item.pag, status: "Fila", hora: Date.now()
-                });
+                await addDoc(collection(db, "pedidos"), { loja: dadosLoja.nome, zap: dadosLoja.zap, local: item.local, bairro: item.bairro, pag: item.pag, status: "Fila", hora: Date.now() });
             }
-            rascunho = []; render(); 
-            btn.innerText = "ENVIAR TUDO PARA O MARCELO ✅"; btn.disabled = false;
-            alert("Lote enviado com sucesso!");
+            rascunho = []; render(); alert("Enviado com sucesso!");
         };
     </script>
 </body>
