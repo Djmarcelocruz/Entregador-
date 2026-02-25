@@ -3,144 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Entregador - Marcelo Entregas</title>
+    <title>Entregador - Marcelo</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-4 pb-24 font-sans text-slate-900">
+<body class="bg-slate-100 p-4 pb-24 font-sans text-slate-900">
     <div class="max-w-md mx-auto">
         
         <div class="bg-white p-4 rounded-3xl shadow-lg mb-4 flex justify-around border-b-4 border-blue-600">
             <div class="text-center">
-                <p class="text-[9px] font-black text-gray-400 uppercase">Entregas Hoje</p>
+                <p class="text-[9px] font-black text-gray-400 uppercase italic">Concluídas</p>
                 <p id="totalDia" class="text-2xl font-black text-blue-600">0</p>
             </div>
-            <div class="border-l pl-6 text-center">
-                <p class="text-[9px] font-black text-gray-400 uppercase italic">Status</p>
-                <div id="stTrabalho" class="text-xs font-black uppercase mt-1 italic italic">...</div>
+            <div class="text-center">
+                <p class="text-[9px] font-black text-gray-400 uppercase italic">Meu Status</p>
+                <div id="stTrabalho" class="text-xs font-black uppercase italic">...</div>
             </div>
         </div>
 
-        <div id="listaChamadas" class="mb-6 space-y-2"></div>
+        <div id="listaChamadas" class="mb-4 space-y-2"></div>
 
         <div class="flex gap-2 mb-6">
-            <button onclick="mudarSt('online')" id="btnOn" class="flex-1 py-4 rounded-2xl font-black text-sm uppercase transition-all"></button>
-            <button onclick="mudarSt('ocupado')" id="btnOcu" class="flex-1 py-4 rounded-2xl font-black text-sm uppercase transition-all"></button>
-        </div>
-
-        <div id="proximaParada" class="hidden sticky top-2 z-50 mb-8">
-            <div class="bg-slate-900 text-white p-5 rounded-[25px] shadow-2xl border-4 border-blue-500">
-                <p class="text-[9px] font-black uppercase text-blue-400 italic mb-1 italic">Próxima Entrega 🏍️</p>
-                <p id="destEnd" class="text-sm font-black uppercase italic mb-4 leading-tight italic"></p>
-                <a id="destMaps" href="#" target="_blank" class="block bg-green-500 text-white text-center py-4 rounded-xl font-black text-sm italic shadow-lg active:scale-95 transition-all">ABRIR MAPA 📍</a>
-            </div>
+            <button onclick="mudarSt('online')" id="btnOn" class="flex-1 py-4 rounded-2xl font-black text-xs shadow-sm"></button>
+            <button onclick="mudarSt('ocupado')" id="btnOcu" class="flex-1 py-4 rounded-2xl font-black text-xs shadow-sm"></button>
         </div>
 
         <div id="entregas" class="space-y-6"></div>
     </div>
 
+    <audio id="somAlerta" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
         let stLocal = { online: false, ocupado: false };
         let relatorioMemoria = JSON.parse(localStorage.getItem('relatorioMemoria')) || {};
-        let contador = parseInt(localStorage.getItem('contadorMarcelo')) || 0;
-        document.getElementById('totalDia').innerText = contador;
+        let ultimaQtdChamados = 0;
 
-        const ordemFiltro = { "OUTROS/RURAL": 1, "JD. EUROPA": 2, "JD. AMÉRICA": 3, "JD. DAS FLORES": 4, "VILA SÃO JOSÉ": 5, "VILA CAMPANTE": 6, "CENTRO": 7 };
+        const atualizarContador = () => {
+            let total = 0;
+            for(let loja in relatorioMemoria) total += relatorioMemoria[loja].itens.length;
+            document.getElementById('totalDia').innerText = total;
+        };
 
-        // MONITORAR CHAMADOS DAS LOJAS
+        // MONITORAR CHAMADOS COM SOM
         onSnapshot(collection(db, "chamadas"), (snaps) => {
             const div = document.getElementById('listaChamadas');
             div.innerHTML = '';
+            
+            if (snaps.size > ultimaQtdChamados) {
+                document.getElementById('somAlerta').play().catch(e => {}); // Toca alerta se chegar novo
+            }
+            ultimaQtdChamados = snaps.size;
+
             snaps.forEach(d => {
-                const c = { id: d.id, ...d.data() };
-                div.innerHTML += `
-                    <div class="bg-orange-500 text-white p-4 rounded-2xl flex justify-between items-center shadow-lg animate-pulse">
-                        <span class="font-black text-[10px] italic">🔔 CHAMADO: ${c.loja.toUpperCase()}</span>
-                        <button onclick="removerChamado('${c.id}')" class="bg-white text-orange-600 px-3 py-1 rounded-lg font-black text-[10px]">OK</button>
+                const c = d.data();
+                if(c.status === "Pendente") {
+                    div.innerHTML += `
+                    <div class="bg-orange-500 text-white p-4 rounded-2xl flex justify-between items-center shadow-xl animate-pulse mb-2 border-2 border-orange-300">
+                        <div class="flex flex-col"><span class="font-black text-xs italic">🔔 ${c.loja} CHAMOU!</span><span class="text-[8px] font-bold opacity-90 uppercase">${c.enderecoLoja || ''}</span></div>
+                        <button onclick="confirmarLeitura('${d.id}')" class="bg-white text-orange-600 px-5 py-3 rounded-xl font-black text-[10px] shadow-lg">OK, VI!</button>
                     </div>`;
+                } else {
+                    div.innerHTML += `
+                    <div class="bg-slate-800 text-white p-3 rounded-xl flex justify-between items-center mb-2 border-l-8 border-green-500">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-black uppercase italic">${c.loja}</span>
+                            <a href="tel:${c.zap}" class="text-[8px] text-blue-300 font-bold underline">📞 Ligar para Loja</a>
+                        </div>
+                        <button onclick="finalizarChamado('${d.id}')" class="bg-red-500 text-white px-3 py-2 rounded-lg font-black text-[9px] uppercase italic">COLETEI</button>
+                    </div>`;
+                }
             });
         });
 
-        window.removerChamado = async (id) => await deleteDoc(doc(db, "chamadas", id));
+        window.confirmarLeitura = async (id) => await updateDoc(doc(db, "chamadas", id), { status: "Visualizado" });
+        window.finalizarChamado = async (id) => await deleteDoc(doc(db, "chamadas", id));
 
         onSnapshot(doc(db, "config", "status"), (d) => {
             stLocal = d.data() || { online: false, ocupado: false };
-            const bOn = document.getElementById('btnOn');
-            const bOc = document.getElementById('btnOcu');
-            document.getElementById('stTrabalho').innerText = stLocal.online ? (stLocal.ocupado ? "ROTA 🛵" : "LIVRE ✅") : "OFFLINE 🔴";
-            bOn.innerText = stLocal.online ? "🟢 ONLINE" : "⚪ OFFLINE";
-            bOn.className = `flex-1 py-4 font-black rounded-2xl ${stLocal.online ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`;
-            bOc.innerText = stLocal.ocupado ? "🛵 ROTA" : "✅ LIVRE";
-            bOc.className = `flex-1 py-4 font-black rounded-2xl ${stLocal.ocupado ? 'bg-orange-500 text-white' : 'bg-blue-100 text-blue-600'}`;
+            document.getElementById('stTrabalho').innerText = stLocal.online ? (stLocal.ocupado ? "ROTA 🛵" : "LIVRE ✅") : "OFF 🔴";
+            document.getElementById('btnOn').innerText = stLocal.online ? "🟢 ONLINE" : "⚪ OFFLINE";
+            document.getElementById('btnOcu').innerText = stLocal.ocupado ? "🛵 EM ROTA" : "✅ LIVRE";
+            document.getElementById('btnOn').className = `flex-1 py-4 font-black rounded-2xl transition-all ${stLocal.online ? 'bg-green-600 text-white shadow-lg' : 'bg-gray-300 text-gray-500'}`;
+            document.getElementById('btnOcu').className = `flex-1 py-4 font-black rounded-2xl transition-all ${stLocal.ocupado ? 'bg-orange-600 text-white shadow-lg' : 'bg-blue-50 text-blue-600'}`;
         });
 
         window.mudarSt = (tipo) => setDoc(doc(db, "config", "status"), { ...stLocal, [tipo]: !stLocal[tipo] });
 
         onSnapshot(collection(db, "pedidos"), (snaps) => {
-            let lojas = {}; let listaOrd = [];
-            snaps.forEach(d => {
-                const p = { id: d.id, ...d.data() };
-                if(!lojas[p.loja]) lojas[p.loja] = [];
-                lojas[p.loja].push(p); listaOrd.push(p);
-            });
-            listaOrd.sort((a, b) => (ordemFiltro[a.bairro] || 99) - (ordemFiltro[b.bairro] || 99));
+            let lojasComPedidos = new Set();
+            let pedidosPorLoja = {};
             
-            if(listaOrd.length > 0) {
-                document.getElementById('destEnd').innerText = listaOrd[0].local;
-                document.getElementById('destMaps').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listaOrd[0].local + ', Quintana - SP')}`;
-                document.getElementById('proximaParada').classList.remove('hidden');
-            } else { document.getElementById('proximaParada').classList.add('hidden'); }
+            snaps.forEach(d => {
+                const p = {id: d.id, ...d.data()};
+                lojasComPedidos.add(p.loja);
+                if(!pedidosPorLoja[p.loja]) pedidosPorLoja[p.loja] = [];
+                pedidosPorLoja[p.loja].push(p);
+            });
 
             const divGeral = document.getElementById('entregas');
-            divGeral.innerHTML = snaps.size ? '' : '<div class="text-center py-20 text-gray-400 font-bold text-[10px] italic">AGUARDANDO PEDIDOS...</div>';
+            divGeral.innerHTML = '';
             
-            for (let l in lojas) {
-                const cardId = l.replace(/\s+/g, '');
+            for (let l in pedidosPorLoja) {
                 divGeral.innerHTML += `
-                <div id="card-${cardId}" class="bg-white rounded-[30px] shadow-xl mb-6 overflow-hidden border-t-8 border-blue-600 p-4">
-                    <h2 class="font-black text-blue-900 uppercase italic mb-4 text-xs italic">${l}</h2>
+                <div class="bg-white rounded-[30px] shadow-xl mb-6 p-4 border-t-8 border-blue-600">
+                    <h2 class="font-black text-blue-900 uppercase italic mb-4 text-xs italic flex justify-between">${l} <span>${pedidosPorLoja[l].length} itens</span></h2>
                     <div class="space-y-3">
-                        ${lojas[l].map(p => `
-                            <div class="pedido-item p-3 bg-gray-50 rounded-2xl border-l-4 ${p.pag.includes('PAGO') ? 'border-green-500' : 'border-orange-500'}">
-                                <div class="flex justify-between items-start">
-                                    <p class="text-[11px] font-black uppercase italic">${p.local}</p>
-                                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.local + ', Quintana - SP')}" target="_blank" class="ml-2 bg-blue-600 text-white p-2 rounded-lg text-[9px] font-black">MAPA</a>
-                                </div>
-                                <p class="text-[9px] font-bold italic mb-2 ${p.pag.includes('PAGO') ? 'text-green-600' : 'text-orange-600'} italic">💰 ${p.pag}</p>
+                        ${pedidosPorLoja[l].map(p => `
+                            <div class="p-3 bg-gray-50 rounded-2xl border-l-4 ${p.pag.includes('PAGO') ? 'border-green-500' : 'border-orange-500'} shadow-sm">
+                                <p class="text-[11px] font-black uppercase italic">${p.local}</p>
+                                <p class="text-[9px] font-bold mb-2 text-slate-400 italic">💰 ${p.pag}</p>
                                 <div class="flex gap-2">
-                                    <input type="text" id="rec-${p.id}" placeholder="Quem recebeu?" class="flex-1 p-2 rounded-xl border border-gray-200 text-[10px] font-bold outline-none">
-                                    <button onclick="concluirEntrega('${p.id}', '${l}', '${p.local}', '${p.zap}', '${p.pag}')" class="bg-green-500 text-white px-5 rounded-xl font-black italic shadow-md">✓</button>
+                                    <input id="rec-${p.id}" placeholder="Recebedor?" class="flex-1 p-2 rounded-xl border text-[10px] font-bold outline-none focus:border-green-400">
+                                    <button onclick="concluirEntrega('${p.id}', '${l}', '${p.local}', '${p.zap}', '${p.pag}')" class="bg-green-600 text-white px-6 rounded-xl font-black italic shadow-md active:scale-90">✓</button>
                                 </div>
                             </div>`).join('')}
                     </div>
-                    <div id="containerBtn-${cardId}" class="mt-4 ${relatorioMemoria[l] && (!lojas[l] || lojas[l].length === 0) ? '' : 'hidden'}">
-                        <button onclick="enviarRelatorioZap('${l}')" class="w-full bg-purple-600 text-white font-black py-5 uppercase italic text-xs rounded-2xl animate-bounce">Enviar Fechamento WhatsApp</button>
-                    </div>
                 </div>`;
             }
+
+            for (let lojaRelatorio in relatorioMemoria) {
+                if (!lojasComPedidos.has(lojaRelatorio)) {
+                    divGeral.innerHTML += `
+                    <div class="bg-purple-600 rounded-[30px] p-6 shadow-2xl text-center mb-10">
+                        <p class="font-black text-white text-[11px] mb-4 uppercase italic">🏁 ${lojaRelatorio} finalizada!</p>
+                        <button onclick="enviarRelatorioZap('${lojaRelatorio}')" class="w-full bg-white text-purple-700 font-black py-5 uppercase italic text-xs rounded-2xl shadow-xl animate-bounce">ENVIAR FECHAMENTO NO WHATSAPP</button>
+                    </div>`;
+                }
+            }
+            atualizarContador();
         });
 
         window.concluirEntrega = async (id, loja, local, zap, pag) => {
-            const quem = document.getElementById(`rec-${id}`).value || "Não informado";
+            const quem = document.getElementById(`rec-${id}`).value || "N/I";
             const hora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
             if(!relatorioMemoria[loja]) relatorioMemoria[loja] = { zap, itens: [] };
-            relatorioMemoria[loja].itens.push(`✅ *${local}*\n💰 Pag: ${pag}\n👤 Rec: ${quem} | ⏰ ${hora}`);
+            relatorioMemoria[loja].itens.push(`✅ *${local}*\n💰 ${pag}\n👤 Rec: ${quem} | ⏰ ${hora}`);
             localStorage.setItem('relatorioMemoria', JSON.stringify(relatorioMemoria));
-            contador++; localStorage.setItem('contadorMarcelo', contador);
-            document.getElementById('totalDia').innerText = contador;
             await deleteDoc(doc(db, "pedidos", id));
         };
 
         window.enviarRelatorioZap = (loja) => {
             const r = relatorioMemoria[loja];
-            const msg = `*FECHAMENTO MARCELO*\n*LOJA:* ${loja.toUpperCase()}\n\n${r.itens.join('\n\n')}`;
+            const msg = `*FECHAMENTO MARCELO*\n*LOJA:* ${loja.toUpperCase()}\n\n${r.itens.join('\n\n')}\n\n*TOTAL: ${r.itens.length} ENTREGAS*`;
             window.open(`https://wa.me/55${r.zap}?text=${encodeURIComponent(msg)}`);
-            delete relatorioMemoria[loja]; localStorage.setItem('relatorioMemoria', JSON.stringify(relatorioMemoria));
+            delete relatorioMemoria[loja]; 
+            localStorage.setItem('relatorioMemoria', JSON.stringify(relatorioMemoria));
             setTimeout(() => location.reload(), 500);
         };
     </script>
