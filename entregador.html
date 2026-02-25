@@ -3,34 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Entregador - Marcelo</title>
+    <title>Marcelo Entregas</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-100 p-4 pb-24 font-sans text-slate-900">
+<body class="bg-slate-100 p-4">
     <div class="max-w-md mx-auto">
-        
-        <div class="bg-white p-4 rounded-3xl shadow-lg mb-4 flex justify-around border-b-4 border-blue-600">
-            <div class="text-center">
-                <p class="text-[9px] font-black text-gray-400 uppercase italic">Concluídas</p>
-                <p id="totalDia" class="text-2xl font-black text-blue-600">0</p>
-            </div>
-            <div class="text-center">
-                <p class="text-[9px] font-black text-gray-400 uppercase italic">Meu Status</p>
-                <div id="stTrabalho" class="text-xs font-black uppercase italic">...</div>
-            </div>
+        <div id="avisoSom" class="bg-blue-600 text-white p-4 rounded-2xl mb-4 text-center font-black animate-pulse cursor-pointer" onclick="this.remove()">
+            CLIQUE AQUI PARA ATIVAR O SOM 🔊
+        </div>
+
+        <div class="bg-white p-4 rounded-3xl shadow-lg mb-4 flex justify-around">
+            <div class="text-center"><p class="text-[9px] font-black italic">CONCLUÍDAS</p><p id="totalDia" class="text-2xl font-black text-blue-600">0</p></div>
+            <div class="text-center"><p class="text-[9px] font-black italic">MEU STATUS</p><div id="stTrabalho" class="text-xs font-black uppercase">...</div></div>
         </div>
 
         <div id="listaChamadas" class="mb-4 space-y-2"></div>
-
-        <div class="flex gap-2 mb-6">
-            <button onclick="mudarSt('online')" id="btnOn" class="flex-1 py-4 rounded-2xl font-black text-xs shadow-sm"></button>
-            <button onclick="mudarSt('ocupado')" id="btnOcu" class="flex-1 py-4 rounded-2xl font-black text-xs shadow-sm"></button>
-        </div>
-
         <div id="entregas" class="space-y-6"></div>
     </div>
 
-    <audio id="somAlerta" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+    <audio id="som" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -39,122 +30,95 @@
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
-        let stLocal = { online: false, ocupado: false };
-        let relatorioMemoria = JSON.parse(localStorage.getItem('relatorioMemoria')) || {};
-        let ultimaQtdChamados = 0;
+        let memoriaRelatorio = JSON.parse(localStorage.getItem('relatorio_marcelo')) || {};
+        let ultimaQtd = 0;
 
-        const atualizarContador = () => {
-            let total = 0;
-            for(let loja in relatorioMemoria) total += relatorioMemoria[loja].itens.length;
-            document.getElementById('totalDia').innerText = total;
-        };
-
-        // MONITORAR CHAMADOS COM SOM
+        // Monitorar Chamadas
         onSnapshot(collection(db, "chamadas"), (snaps) => {
             const div = document.getElementById('listaChamadas');
             div.innerHTML = '';
-            
-            if (snaps.size > ultimaQtdChamados) {
-                document.getElementById('somAlerta').play().catch(e => {}); // Toca alerta se chegar novo
-            }
-            ultimaQtdChamados = snaps.size;
+            if(snaps.size > ultimaQtd) { document.getElementById('som').play().catch(()=>{}); }
+            ultimaQtd = snaps.size;
 
             snaps.forEach(d => {
                 const c = d.data();
                 if(c.status === "Pendente") {
-                    div.innerHTML += `
-                    <div class="bg-orange-500 text-white p-4 rounded-2xl flex justify-between items-center shadow-xl animate-pulse mb-2 border-2 border-orange-300">
-                        <div class="flex flex-col"><span class="font-black text-xs italic">🔔 ${c.loja} CHAMOU!</span><span class="text-[8px] font-bold opacity-90 uppercase">${c.enderecoLoja || ''}</span></div>
-                        <button onclick="confirmarLeitura('${d.id}')" class="bg-white text-orange-600 px-5 py-3 rounded-xl font-black text-[10px] shadow-lg">OK, VI!</button>
-                    </div>`;
+                    div.innerHTML += `<div class="bg-orange-500 text-white p-4 rounded-2xl flex justify-between items-center shadow-lg mb-2 border-2 border-white"><div><p class="font-black text-xs">🔔 ${c.loja}</p><p class="text-[8px] uppercase">${c.enderecoLoja}</p></div><button onclick="ver('${d.id}')" class="bg-white text-orange-600 px-4 py-2 rounded-xl font-black text-xs">OK!</button></div>`;
                 } else {
-                    div.innerHTML += `
-                    <div class="bg-slate-800 text-white p-3 rounded-xl flex justify-between items-center mb-2 border-l-8 border-green-500">
-                        <div class="flex flex-col">
-                            <span class="text-[10px] font-black uppercase italic">${c.loja}</span>
-                            <a href="tel:${c.zap}" class="text-[8px] text-blue-300 font-bold underline">📞 Ligar para Loja</a>
-                        </div>
-                        <button onclick="finalizarChamado('${d.id}')" class="bg-red-500 text-white px-3 py-2 rounded-lg font-black text-[9px] uppercase italic">COLETEI</button>
-                    </div>`;
+                    div.innerHTML += `<div class="bg-slate-800 text-white p-3 rounded-xl flex justify-between items-center mb-2 border-l-8 border-green-500"><div class="text-[9px] font-black uppercase">${c.loja}</div><button onclick="limpar('${d.id}')" class="bg-red-500 px-3 py-1 rounded text-[8px]">COLETEI</button></div>`;
                 }
             });
         });
 
-        window.confirmarLeitura = async (id) => await updateDoc(doc(db, "chamadas", id), { status: "Visualizado" });
-        window.finalizarChamado = async (id) => await deleteDoc(doc(db, "chamadas", id));
+        window.ver = async (id) => await updateDoc(doc(db, "chamadas", id), { status: "Visualizado" });
+        window.limpar = async (id) => await deleteDoc(doc(db, "chamadas", id));
 
-        onSnapshot(doc(db, "config", "status"), (d) => {
-            stLocal = d.data() || { online: false, ocupado: false };
-            document.getElementById('stTrabalho').innerText = stLocal.online ? (stLocal.ocupado ? "ROTA 🛵" : "LIVRE ✅") : "OFF 🔴";
-            document.getElementById('btnOn').innerText = stLocal.online ? "🟢 ONLINE" : "⚪ OFFLINE";
-            document.getElementById('btnOcu').innerText = stLocal.ocupado ? "🛵 EM ROTA" : "✅ LIVRE";
-            document.getElementById('btnOn').className = `flex-1 py-4 font-black rounded-2xl transition-all ${stLocal.online ? 'bg-green-600 text-white shadow-lg' : 'bg-gray-300 text-gray-500'}`;
-            document.getElementById('btnOcu').className = `flex-1 py-4 font-black rounded-2xl transition-all ${stLocal.ocupado ? 'bg-orange-600 text-white shadow-lg' : 'bg-blue-50 text-blue-600'}`;
-        });
-
-        window.mudarSt = (tipo) => setDoc(doc(db, "config", "status"), { ...stLocal, [tipo]: !stLocal[tipo] });
-
+        // Monitorar Pedidos
         onSnapshot(collection(db, "pedidos"), (snaps) => {
-            let lojasComPedidos = new Set();
-            let pedidosPorLoja = {};
-            
+            let porLoja = {};
             snaps.forEach(d => {
                 const p = {id: d.id, ...d.data()};
-                lojasComPedidos.add(p.loja);
-                if(!pedidosPorLoja[p.loja]) pedidosPorLoja[p.loja] = [];
-                pedidosPorLoja[p.loja].push(p);
+                if(!porLoja[p.loja]) porLoja[p.loja] = [];
+                porLoja[p.loja].push(p);
             });
 
             const divGeral = document.getElementById('entregas');
             divGeral.innerHTML = '';
             
-            for (let l in pedidosPorLoja) {
+            for (let loja in porLoja) {
                 divGeral.innerHTML += `
-                <div class="bg-white rounded-[30px] shadow-xl mb-6 p-4 border-t-8 border-blue-600">
-                    <h2 class="font-black text-blue-900 uppercase italic mb-4 text-xs italic flex justify-between">${l} <span>${pedidosPorLoja[l].length} itens</span></h2>
+                <div class="bg-white rounded-3xl shadow-xl mb-6 p-4 border-t-8 border-blue-600">
+                    <h2 class="font-black text-blue-900 mb-4 text-xs italic uppercase">${loja}</h2>
                     <div class="space-y-3">
-                        ${pedidosPorLoja[l].map(p => `
-                            <div class="p-3 bg-gray-50 rounded-2xl border-l-4 ${p.pag.includes('PAGO') ? 'border-green-500' : 'border-orange-500'} shadow-sm">
-                                <p class="text-[11px] font-black uppercase italic">${p.local}</p>
-                                <p class="text-[9px] font-bold mb-2 text-slate-400 italic">💰 ${p.pag}</p>
-                                <div class="flex gap-2">
-                                    <input id="rec-${p.id}" placeholder="Recebedor?" class="flex-1 p-2 rounded-xl border text-[10px] font-bold outline-none focus:border-green-400">
-                                    <button onclick="concluirEntrega('${p.id}', '${l}', '${p.local}', '${p.zap}', '${p.pag}')" class="bg-green-600 text-white px-6 rounded-xl font-black italic shadow-md active:scale-90">✓</button>
-                                </div>
-                            </div>`).join('')}
+                        ${porLoja[loja].map(p => `
+                        <div class="p-3 bg-gray-50 rounded-2xl border-l-4 border-orange-500">
+                            <p class="text-[10px] font-black uppercase">${p.local}</p>
+                            <p class="text-[8px] font-bold text-gray-400 mb-2">${p.pag}</p>
+                            <div class="flex gap-2">
+                                <input id="rec-${p.id}" placeholder="Quem recebeu?" class="flex-1 p-2 rounded-lg border text-[10px]">
+                                <button onclick="concluir('${p.id}','${loja}','${p.local}','${p.zap}','${p.pag}')" class="bg-green-600 text-white px-4 rounded-xl font-black">✓</button>
+                            </div>
+                        </div>`).join('')}
                     </div>
                 </div>`;
             }
 
-            for (let lojaRelatorio in relatorioMemoria) {
-                if (!lojasComPedidos.has(lojaRelatorio)) {
-                    divGeral.innerHTML += `
-                    <div class="bg-purple-600 rounded-[30px] p-6 shadow-2xl text-center mb-10">
-                        <p class="font-black text-white text-[11px] mb-4 uppercase italic">🏁 ${lojaRelatorio} finalizada!</p>
-                        <button onclick="enviarRelatorioZap('${lojaRelatorio}')" class="w-full bg-white text-purple-700 font-black py-5 uppercase italic text-xs rounded-2xl shadow-xl animate-bounce">ENVIAR FECHAMENTO NO WHATSAPP</button>
-                    </div>`;
+            // Exibir botões de finalizar para lojas concluídas
+            for (let l in memoriaRelatorio) {
+                if (!porLoja[l]) {
+                    divGeral.innerHTML += `<div class="bg-purple-600 p-6 rounded-3xl text-center mb-10"><p class="text-white font-black text-xs mb-4 uppercase italic">${l} CONCLUÍDA!</p><button onclick="zap('${l}')" class="w-full bg-white text-purple-700 p-4 rounded-2xl font-black text-xs">ENVIAR RELATÓRIO WHATSAPP</button></div>`;
                 }
             }
             atualizarContador();
         });
 
-        window.concluirEntrega = async (id, loja, local, zap, pag) => {
-            const quem = document.getElementById(`rec-${id}`).value || "N/I";
-            const hora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            if(!relatorioMemoria[loja]) relatorioMemoria[loja] = { zap, itens: [] };
-            relatorioMemoria[loja].itens.push(`✅ *${local}*\n💰 ${pag}\n👤 Rec: ${quem} | ⏰ ${hora}`);
-            localStorage.setItem('relatorioMemoria', JSON.stringify(relatorioMemoria));
+        window.concluir = async (id, loja, local, zap, pag) => {
+            const rec = document.getElementById(`rec-${id}`).value || "N/I";
+            if(!memoriaRelatorio[loja]) memoriaRelatorio[loja] = { zap, itens: [] };
+            memoriaRelatorio[loja].itens.push(`✅ *${local}*\n💰 ${pag}\n👤 Rec: ${rec}`);
+            localStorage.setItem('relatorio_marcelo', JSON.stringify(memoriaRelatorio));
             await deleteDoc(doc(db, "pedidos", id));
         };
 
-        window.enviarRelatorioZap = (loja) => {
-            const r = relatorioMemoria[loja];
-            const msg = `*FECHAMENTO MARCELO*\n*LOJA:* ${loja.toUpperCase()}\n\n${r.itens.join('\n\n')}\n\n*TOTAL: ${r.itens.length} ENTREGAS*`;
+        window.zap = (loja) => {
+            const r = memoriaRelatorio[loja];
+            const msg = `*FECHAMENTO MARCELO*\n\n${r.itens.join('\n\n')}`;
             window.open(`https://wa.me/55${r.zap}?text=${encodeURIComponent(msg)}`);
-            delete relatorioMemoria[loja]; 
-            localStorage.setItem('relatorioMemoria', JSON.stringify(relatorioMemoria));
-            setTimeout(() => location.reload(), 500);
+            delete memoriaRelatorio[loja];
+            localStorage.setItem('relatorio_marcelo', JSON.stringify(memoriaRelatorio));
+            location.reload();
         };
+
+        function atualizarContador() {
+            let total = 0;
+            for(let l in memoriaRelatorio) total += memoriaRelatorio[l].itens.length;
+            document.getElementById('totalDia').innerText = total;
+        }
+
+        onSnapshot(doc(db, "config", "status"), (d) => {
+            const s = d.data() || { online: false };
+            document.getElementById('stTrabalho').innerText = s.online ? "ONLINE" : "OFFLINE";
+        });
     </script>
 </body>
 </html>
