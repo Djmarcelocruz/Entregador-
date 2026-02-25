@@ -26,18 +26,24 @@
                 🔔 CHAMAR MARCELO AGORA
             </button>
 
-            <div class="bg-white p-6 rounded-[30px] shadow-xl relative border border-gray-50">
-                <p class="text-[10px] font-black text-gray-400 uppercase italic mb-2">Destino da Entrega</p>
+            <div class="bg-white p-6 rounded-[30px] shadow-xl border border-gray-50">
+                <p class="text-[10px] font-black text-gray-400 uppercase italic mb-4">Dados da Entrega</p>
                 
-                <div class="relative mb-4">
-                    <input id="inputEnd" autocomplete="off" placeholder="Comece a digitar a rua..." 
-                        class="w-full p-5 bg-blue-50 rounded-2xl font-bold outline-none text-sm placeholder:text-gray-300 border-2 border-transparent focus:border-blue-300 transition-all"
-                        oninput="autoCompletar(this.value)">
+                <div class="space-y-3 mb-4">
+                    <input id="inputEnd" placeholder="Rua e Número" 
+                        class="w-full p-5 bg-blue-50 rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:border-blue-300">
                     
-                    <div id="sugestoes" class="absolute z-50 w-full bg-white shadow-2xl rounded-2xl mt-1 hidden border border-gray-100 overflow-hidden"></div>
+                    <select id="bairro" class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-gray-100 font-black text-blue-900 outline-none text-[11px] uppercase italic">
+                        <option value="CENTRO">📍 CENTRO</option>
+                        <option value="VILA CAMPANTE">📍 VILA CAMPANTE</option>
+                        <option value="VILA SÃO JOSÉ">📍 VILA SÃO JOSÉ</option>
+                        <option value="JD. DAS FLORES">📍 JD. DAS FLORES</option>
+                        <option value="JD. AMÉRICA">📍 JD. AMÉRICA</option>
+                        <option value="JD. EUROPA">📍 JD. EUROPA</option>
+                        <option value="POMPÉIA">📍 POMPÉIA (GERAL)</option>
+                        <option value="OUTROS/RURAL">📍 OUTROS / RURAL</option>
+                    </select>
                 </div>
-
-                <input type="hidden" id="bairro">
 
                 <div class="grid grid-cols-2 gap-2 mb-4">
                     <select id="pagamento" class="bg-gray-50 p-4 rounded-xl font-black text-[10px] outline-none border-2 border-gray-100 uppercase italic">
@@ -49,11 +55,11 @@
                     <input id="trocoPara" type="number" placeholder="Troco R$?" class="bg-gray-50 p-4 rounded-xl font-bold text-[10px] border-2 border-gray-100 outline-none">
                 </div>
 
-                <button onclick="addLista()" class="w-full bg-slate-800 text-white font-black py-5 rounded-2xl mb-4 italic hover:bg-black transition-all">+ ADICIONAR ENTREGA</button>
+                <button onclick="addLista()" class="w-full bg-slate-800 text-white font-black py-5 rounded-2xl mb-4 italic">+ ADICIONAR ENTREGA</button>
                 
                 <div id="listaRascunho" class="space-y-2 mb-4"></div>
                 
-                <button id="btnEnviarLote" onclick="enviarLote()" class="hidden w-full bg-green-600 text-white font-black py-6 rounded-3xl shadow-lg uppercase italic text-sm animate-pulse">ENVIAR TUDO ✅</button>
+                <button id="btnEnviarLote" onclick="enviarLote()" class="hidden w-full bg-green-600 text-white font-black py-6 rounded-3xl shadow-lg uppercase italic text-sm">ENVIAR TUDO ✅</button>
             </div>
         </div>
     </div>
@@ -82,42 +88,6 @@
             }
         };
 
-        window.autoCompletar = async (texto) => {
-            const lista = document.getElementById('sugestoes');
-            // Só começa a buscar após 3 letras (economiza dados e é mais rápido)
-            if (texto.length < 3 || texto.includes(", Nº")) { lista.classList.add('hidden'); return; }
-            try {
-                // Foco geográfico em Quintana e região
-                const foco = "&viewbox=-50.35,-22.10,-50.00,-21.85&bounded=1";
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(texto)}${foco}&limit=4&countrycodes=br`);
-                const data = await res.json();
-                if (data.length > 0) {
-                    lista.innerHTML = data.map(item => {
-                        const rua = item.address.road || item.display_name.split(',')[0];
-                        const bairro = item.address.suburb || item.address.neighbourhood || 'Centro';
-                        const cidade = item.address.city || item.address.town || '';
-                        return `
-                        <div onclick="selecionarEnd('${rua}', '${bairro.toUpperCase()}', '${cidade.toUpperCase()}')" class="p-4 border-b border-gray-50 hover:bg-blue-50 cursor-pointer">
-                            <p class="text-[11px] font-black uppercase text-blue-900">${rua}</p>
-                            <p class="text-[9px] font-bold text-gray-400 uppercase italic">${bairro} - ${cidade}</p>
-                        </div>`;
-                    }).join('');
-                    lista.classList.remove('hidden');
-                } else { lista.classList.add('hidden'); }
-            } catch (e) { }
-        };
-
-        window.selecionarEnd = (rua, bairro, cidade) => {
-            const input = document.getElementById('inputEnd');
-            // Coloca a rua e já prepara o campo para o número
-            input.value = `${rua}, Nº `;
-            document.getElementById('bairro').value = `${bairro} (${cidade})`;
-            document.getElementById('sugestoes').classList.add('hidden');
-            // Foca no input para o lojista só digitar o número
-            input.focus();
-            input.setSelectionRange(input.value.length, input.value.length);
-        };
-
         window.chamarNoSistema = async () => {
             const btn = document.getElementById('btnChamada');
             btn.innerText = "CHAMANDO...";
@@ -126,16 +96,16 @@
         };
 
         window.addLista = () => {
-            const local = document.getElementById('inputEnd').value;
-            const bairro = document.getElementById('bairro').value || 'CENTRO';
+            const rua = document.getElementById('inputEnd').value;
+            const bairro = document.getElementById('bairro').value;
             const pag = document.getElementById('pagamento').value;
             const troco = document.getElementById('trocoPara').value;
-            if(local && local !== "") {
+            
+            if(rua) {
                 let info = pag;
                 if(pag === "DINHEIRO" && troco) info += ` (Troco p/ ${troco})`;
-                rascunho.push({ local, bairro, pag: info });
+                rascunho.push({ local: `${rua}, ${bairro}`, bairro, pag: info });
                 document.getElementById('inputEnd').value = ''; 
-                document.getElementById('bairro').value = '';
                 render();
             }
         };
@@ -157,7 +127,7 @@
             }
             rascunho = []; render(); 
             btn.innerText = "ENVIAR TUDO ✅"; btn.disabled = false;
-            alert("Sucesso! Marcelo já recebeu seus pedidos.");
+            alert("Sucesso! Marcelo recebeu os pedidos.");
         };
 
         window.salvarLoja = () => {
