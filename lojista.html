@@ -6,14 +6,14 @@
     <title>Lojista - Marcelo Entregas</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-4 font-sans text-slate-800">
+<body class="bg-slate-50 p-4 font-sans text-slate-800">
     <div class="max-w-md mx-auto">
-        
-        <div id="cadastro" class="hidden bg-white p-8 rounded-[30px] shadow-2xl">
+        <div id="cadastro" class="hidden bg-white p-8 rounded-[30px] shadow-2xl border-b-8 border-blue-600">
             <h2 class="text-xl font-black text-blue-900 mb-6 uppercase italic text-center">Configurar Sua Loja</h2>
-            <input id="nLoja" placeholder="Nome da Loja" class="w-full p-4 mb-3 bg-gray-50 rounded-2xl border-none outline-none font-bold italic">
-            <input id="zLoja" placeholder="WhatsApp (Ex: 14999999999)" class="w-full p-4 mb-6 bg-gray-50 rounded-2xl border-none outline-none font-bold italic">
-            <button onclick="salvarLoja()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg uppercase italic">Entrar no Painel</button>
+            <input id="nLoja" placeholder="Nome da Loja" class="w-full p-4 mb-3 bg-gray-50 rounded-2xl outline-none font-bold italic border-2 border-gray-100 focus:border-blue-400">
+            <input id="zLoja" placeholder="WhatsApp (Ex: 14999999999)" class="w-full p-4 mb-3 bg-gray-50 rounded-2xl outline-none font-bold italic border-2 border-gray-100 focus:border-blue-400">
+            <input id="eLoja" placeholder="Endereço da Loja (Rua e Nº)" class="w-full p-4 mb-6 bg-gray-50 rounded-2xl outline-none font-bold italic border-2 border-gray-100 focus:border-blue-400">
+            <button onclick="salvarLoja()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg uppercase italic hover:bg-blue-700">Salvar e Entrar</button>
         </div>
 
         <div id="painel" class="hidden space-y-4">
@@ -26,40 +26,34 @@
                 🔔 CHAMAR MARCELO AGORA
             </button>
 
-            <div class="bg-white p-6 rounded-[30px] shadow-xl border border-gray-50">
-                <p class="text-[10px] font-black text-gray-400 uppercase italic mb-4">Dados da Entrega</p>
+            <div class="bg-white p-6 rounded-[30px] shadow-xl border border-gray-100">
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-[10px] font-black text-gray-400 uppercase italic">Nova Entrega</p>
+                    <button onclick="if(confirm('Limpar lista?')) { rascunho=[]; render(); }" class="text-[9px] font-black text-red-400 uppercase italic underline">Limpar Lote</button>
+                </div>
                 
-                <div class="space-y-3 mb-4">
-                    <input id="inputEnd" placeholder="Rua e Número" 
-                        class="w-full p-5 bg-blue-50 rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:border-blue-300">
-                    
-                    <select id="bairro" class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-gray-100 font-black text-blue-900 outline-none text-[11px] uppercase italic">
-                        <option value="CENTRO">📍 CENTRO</option>
-                        <option value="VILA CAMPANTE">📍 VILA CAMPANTE</option>
-                        <option value="VILA SÃO JOSÉ">📍 VILA SÃO JOSÉ</option>
-                        <option value="JD. DAS FLORES">📍 JD. DAS FLORES</option>
-                        <option value="JD. AMÉRICA">📍 JD. AMÉRICA</option>
-                        <option value="JD. EUROPA">📍 JD. EUROPA</option>
-                        <option value="POMPÉIA">📍 POMPÉIA (GERAL)</option>
-                        <option value="OUTROS/RURAL">📍 OUTROS / RURAL</option>
-                    </select>
+                <input id="inputEnd" placeholder="Rua e Número" class="w-full p-5 bg-blue-50 rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:border-blue-300">
+                
+                <div class="grid grid-cols-2 gap-2 mt-2 mb-2">
+                    <input id="inputBairro" placeholder="Bairro" class="p-4 bg-gray-50 rounded-xl font-bold outline-none text-sm border-2 border-gray-100">
+                    <input id="inputCidade" placeholder="Cidade" class="p-4 bg-gray-50 rounded-xl font-bold outline-none text-sm border-2 border-gray-100">
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 mb-4">
-                    <select id="pagamento" class="bg-gray-50 p-4 rounded-xl font-black text-[10px] outline-none border-2 border-gray-100 uppercase italic">
+                    <select id="pagamento" class="bg-gray-100 p-4 rounded-xl font-black text-[10px] outline-none uppercase italic border-2 border-transparent">
                         <option value="JÁ PAGO">JÁ PAGO ✅</option>
                         <option value="DINHEIRO">DINHEIRO 💵</option>
                         <option value="MAQUININHA">MAQUININHA 💳</option>
-                        <option value="PIX NA ENTREGA">PIX ENTREGA 📱</option>
+                        <option value="PIX">PIX 📱</option>
                     </select>
-                    <input id="trocoPara" type="number" placeholder="Troco R$?" class="bg-gray-50 p-4 rounded-xl font-bold text-[10px] border-2 border-gray-100 outline-none">
+                    <input id="trocoPara" type="number" placeholder="Troco p/ R$?" class="bg-gray-50 p-4 rounded-xl font-bold text-[10px] outline-none border-2 border-gray-100">
                 </div>
 
-                <button onclick="addLista()" class="w-full bg-slate-800 text-white font-black py-5 rounded-2xl mb-4 italic">+ ADICIONAR ENTREGA</button>
+                <button onclick="addLista()" class="w-full bg-slate-800 text-white font-black py-5 rounded-2xl mb-4 italic shadow-lg">+ ADICIONAR AO LOTE</button>
                 
-                <div id="listaRascunho" class="space-y-2 mb-4"></div>
+                <div id="listaRascunho" class="space-y-2 mb-4 max-h-48 overflow-y-auto"></div>
                 
-                <button id="btnEnviarLote" onclick="enviarLote()" class="hidden w-full bg-green-600 text-white font-black py-6 rounded-3xl shadow-lg uppercase italic text-sm">ENVIAR TUDO ✅</button>
+                <button id="btnEnviarLote" onclick="enviarLote()" class="hidden w-full bg-green-600 text-white font-black py-6 rounded-3xl shadow-xl uppercase italic text-sm animate-pulse">ENVIAR TUDO PARA O MARCELO ✅</button>
             </div>
         </div>
     </div>
@@ -90,50 +84,68 @@
 
         window.chamarNoSistema = async () => {
             const btn = document.getElementById('btnChamada');
-            btn.innerText = "CHAMANDO...";
-            await addDoc(collection(db, "chamadas"), { loja: dadosLoja.nome, hora: Date.now() });
-            setTimeout(() => btn.innerText = "🔔 CHAMADO ENVIADO!", 1000);
+            const docRef = await addDoc(collection(db, "chamadas"), { 
+                loja: dadosLoja.nome, 
+                enderecoLoja: dadosLoja.endereco, 
+                zap: dadosLoja.zap,
+                hora: Date.now(), 
+                status: "Pendente" 
+            });
+            btn.innerText = "⏳ AGUARDANDO MARCELO...";
+            btn.classList.replace('bg-orange-500', 'bg-slate-400');
+
+            onSnapshot(doc(db, "chamadas", docRef.id), (d) => {
+                if (d.exists() && d.data().status === "Visualizado") {
+                    btn.innerText = "✅ MARCELO ESTÁ A CAMINHO!";
+                    btn.classList.replace('bg-slate-400', 'bg-green-600');
+                    setTimeout(() => {
+                        btn.innerText = "🔔 CHAMAR MARCELO AGORA";
+                        btn.classList.replace('bg-green-600', 'bg-orange-500');
+                    }, 10000);
+                }
+            });
         };
 
         window.addLista = () => {
-            const rua = document.getElementById('inputEnd').value;
-            const bairro = document.getElementById('bairro').value;
+            const rua = document.getElementById('inputEnd').value.trim();
+            const bairro = document.getElementById('inputBairro').value.trim();
+            const cidade = document.getElementById('inputCidade').value.trim();
             const pag = document.getElementById('pagamento').value;
             const troco = document.getElementById('trocoPara').value;
-            
-            if(rua) {
-                let info = pag;
-                if(pag === "DINHEIRO" && troco) info += ` (Troco p/ ${troco})`;
-                rascunho.push({ local: `${rua}, ${bairro}`, bairro, pag: info });
-                document.getElementById('inputEnd').value = ''; 
-                render();
+            if(rua && cidade) {
+                let info = pag + (pag === "DINHEIRO" && troco ? ` (Troco p/ R$${troco})` : "");
+                rascunho.push({ local: `${rua}, ${bairro} - ${cidade}`, pag: info });
+                document.getElementById('inputEnd').value = ''; render();
             }
         };
 
         function render() {
             document.getElementById('listaRascunho').innerHTML = rascunho.map((e, i) => `
-                <div class="p-3 bg-gray-50 rounded-2xl flex justify-between items-center text-[10px] font-black uppercase italic shadow-sm border-l-4 border-blue-600">
-                    <span>${e.local}</span>
+                <div class="p-3 bg-white rounded-2xl flex justify-between items-center text-[10px] font-black uppercase shadow-sm border-l-4 border-blue-600 border border-gray-100">
+                    <span class="truncate">${e.local}</span>
                     <button onclick="rascunho.splice(${i},1);render()" class="text-red-500 font-black px-2">X</button>
                 </div>`).join('');
             document.getElementById('btnEnviarLote').classList.toggle('hidden', rascunho.length === 0);
         }
 
         window.enviarLote = async () => {
-            const btn = document.getElementById('btnEnviarLote');
-            btn.innerText = "ENVIANDO..."; btn.disabled = true;
             for (const item of rascunho) {
-                await addDoc(collection(db, "pedidos"), { loja: dadosLoja.nome, zap: dadosLoja.zap, local: item.local, bairro: item.bairro, pag: item.pag, status: "Fila", hora: Date.now() });
+                await addDoc(collection(db, "pedidos"), { 
+                    loja: dadosLoja.nome, zap: dadosLoja.zap, 
+                    local: item.local, pag: item.pag, hora: Date.now() 
+                });
             }
-            rascunho = []; render(); 
-            btn.innerText = "ENVIAR TUDO ✅"; btn.disabled = false;
-            alert("Sucesso! Marcelo recebeu os pedidos.");
+            rascunho = []; render(); alert("Tudo enviado! Marcelo já recebeu.");
         };
 
         window.salvarLoja = () => {
-            const n = document.getElementById('nLoja').value;
-            const z = document.getElementById('zLoja').value;
-            if(n && z) { localStorage.setItem('marcelo_loja', JSON.stringify({nome: n, zap: z})); location.reload(); }
+            const n = document.getElementById('nLoja').value.trim();
+            const z = document.getElementById('zLoja').value.trim();
+            const e = document.getElementById('eLoja').value.trim();
+            if(n && z && e) { 
+                localStorage.setItem('marcelo_loja', JSON.stringify({nome: n, zap: z, endereco: e})); 
+                location.reload(); 
+            }
         };
     </script>
 </body>
