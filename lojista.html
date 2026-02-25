@@ -8,43 +8,36 @@
 </head>
 <body class="bg-gray-100 p-4 font-sans text-slate-800">
     <div class="max-w-md mx-auto">
+        
         <div id="cadastro" class="hidden bg-white p-8 rounded-[30px] shadow-2xl">
-            <h2 class="text-2xl font-black text-blue-900 mb-6 uppercase text-center italic">Configurar Loja</h2>
-            <input id="nLoja" placeholder="Nome da sua Loja" class="w-full p-4 mb-3 bg-gray-50 rounded-2xl border-2 border-gray-100 outline-none font-bold italic text-sm">
-            <input id="zLoja" placeholder="WhatsApp (Ex: 14999999999)" class="w-full p-4 mb-6 bg-gray-50 rounded-2xl border-2 border-gray-100 outline-none font-bold italic text-sm">
-            <button onclick="salvarLoja()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg uppercase italic">Salvar e Começar</button>
+            <h2 class="text-xl font-black text-blue-900 mb-6 uppercase italic text-center">Configurar Sua Loja</h2>
+            <input id="nLoja" placeholder="Nome da Loja" class="w-full p-4 mb-3 bg-gray-50 rounded-2xl border-none outline-none font-bold italic">
+            <input id="zLoja" placeholder="WhatsApp (Ex: 14999999999)" class="w-full p-4 mb-6 bg-gray-50 rounded-2xl border-none outline-none font-bold italic">
+            <button onclick="salvarLoja()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg uppercase italic">Entrar no Painel</button>
         </div>
 
         <div id="painel" class="hidden space-y-4">
-            <div class="bg-white p-5 rounded-3xl shadow-md flex justify-between items-center border-b-4 border-blue-600">
-                <h1 id="exibirNome" class="font-black text-blue-900 uppercase italic text-sm"></h1>
-                <span id="stStatus" class="text-[9px] font-black p-2 rounded-lg italic text-white bg-gray-400 uppercase tracking-tighter italic">Carregando...</span>
+            <div class="bg-white p-4 rounded-3xl shadow-md flex justify-between items-center border-b-4 border-blue-600">
+                <h1 id="exibirNome" class="font-black text-blue-900 uppercase italic text-xs"></h1>
+                <span id="stStatus" class="text-[9px] font-black p-2 rounded-lg text-white bg-gray-400 uppercase italic">...</span>
             </div>
 
-            <button id="btnChamada" onclick="chamarNoSistema()" class="w-full bg-orange-500 text-white font-black py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 text-xs uppercase italic transition-all active:scale-95">
+            <button id="btnChamada" onclick="chamarNoSistema()" class="w-full bg-orange-500 text-white font-black py-4 rounded-2xl shadow-lg uppercase italic text-[10px] active:scale-95 transition-all">
                 🔔 CHAMAR MARCELO AGORA
             </button>
 
-            <div class="bg-white p-6 rounded-[30px] shadow-xl relative border border-gray-100">
-                <h3 class="font-black text-gray-400 text-[10px] uppercase italic mb-4 tracking-widest italic">Nova Entrega</h3>
+            <div class="bg-white p-6 rounded-[30px] shadow-xl relative border border-gray-50">
+                <p class="text-[10px] font-black text-gray-400 uppercase italic mb-2">Destino da Entrega</p>
                 
-                <div class="relative mb-3">
-                    <input id="inputEnd" autocomplete="off" placeholder="Digite a rua e número..." 
-                        class="w-full p-5 bg-blue-50 rounded-2xl border-2 border-transparent focus:border-blue-500 font-bold outline-none transition-all text-sm"
+                <div class="relative mb-4">
+                    <input id="inputEnd" autocomplete="off" placeholder="Comece a digitar a rua..." 
+                        class="w-full p-5 bg-blue-50 rounded-2xl font-bold outline-none text-sm placeholder:text-gray-300 border-2 border-transparent focus:border-blue-300 transition-all"
                         oninput="autoCompletar(this.value)">
+                    
                     <div id="sugestoes" class="absolute z-50 w-full bg-white shadow-2xl rounded-2xl mt-1 hidden border border-gray-100 overflow-hidden"></div>
                 </div>
 
-                <select id="bairro" class="w-full p-4 mb-3 bg-gray-50 rounded-2xl border-2 border-gray-100 font-black text-blue-900 outline-none text-[10px] uppercase italic">
-                    <option value="CENTRO">📍 CENTRO</option>
-                    <option value="VILA CAMPANTE">📍 VILA CAMPANTE</option>
-                    <option value="VILA SÃO JOSÉ">📍 VILA SÃO JOSÉ</option>
-                    <option value="JD. DAS FLORES">📍 JD. DAS FLORES</option>
-                    <option value="JD. AMÉRICA">📍 JD. AMÉRICA</option>
-                    <option value="JD. EUROPA">📍 JD. EUROPA</option>
-                    <option value="OUTROS/RURAL">📍 OUTROS / RURAL</option>
-                    <option value="POMPÉIA">📍 POMPÉIA (GERAL)</option>
-                </select>
+                <input type="hidden" id="bairro">
 
                 <div class="grid grid-cols-2 gap-2 mb-4">
                     <select id="pagamento" class="bg-gray-50 p-4 rounded-xl font-black text-[10px] outline-none border-2 border-gray-100 uppercase italic">
@@ -53,19 +46,21 @@
                         <option value="MAQUININHA">MAQUININHA 💳</option>
                         <option value="PIX NA ENTREGA">PIX ENTREGA 📱</option>
                     </select>
-                    <input id="trocoPara" type="number" placeholder="Troco R$?" class="bg-gray-50 p-4 rounded-xl font-bold text-[10px] outline-none border-2 border-gray-100">
+                    <input id="trocoPara" type="number" placeholder="Troco R$?" class="bg-gray-50 p-4 rounded-xl font-bold text-[10px] border-2 border-gray-100 outline-none">
                 </div>
 
-                <button onclick="addLista()" class="w-full bg-slate-800 text-white font-black py-4 rounded-2xl mb-4 italic hover:bg-black transition-all">+ ADICIONAR NO LOTE</button>
-                <div id="listaRascunho" class="space-y-2 max-h-60 overflow-y-auto mb-4"></div>
-                <button id="btnEnviarLote" onclick="enviarLote()" class="hidden w-full bg-green-600 text-white font-black py-5 rounded-2xl shadow-lg uppercase italic text-sm">Enviar para o Marcelo ✅</button>
+                <button onclick="addLista()" class="w-full bg-slate-800 text-white font-black py-5 rounded-2xl mb-4 italic hover:bg-black transition-all">+ ADICIONAR ENTREGA</button>
+                
+                <div id="listaRascunho" class="space-y-2 mb-4"></div>
+                
+                <button id="btnEnviarLote" onclick="enviarLote()" class="hidden w-full bg-green-600 text-white font-black py-6 rounded-3xl shadow-lg uppercase italic text-sm animate-pulse">ENVIAR TUDO ✅</button>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
@@ -82,36 +77,17 @@
                     const s = d.data() || {};
                     const el = document.getElementById('stStatus');
                     el.innerText = s.online ? (s.ocupado ? "ROTA 🛵" : "ONLINE 🟢") : "OFFLINE 🔴";
-                    el.className = `text-[9px] font-black p-2 rounded-lg italic text-white ${s.online ? 'bg-green-600' : 'bg-red-600'}`;
+                    el.className = `text-[9px] font-black p-2 rounded-lg text-white ${s.online ? 'bg-green-600' : 'bg-red-600'}`;
                 });
             }
         };
 
-        // CHAMADA NO SISTEMA (Cria um alerta para o Marcelo)
-        window.chamarNoSistema = async () => {
-            const btn = document.getElementById('btnChamada');
-            btn.innerText = "CHAMANDO...";
-            btn.classList.replace('bg-orange-500', 'bg-gray-400');
-            
-            await addDoc(collection(db, "chamadas"), {
-                loja: dadosLoja.nome,
-                hora: Date.now(),
-                lida: false
-            });
-            
-            setTimeout(() => {
-                btn.innerText = "🔔 CHAMADO ENVIADO!";
-                setTimeout(() => {
-                    btn.innerText = "🔔 CHAMAR MARCELO AGORA";
-                    btn.classList.replace('bg-gray-400', 'bg-orange-500');
-                }, 3000);
-            }, 1000);
-        };
-
         window.autoCompletar = async (texto) => {
             const lista = document.getElementById('sugestoes');
-            if (texto.length < 3) { lista.classList.add('hidden'); return; }
+            // Só começa a buscar após 3 letras (economiza dados e é mais rápido)
+            if (texto.length < 3 || texto.includes(", Nº")) { lista.classList.add('hidden'); return; }
             try {
+                // Foco geográfico em Quintana e região
                 const foco = "&viewbox=-50.35,-22.10,-50.00,-21.85&bounded=1";
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(texto)}${foco}&limit=4&countrycodes=br`);
                 const data = await res.json();
@@ -119,49 +95,56 @@
                     lista.innerHTML = data.map(item => {
                         const rua = item.address.road || item.display_name.split(',')[0];
                         const bairro = item.address.suburb || item.address.neighbourhood || 'Centro';
-                        return `<div onclick="selecionarEnd('${rua}', '${bairro}')" class="p-4 border-b border-gray-50 hover:bg-blue-50 cursor-pointer italic text-xs font-black uppercase">${rua} <br><span class="text-[9px] text-gray-400">${bairro}</span></div>`;
+                        const cidade = item.address.city || item.address.town || '';
+                        return `
+                        <div onclick="selecionarEnd('${rua}', '${bairro.toUpperCase()}', '${cidade.toUpperCase()}')" class="p-4 border-b border-gray-50 hover:bg-blue-50 cursor-pointer">
+                            <p class="text-[11px] font-black uppercase text-blue-900">${rua}</p>
+                            <p class="text-[9px] font-bold text-gray-400 uppercase italic">${bairro} - ${cidade}</p>
+                        </div>`;
                     }).join('');
                     lista.classList.remove('hidden');
                 } else { lista.classList.add('hidden'); }
             } catch (e) { }
         };
 
-        window.selecionarEnd = (rua, bairro) => {
-            document.getElementById('inputEnd').value = rua + ", ";
-            const selBairro = document.getElementById('bairro');
-            for (let i = 0; i < selBairro.options.length; i++) {
-                if (bairro.toUpperCase().includes(selBairro.options[i].value)) {
-                    selBairro.selectedIndex = i; break;
-                }
-            }
+        window.selecionarEnd = (rua, bairro, cidade) => {
+            const input = document.getElementById('inputEnd');
+            // Coloca a rua e já prepara o campo para o número
+            input.value = `${rua}, Nº `;
+            document.getElementById('bairro').value = `${bairro} (${cidade})`;
             document.getElementById('sugestoes').classList.add('hidden');
-            document.getElementById('inputEnd').focus();
+            // Foca no input para o lojista só digitar o número
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
         };
 
-        window.salvarLoja = () => {
-            const n = document.getElementById('nLoja').value;
-            const z = document.getElementById('zLoja').value;
-            if(n && z) { localStorage.setItem('marcelo_loja', JSON.stringify({nome: n, zap: z})); location.reload(); }
+        window.chamarNoSistema = async () => {
+            const btn = document.getElementById('btnChamada');
+            btn.innerText = "CHAMANDO...";
+            await addDoc(collection(db, "chamadas"), { loja: dadosLoja.nome, hora: Date.now() });
+            setTimeout(() => btn.innerText = "🔔 CHAMADO ENVIADO!", 1000);
         };
 
         window.addLista = () => {
-            const rua = document.getElementById('inputEnd').value;
-            const bairro = document.getElementById('bairro').value;
+            const local = document.getElementById('inputEnd').value;
+            const bairro = document.getElementById('bairro').value || 'CENTRO';
             const pag = document.getElementById('pagamento').value;
             const troco = document.getElementById('trocoPara').value;
-            if(rua) {
-                let infoPag = pag;
-                if(pag === "DINHEIRO" && troco) infoPag += ` (Troco R$ ${troco})`;
-                rascunho.push({ local: `${rua}, ${bairro}`, bairro, pag: infoPag });
-                document.getElementById('inputEnd').value = ''; render();
+            if(local && local !== "") {
+                let info = pag;
+                if(pag === "DINHEIRO" && troco) info += ` (Troco p/ ${troco})`;
+                rascunho.push({ local, bairro, pag: info });
+                document.getElementById('inputEnd').value = ''; 
+                document.getElementById('bairro').value = '';
+                render();
             }
         };
 
         function render() {
             document.getElementById('listaRascunho').innerHTML = rascunho.map((e, i) => `
-                <div class="p-3 bg-gray-50 rounded-xl border-l-4 border-blue-600 flex justify-between items-center text-[10px] font-black uppercase italic shadow-sm">
+                <div class="p-3 bg-gray-50 rounded-2xl flex justify-between items-center text-[10px] font-black uppercase italic shadow-sm border-l-4 border-blue-600">
                     <span>${e.local}</span>
-                    <button onclick="rascunho.splice(${i},1);render()" class="text-red-500 px-2 font-black">X</button>
+                    <button onclick="rascunho.splice(${i},1);render()" class="text-red-500 font-black px-2">X</button>
                 </div>`).join('');
             document.getElementById('btnEnviarLote').classList.toggle('hidden', rascunho.length === 0);
         }
@@ -174,7 +157,13 @@
             }
             rascunho = []; render(); 
             btn.innerText = "ENVIAR TUDO ✅"; btn.disabled = false;
-            alert("Lote enviado!");
+            alert("Sucesso! Marcelo já recebeu seus pedidos.");
+        };
+
+        window.salvarLoja = () => {
+            const n = document.getElementById('nLoja').value;
+            const z = document.getElementById('zLoja').value;
+            if(n && z) { localStorage.setItem('marcelo_loja', JSON.stringify({nome: n, zap: z})); location.reload(); }
         };
     </script>
 </body>
