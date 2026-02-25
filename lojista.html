@@ -6,54 +6,41 @@
     <title>Lojista - Marcelo Entregas</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 p-4 font-sans text-slate-800">
+<body class="bg-gray-100 p-4">
     <div class="max-w-md mx-auto">
-        <div id="cadastro" class="hidden bg-white p-8 rounded-[30px] shadow-2xl border-b-8 border-blue-600">
-            <h2 class="text-xl font-black text-blue-900 mb-6 uppercase italic text-center">Configurar Sua Loja</h2>
-            <input id="nLoja" placeholder="Nome da Loja" class="w-full p-4 mb-3 bg-gray-50 rounded-2xl outline-none font-bold italic border-2 border-gray-100 focus:border-blue-400">
-            <input id="zLoja" placeholder="WhatsApp (Ex: 14999999999)" class="w-full p-4 mb-3 bg-gray-50 rounded-2xl outline-none font-bold italic border-2 border-gray-100 focus:border-blue-400">
-            <input id="eLoja" placeholder="Endereço da Loja (Rua e Nº)" class="w-full p-4 mb-6 bg-gray-50 rounded-2xl outline-none font-bold italic border-2 border-gray-100 focus:border-blue-400">
-            <button onclick="salvarLoja()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg uppercase italic hover:bg-blue-700">Salvar e Entrar</button>
+        <div id="cadastro" class="hidden bg-white p-6 rounded-3xl shadow-xl">
+            <h2 class="text-center font-black mb-4">CADASTRO DA LOJA</h2>
+            <input id="nLoja" placeholder="Nome da Loja" class="w-full p-4 mb-2 bg-gray-50 rounded-xl border">
+            <input id="zLoja" placeholder="WhatsApp (Ex: 14999999999)" class="w-full p-4 mb-2 bg-gray-50 rounded-xl border">
+            <input id="eLoja" placeholder="Endereço Completo da Loja" class="w-full p-4 mb-4 bg-gray-50 rounded-xl border">
+            <button onclick="salvarLoja()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-bold">SALVAR</button>
         </div>
 
         <div id="painel" class="hidden space-y-4">
-            <div class="bg-white p-4 rounded-3xl shadow-md flex justify-between items-center border-b-4 border-blue-600">
-                <h1 id="exibirNome" class="font-black text-blue-900 uppercase italic text-xs"></h1>
-                <span id="stStatus" class="text-[9px] font-black p-2 rounded-lg text-white bg-gray-400 uppercase italic">...</span>
+            <div class="bg-white p-4 rounded-2xl shadow flex justify-between items-center font-bold text-xs">
+                <span id="exibirNome"></span>
+                <span id="stStatus">...</span>
             </div>
 
-            <button id="btnChamada" onclick="chamarNoSistema()" class="w-full bg-orange-500 text-white font-black py-4 rounded-2xl shadow-lg uppercase italic text-[10px] active:scale-95 transition-all">
-                🔔 CHAMAR MARCELO AGORA
-            </button>
+            <button id="btnChamada" onclick="chamarNoSistema()" class="w-full bg-orange-500 text-white p-5 rounded-2xl font-black shadow-lg">🔔 CHAMAR MARCELO AGORA</button>
 
-            <div class="bg-white p-6 rounded-[30px] shadow-xl border border-gray-100">
-                <div class="flex justify-between items-center mb-4">
-                    <p class="text-[10px] font-black text-gray-400 uppercase italic">Nova Entrega</p>
-                    <button onclick="if(confirm('Limpar lista?')) { rascunho=[]; render(); }" class="text-[9px] font-black text-red-400 uppercase italic underline">Limpar Lote</button>
-                </div>
+            <div class="bg-white p-6 rounded-3xl shadow-lg">
+                <p class="font-black text-xs text-gray-400 mb-2 italic">DESTINO DA ENTREGA:</p>
+                <input id="inputEnd" placeholder="Rua e Número" class="w-full p-4 mb-2 bg-blue-50 rounded-xl font-bold">
+                <input id="inputBairro" placeholder="Bairro e Cidade" class="w-full p-4 mb-4 bg-blue-50 rounded-xl font-bold">
                 
-                <input id="inputEnd" placeholder="Rua e Número" class="w-full p-5 bg-blue-50 rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:border-blue-300">
-                
-                <div class="grid grid-cols-2 gap-2 mt-2 mb-2">
-                    <input id="inputBairro" placeholder="Bairro" class="p-4 bg-gray-50 rounded-xl font-bold outline-none text-sm border-2 border-gray-100">
-                    <input id="inputCidade" placeholder="Cidade" class="p-4 bg-gray-50 rounded-xl font-bold outline-none text-sm border-2 border-gray-100">
-                </div>
-
                 <div class="grid grid-cols-2 gap-2 mb-4">
-                    <select id="pagamento" class="bg-gray-100 p-4 rounded-xl font-black text-[10px] outline-none uppercase italic border-2 border-transparent">
+                    <select id="pagamento" class="p-4 bg-gray-50 rounded-xl font-bold text-xs">
                         <option value="JÁ PAGO">JÁ PAGO ✅</option>
                         <option value="DINHEIRO">DINHEIRO 💵</option>
                         <option value="MAQUININHA">MAQUININHA 💳</option>
                         <option value="PIX">PIX 📱</option>
                     </select>
-                    <input id="trocoPara" type="number" placeholder="Troco p/ R$?" class="bg-gray-50 p-4 rounded-xl font-bold text-[10px] outline-none border-2 border-gray-100">
+                    <input id="trocoPara" type="number" placeholder="Troco?" class="p-4 bg-gray-50 rounded-xl border font-bold">
                 </div>
-
-                <button onclick="addLista()" class="w-full bg-slate-800 text-white font-black py-5 rounded-2xl mb-4 italic shadow-lg">+ ADICIONAR AO LOTE</button>
-                
-                <div id="listaRascunho" class="space-y-2 mb-4 max-h-48 overflow-y-auto"></div>
-                
-                <button id="btnEnviarLote" onclick="enviarLote()" class="hidden w-full bg-green-600 text-white font-black py-6 rounded-3xl shadow-xl uppercase italic text-sm animate-pulse">ENVIAR TUDO PARA O MARCELO ✅</button>
+                <button onclick="addLista()" class="w-full bg-slate-800 text-white p-4 rounded-xl font-black mb-4">+ ADICIONAR</button>
+                <div id="listaRascunho" class="space-y-2 mb-4"></div>
+                <button id="btnEnviarLote" onclick="enviarLote()" class="hidden w-full bg-green-600 text-white p-5 rounded-2xl font-black shadow-xl">ENVIAR TODOS ✅</button>
             </div>
         </div>
     </div>
@@ -75,77 +62,52 @@
                 document.getElementById('exibirNome').innerText = dadosLoja.nome;
                 onSnapshot(doc(db, "config", "status"), (d) => {
                     const s = d.data() || {};
-                    const el = document.getElementById('stStatus');
-                    el.innerText = s.online ? (s.ocupado ? "ROTA 🛵" : "ONLINE 🟢") : "OFFLINE 🔴";
-                    el.className = `text-[9px] font-black p-2 rounded-lg text-white ${s.online ? 'bg-green-600' : 'bg-red-600'}`;
+                    document.getElementById('stStatus').innerText = s.online ? "ONLINE 🟢" : "OFFLINE 🔴";
                 });
             }
         };
 
         window.chamarNoSistema = async () => {
             const btn = document.getElementById('btnChamada');
-            const docRef = await addDoc(collection(db, "chamadas"), { 
-                loja: dadosLoja.nome, 
-                enderecoLoja: dadosLoja.endereco, 
-                zap: dadosLoja.zap,
-                hora: Date.now(), 
-                status: "Pendente" 
-            });
-            btn.innerText = "⏳ AGUARDANDO MARCELO...";
-            btn.classList.replace('bg-orange-500', 'bg-slate-400');
-
+            btn.innerText = "CHAMANDO...";
+            const docRef = await addDoc(collection(db, "chamadas"), { loja: dadosLoja.nome, enderecoLoja: dadosLoja.endereco, zap: dadosLoja.zap, hora: Date.now(), status: "Pendente" });
             onSnapshot(doc(db, "chamadas", docRef.id), (d) => {
                 if (d.exists() && d.data().status === "Visualizado") {
-                    btn.innerText = "✅ MARCELO ESTÁ A CAMINHO!";
-                    btn.classList.replace('bg-slate-400', 'bg-green-600');
-                    setTimeout(() => {
-                        btn.innerText = "🔔 CHAMAR MARCELO AGORA";
-                        btn.classList.replace('bg-green-600', 'bg-orange-500');
-                    }, 10000);
+                    btn.innerText = "✅ MARCELO ESTÁ VINDO!";
+                    btn.className = "w-full bg-green-600 text-white p-5 rounded-2xl font-black";
                 }
             });
         };
 
         window.addLista = () => {
-            const rua = document.getElementById('inputEnd').value.trim();
-            const bairro = document.getElementById('inputBairro').value.trim();
-            const cidade = document.getElementById('inputCidade').value.trim();
+            const rua = document.getElementById('inputEnd').value;
+            const bairro = document.getElementById('inputBairro').value;
             const pag = document.getElementById('pagamento').value;
             const troco = document.getElementById('trocoPara').value;
-            if(rua && cidade) {
-                let info = pag + (pag === "DINHEIRO" && troco ? ` (Troco p/ R$${troco})` : "");
-                rascunho.push({ local: `${rua}, ${bairro} - ${cidade}`, pag: info });
+            if(rua) {
+                let info = pag + (troco ? ` (Troco R$${troco})` : "");
+                rascunho.push({ local: `${rua} - ${bairro}`, pag: info });
                 document.getElementById('inputEnd').value = ''; render();
             }
         };
 
         function render() {
-            document.getElementById('listaRascunho').innerHTML = rascunho.map((e, i) => `
-                <div class="p-3 bg-white rounded-2xl flex justify-between items-center text-[10px] font-black uppercase shadow-sm border-l-4 border-blue-600 border border-gray-100">
-                    <span class="truncate">${e.local}</span>
-                    <button onclick="rascunho.splice(${i},1);render()" class="text-red-500 font-black px-2">X</button>
-                </div>`).join('');
+            document.getElementById('listaRascunho').innerHTML = rascunho.map((e, i) => `<div class="p-3 bg-white rounded-xl shadow-sm border-l-4 border-blue-600 flex justify-between text-xs font-bold uppercase italic"><span>${e.local}</span><button onclick="rascunho.splice(${i},1);render()" class="text-red-500">X</button></div>`).join('');
             document.getElementById('btnEnviarLote').classList.toggle('hidden', rascunho.length === 0);
         }
 
         window.enviarLote = async () => {
             for (const item of rascunho) {
-                await addDoc(collection(db, "pedidos"), { 
-                    loja: dadosLoja.nome, zap: dadosLoja.zap, 
-                    local: item.local, pag: item.pag, hora: Date.now() 
-                });
+                await addDoc(collection(db, "pedidos"), { loja: dadosLoja.nome, zap: dadosLoja.zap, local: item.local, pag: item.pag, hora: Date.now() });
             }
-            rascunho = []; render(); alert("Tudo enviado! Marcelo já recebeu.");
+            rascunho = []; render(); alert("Enviado com sucesso!");
         };
 
         window.salvarLoja = () => {
-            const n = document.getElementById('nLoja').value.trim();
-            const z = document.getElementById('zLoja').value.trim();
-            const e = document.getElementById('eLoja').value.trim();
-            if(n && z && e) { 
-                localStorage.setItem('marcelo_loja', JSON.stringify({nome: n, zap: z, endereco: e})); 
-                location.reload(); 
-            }
+            const n = document.getElementById('nLoja').value;
+            const z = document.getElementById('zLoja').value;
+            const e = document.getElementById('eLoja').value;
+            if(n && z && e) { localStorage.setItem('marcelo_loja', JSON.stringify({nome: n, zap: z, endereco: e})); location.reload(); }
         };
     </script>
 </body>
