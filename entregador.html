@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Marcelo Entregas PRO</title>
+    <title>Entregador - Marcelo Entregas</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4 pb-24 font-sans text-slate-900">
@@ -15,10 +15,12 @@
                 <p id="totalDia" class="text-2xl font-black text-blue-600">0</p>
             </div>
             <div class="border-l pl-6 text-center">
-                <p class="text-[9px] font-black text-gray-400 uppercase">Status</p>
-                <div id="stTrabalho" class="text-xs font-black uppercase mt-1 italic">...</div>
+                <p class="text-[9px] font-black text-gray-400 uppercase italic">Status</p>
+                <div id="stTrabalho" class="text-xs font-black uppercase mt-1 italic italic">...</div>
             </div>
         </div>
+
+        <div id="listaChamadas" class="mb-6 space-y-2"></div>
 
         <div class="flex gap-2 mb-6">
             <button onclick="mudarSt('online')" id="btnOn" class="flex-1 py-4 rounded-2xl font-black text-sm uppercase transition-all"></button>
@@ -27,9 +29,9 @@
 
         <div id="proximaParada" class="hidden sticky top-2 z-50 mb-8">
             <div class="bg-slate-900 text-white p-5 rounded-[25px] shadow-2xl border-4 border-blue-500">
-                <p class="text-[9px] font-black uppercase text-blue-400 italic mb-1">Próxima Entrega 🏍️</p>
-                <p id="destEnd" class="text-sm font-black uppercase italic mb-4 leading-tight"></p>
-                <a id="destMaps" href="#" target="_blank" class="block bg-green-500 text-white text-center py-4 rounded-xl font-black text-sm italic shadow-lg active:scale-95 transition-all">ABRIR NO MAPA 📍</a>
+                <p class="text-[9px] font-black uppercase text-blue-400 italic mb-1 italic">Próxima Entrega 🏍️</p>
+                <p id="destEnd" class="text-sm font-black uppercase italic mb-4 leading-tight italic"></p>
+                <a id="destMaps" href="#" target="_blank" class="block bg-green-500 text-white text-center py-4 rounded-xl font-black text-sm italic shadow-lg active:scale-95 transition-all">ABRIR MAPA 📍</a>
             </div>
         </div>
 
@@ -38,7 +40,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
@@ -50,45 +52,58 @@
 
         const ordemFiltro = { "OUTROS/RURAL": 1, "JD. EUROPA": 2, "JD. AMÉRICA": 3, "JD. DAS FLORES": 4, "VILA SÃO JOSÉ": 5, "VILA CAMPANTE": 6, "CENTRO": 7 };
 
+        // MONITORAR CHAMADOS DAS LOJAS
+        onSnapshot(collection(db, "chamadas"), (snaps) => {
+            const div = document.getElementById('listaChamadas');
+            div.innerHTML = '';
+            snaps.forEach(d => {
+                const c = { id: d.id, ...d.data() };
+                div.innerHTML += `
+                    <div class="bg-orange-500 text-white p-4 rounded-2xl flex justify-between items-center shadow-lg animate-pulse">
+                        <span class="font-black text-[10px] italic">🔔 CHAMADO: ${c.loja.toUpperCase()}</span>
+                        <button onclick="removerChamado('${c.id}')" class="bg-white text-orange-600 px-3 py-1 rounded-lg font-black text-[10px]">OK</button>
+                    </div>`;
+            });
+        });
+
+        window.removerChamado = async (id) => await deleteDoc(doc(db, "chamadas", id));
+
         onSnapshot(doc(db, "config", "status"), (d) => {
             stLocal = d.data() || { online: false, ocupado: false };
             const bOn = document.getElementById('btnOn');
             const bOc = document.getElementById('btnOcu');
-            document.getElementById('stTrabalho').innerText = stLocal.online ? (stLocal.ocupado ? "EM ROTA 🛵" : "LIVRE ✅") : "OFFLINE 🔴";
+            document.getElementById('stTrabalho').innerText = stLocal.online ? (stLocal.ocupado ? "ROTA 🛵" : "LIVRE ✅") : "OFFLINE 🔴";
             bOn.innerText = stLocal.online ? "🟢 ONLINE" : "⚪ OFFLINE";
             bOn.className = `flex-1 py-4 font-black rounded-2xl ${stLocal.online ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`;
-            bOc.innerText = stLocal.ocupado ? "🛵 EM ROTA" : "✅ LIVRE";
+            bOc.innerText = stLocal.ocupado ? "🛵 ROTA" : "✅ LIVRE";
             bOc.className = `flex-1 py-4 font-black rounded-2xl ${stLocal.ocupado ? 'bg-orange-500 text-white' : 'bg-blue-100 text-blue-600'}`;
         });
 
         window.mudarSt = (tipo) => setDoc(doc(db, "config", "status"), { ...stLocal, [tipo]: !stLocal[tipo] });
 
         onSnapshot(collection(db, "pedidos"), (snaps) => {
-            let lojas = {};
-            let listaOrdenada = [];
-            
+            let lojas = {}; let listaOrd = [];
             snaps.forEach(d => {
                 const p = { id: d.id, ...d.data() };
                 if(!lojas[p.loja]) lojas[p.loja] = [];
-                lojas[p.loja].push(p);
-                listaOrdenada.push(p);
+                lojas[p.loja].push(p); listaOrd.push(p);
             });
-
-            listaOrdenada.sort((a, b) => (ordemFiltro[a.bairro] || 99) - (ordemFiltro[b.bairro] || 99));
-            if(listaOrdenada.length > 0) {
-                document.getElementById('destEnd').innerText = listaOrdenada[0].local;
-                document.getElementById('destMaps').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listaOrdenada[0].local + ', Quintana - SP')}`;
+            listaOrd.sort((a, b) => (ordemFiltro[a.bairro] || 99) - (ordemFiltro[b.bairro] || 99));
+            
+            if(listaOrd.length > 0) {
+                document.getElementById('destEnd').innerText = listaOrd[0].local;
+                document.getElementById('destMaps').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listaOrd[0].local + ', Quintana - SP')}`;
                 document.getElementById('proximaParada').classList.remove('hidden');
             } else { document.getElementById('proximaParada').classList.add('hidden'); }
 
             const divGeral = document.getElementById('entregas');
-            divGeral.innerHTML = snaps.size ? '' : '<div class="text-center py-20 text-gray-400 font-bold text-xs uppercase italic">Sem pedidos...</div>';
+            divGeral.innerHTML = snaps.size ? '' : '<div class="text-center py-20 text-gray-400 font-bold text-[10px] italic">AGUARDANDO PEDIDOS...</div>';
             
             for (let l in lojas) {
                 const cardId = l.replace(/\s+/g, '');
                 divGeral.innerHTML += `
                 <div id="card-${cardId}" class="bg-white rounded-[30px] shadow-xl mb-6 overflow-hidden border-t-8 border-blue-600 p-4">
-                    <h2 class="font-black text-blue-900 uppercase italic mb-4">${l}</h2>
+                    <h2 class="font-black text-blue-900 uppercase italic mb-4 text-xs italic">${l}</h2>
                     <div class="space-y-3">
                         ${lojas[l].map(p => `
                             <div class="pedido-item p-3 bg-gray-50 rounded-2xl border-l-4 ${p.pag.includes('PAGO') ? 'border-green-500' : 'border-orange-500'}">
@@ -96,16 +111,15 @@
                                     <p class="text-[11px] font-black uppercase italic">${p.local}</p>
                                     <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.local + ', Quintana - SP')}" target="_blank" class="ml-2 bg-blue-600 text-white p-2 rounded-lg text-[9px] font-black">MAPA</a>
                                 </div>
-                                <p class="text-[9px] font-bold italic ${p.pag.includes('PAGO') ? 'text-green-600' : 'text-orange-600'}">💰 ${p.pag}</p>
-                                <div class="flex gap-2 mt-2">
+                                <p class="text-[9px] font-bold italic mb-2 ${p.pag.includes('PAGO') ? 'text-green-600' : 'text-orange-600'} italic">💰 ${p.pag}</p>
+                                <div class="flex gap-2">
                                     <input type="text" id="rec-${p.id}" placeholder="Quem recebeu?" class="flex-1 p-2 rounded-xl border border-gray-200 text-[10px] font-bold outline-none">
                                     <button onclick="concluirEntrega('${p.id}', '${l}', '${p.local}', '${p.zap}', '${p.pag}')" class="bg-green-500 text-white px-5 rounded-xl font-black italic shadow-md">✓</button>
                                 </div>
-                            </div>
-                        `).join('')}
+                            </div>`).join('')}
                     </div>
                     <div id="containerBtn-${cardId}" class="mt-4 ${relatorioMemoria[l] && (!lojas[l] || lojas[l].length === 0) ? '' : 'hidden'}">
-                        <button onclick="enviarRelatorioZap('${l}')" class="w-full bg-purple-600 text-white font-black py-5 uppercase italic text-xs rounded-2xl animate-bounce">Finalizar e Enviar WhatsApp</button>
+                        <button onclick="enviarRelatorioZap('${l}')" class="w-full bg-purple-600 text-white font-black py-5 uppercase italic text-xs rounded-2xl animate-bounce">Enviar Fechamento WhatsApp</button>
                     </div>
                 </div>`;
             }
@@ -114,15 +128,11 @@
         window.concluirEntrega = async (id, loja, local, zap, pag) => {
             const quem = document.getElementById(`rec-${id}`).value || "Não informado";
             const hora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            
             if(!relatorioMemoria[loja]) relatorioMemoria[loja] = { zap, itens: [] };
             relatorioMemoria[loja].itens.push(`✅ *${local}*\n💰 Pag: ${pag}\n👤 Rec: ${quem} | ⏰ ${hora}`);
             localStorage.setItem('relatorioMemoria', JSON.stringify(relatorioMemoria));
-            
-            contador++;
-            localStorage.setItem('contadorMarcelo', contador);
+            contador++; localStorage.setItem('contadorMarcelo', contador);
             document.getElementById('totalDia').innerText = contador;
-
             await deleteDoc(doc(db, "pedidos", id));
         };
 
@@ -130,8 +140,7 @@
             const r = relatorioMemoria[loja];
             const msg = `*FECHAMENTO MARCELO*\n*LOJA:* ${loja.toUpperCase()}\n\n${r.itens.join('\n\n')}`;
             window.open(`https://wa.me/55${r.zap}?text=${encodeURIComponent(msg)}`);
-            delete relatorioMemoria[loja];
-            localStorage.setItem('relatorioMemoria', JSON.stringify(relatorioMemoria));
+            delete relatorioMemoria[loja]; localStorage.setItem('relatorioMemoria', JSON.stringify(relatorioMemoria));
             setTimeout(() => location.reload(), 500);
         };
     </script>
