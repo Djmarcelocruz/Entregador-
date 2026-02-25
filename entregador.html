@@ -27,10 +27,7 @@
 
         <div id="proximaParada" class="hidden sticky top-2 z-50 mb-8">
             <div class="bg-slate-900 text-white p-5 rounded-[25px] shadow-2xl border-4 border-blue-500">
-                <div class="flex justify-between items-center mb-1">
-                    <span class="text-[9px] font-black uppercase text-blue-400 italic">Próxima Entrega 🏍️</span>
-                    <span id="destBairro" class="bg-blue-500 text-slate-900 px-2 py-1 rounded font-black text-[9px]"></span>
-                </div>
+                <p class="text-[9px] font-black uppercase text-blue-400 italic mb-1">Próxima Entrega 🏍️</p>
                 <p id="destEnd" class="text-sm font-black uppercase italic mb-4 leading-tight"></p>
                 <a id="destMaps" href="#" target="_blank" class="block bg-green-500 text-white text-center py-4 rounded-xl font-black text-sm italic shadow-lg active:scale-95 transition-all">ABRIR NO MAPA 📍</a>
             </div>
@@ -41,18 +38,10 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const firebaseConfig = { 
-            apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
-            authDomain: "meuappentregas.firebaseapp.com", 
-            projectId: "meuappentregas", 
-            storageBucket: "meuappentregas.firebasestorage.app", 
-            messagingSenderId: "442484186787", 
-            appId: "1:442484186787:web:ac914827ebebda987f2916" 
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
+        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
         let stLocal = { online: false, ocupado: false };
         let relatorioMemoria = JSON.parse(localStorage.getItem('relatorioMemoria')) || {};
@@ -67,92 +56,67 @@
             const bOc = document.getElementById('btnOcu');
             document.getElementById('stTrabalho').innerText = stLocal.online ? (stLocal.ocupado ? "EM ROTA 🛵" : "LIVRE ✅") : "OFFLINE 🔴";
             bOn.innerText = stLocal.online ? "🟢 ONLINE" : "⚪ OFFLINE";
-            bOn.className = `flex-1 py-4 font-black rounded-2xl ${stLocal.online ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-300 text-gray-500'}`;
+            bOn.className = `flex-1 py-4 font-black rounded-2xl ${stLocal.online ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`;
             bOc.innerText = stLocal.ocupado ? "🛵 EM ROTA" : "✅ LIVRE";
-            bOc.className = `flex-1 py-4 font-black rounded-2xl ${stLocal.ocupado ? 'bg-orange-500 text-white shadow-lg' : 'bg-blue-100 text-blue-600'}`;
+            bOc.className = `flex-1 py-4 font-black rounded-2xl ${stLocal.ocupado ? 'bg-orange-500 text-white' : 'bg-blue-100 text-blue-600'}`;
         });
 
         window.mudarSt = (tipo) => setDoc(doc(db, "config", "status"), { ...stLocal, [tipo]: !stLocal[tipo] });
 
         onSnapshot(collection(db, "pedidos"), (snaps) => {
             let lojas = {};
-            let listaOrdenadaParaDestaque = [];
+            let listaOrdenada = [];
             
             snaps.forEach(d => {
                 const p = { id: d.id, ...d.data() };
                 if(!lojas[p.loja]) lojas[p.loja] = [];
                 lojas[p.loja].push(p);
-                listaOrdenadaParaDestaque.push(p);
+                listaOrdenada.push(p);
             });
 
-            listaOrdenadaParaDestaque.sort((a, b) => (ordemFiltro[a.bairro] || 99) - (ordemFiltro[b.bairro] || 99));
-            atualizarQuadroDestaque(listaOrdenadaParaDestaque);
+            listaOrdenada.sort((a, b) => (ordemFiltro[a.bairro] || 99) - (ordemFiltro[b.bairro] || 99));
+            if(listaOrdenada.length > 0) {
+                document.getElementById('destEnd').innerText = listaOrdenada[0].local;
+                document.getElementById('destMaps').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listaOrdenada[0].local + ', Quintana - SP')}`;
+                document.getElementById('proximaParada').classList.remove('hidden');
+            } else { document.getElementById('proximaParada').classList.add('hidden'); }
 
             const divGeral = document.getElementById('entregas');
-            divGeral.innerHTML = snaps.size ? '' : '<div class="text-center py-20 text-gray-400 font-bold italic text-xs uppercase">Aguardando novos pedidos...</div>';
+            divGeral.innerHTML = snaps.size ? '' : '<div class="text-center py-20 text-gray-400 font-bold text-xs uppercase italic">Sem pedidos...</div>';
             
             for (let l in lojas) {
                 const cardId = l.replace(/\s+/g, '');
-                const agrupados = lojas[l].reduce((acc, obj) => {
-                    const key = obj.bairro || 'CENTRO';
-                    if (!acc[key]) acc[key] = [];
-                    acc[key].push(obj);
-                    return acc;
-                }, {});
-
-                const bairrosNaTela = Object.keys(agrupados).sort((a, b) => (ordemFiltro[a] || 99) - (ordemFiltro[b] || 99));
-
                 divGeral.innerHTML += `
-                <div class="bg-white rounded-[30px] shadow-xl mb-6 overflow-hidden border-t-8 border-blue-600">
-                    <div class="p-4 bg-blue-50 flex justify-between items-center">
-                        <h2 class="font-black text-blue-900 uppercase italic text-sm">${l}</h2>
-                    </div>
-                    <div class="p-4">
-                        ${bairrosNaTela.map(b => `
-                            <div class="mb-4">
-                                <p class="text-[8px] font-black text-gray-400 border-b mb-2 uppercase">${b}</p>
-                                ${agrupados[b].map(p => `
-                                    <div class="p-3 bg-gray-50 rounded-2xl border-l-4 ${p.pag.includes('PAGO') ? 'border-green-500' : 'border-orange-500'} mb-3">
-                                        <div class="flex justify-between items-start mb-1">
-                                            <p class="text-[11px] font-black text-gray-700 uppercase italic flex-1">${p.local}</p>
-                                            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.local + ', Quintana - SP')}" target="_blank" class="ml-2 bg-blue-600 text-white p-2 rounded-lg text-[9px] font-black">MAPA</a>
-                                        </div>
-                                        <div class="text-[9px] font-black italic mb-2 ${p.pag.includes('PAGO') ? 'text-green-600' : 'text-orange-600'}">💰 ${p.pag}</div>
-                                        <div class="flex gap-2">
-                                            <input type="text" id="rec-${p.id}" placeholder="Quem recebeu?" class="flex-1 p-2 rounded-xl border border-gray-200 text-[10px] font-bold outline-none">
-                                            <button onclick="concluirEntrega('${p.id}', '${l}', '${p.local}', '${p.zap}', '${p.pag}')" class="bg-green-500 text-white px-5 rounded-xl font-black italic shadow-md">✓</button>
-                                        </div>
-                                    </div>
-                                `).join('')}
+                <div id="card-${cardId}" class="bg-white rounded-[30px] shadow-xl mb-6 overflow-hidden border-t-8 border-blue-600 p-4">
+                    <h2 class="font-black text-blue-900 uppercase italic mb-4">${l}</h2>
+                    <div class="space-y-3">
+                        ${lojas[l].map(p => `
+                            <div class="pedido-item p-3 bg-gray-50 rounded-2xl border-l-4 ${p.pag.includes('PAGO') ? 'border-green-500' : 'border-orange-500'}">
+                                <div class="flex justify-between items-start">
+                                    <p class="text-[11px] font-black uppercase italic">${p.local}</p>
+                                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.local + ', Quintana - SP')}" target="_blank" class="ml-2 bg-blue-600 text-white p-2 rounded-lg text-[9px] font-black">MAPA</a>
+                                </div>
+                                <p class="text-[9px] font-bold italic ${p.pag.includes('PAGO') ? 'text-green-600' : 'text-orange-600'}">💰 ${p.pag}</p>
+                                <div class="flex gap-2 mt-2">
+                                    <input type="text" id="rec-${p.id}" placeholder="Quem recebeu?" class="flex-1 p-2 rounded-xl border border-gray-200 text-[10px] font-bold outline-none">
+                                    <button onclick="concluirEntrega('${p.id}', '${l}', '${p.local}', '${p.zap}', '${p.pag}')" class="bg-green-500 text-white px-5 rounded-xl font-black italic shadow-md">✓</button>
+                                </div>
                             </div>
                         `).join('')}
                     </div>
-                    <div id="containerBtn-${cardId}" class="p-2 ${relatorioMemoria[l] && (!lojas[l] || lojas[l].length === 0) ? '' : 'hidden'}">
-                        <button onclick="enviarRelatorioZap('${l}')" class="w-full bg-purple-600 text-white font-black py-5 uppercase italic text-xs rounded-2xl">Finalizar e Enviar WhatsApp</button>
+                    <div id="containerBtn-${cardId}" class="mt-4 ${relatorioMemoria[l] && (!lojas[l] || lojas[l].length === 0) ? '' : 'hidden'}">
+                        <button onclick="enviarRelatorioZap('${l}')" class="w-full bg-purple-600 text-white font-black py-5 uppercase italic text-xs rounded-2xl animate-bounce">Finalizar e Enviar WhatsApp</button>
                     </div>
                 </div>`;
             }
         });
 
-        function atualizarQuadroDestaque(pedidos) {
-            const quadro = document.getElementById('proximaParada');
-            if(pedidos.length > 0) {
-                const p = pedidos[0];
-                document.getElementById('destBairro').innerText = p.bairro || 'CENTRO';
-                document.getElementById('destEnd').innerText = p.local;
-                document.getElementById('destMaps').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.local + ', Quintana - SP')}`;
-                quadro.classList.remove('hidden');
-            } else { quadro.classList.add('hidden'); }
-        }
-
         window.concluirEntrega = async (id, loja, local, zap, pag) => {
-            const inputQuem = document.getElementById(`rec-${id}`);
-            const quem = inputQuem ? inputQuem.value || "Não informado" : "Não informado";
+            const quem = document.getElementById(`rec-${id}`).value || "Não informado";
             const hora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
             
             if(!relatorioMemoria[loja]) relatorioMemoria[loja] = { zap, itens: [] };
             relatorioMemoria[loja].itens.push(`✅ *${local}*\n💰 Pag: ${pag}\n👤 Rec: ${quem} | ⏰ ${hora}`);
-            
             localStorage.setItem('relatorioMemoria', JSON.stringify(relatorioMemoria));
             
             contador++;
@@ -160,16 +124,12 @@
             document.getElementById('totalDia').innerText = contador;
 
             await deleteDoc(doc(db, "pedidos", id));
-            // A própria atualização do onSnapshot cuidará de mostrar o botão se a lista estiver vazia agora.
         };
 
         window.enviarRelatorioZap = (loja) => {
             const r = relatorioMemoria[loja];
-            const dataHoje = new Date().toLocaleDateString('pt-BR');
-            const msg = `*FECHAMENTO MARCELO - ${dataHoje}*\n*LOJA:* ${loja.toUpperCase()}\n\n${r.itens.join('\n\n')}\n\n*Total de hoje: ${contador} entregas* 🏍️`;
-            
+            const msg = `*FECHAMENTO MARCELO*\n*LOJA:* ${loja.toUpperCase()}\n\n${r.itens.join('\n\n')}`;
             window.open(`https://wa.me/55${r.zap}?text=${encodeURIComponent(msg)}`);
-            
             delete relatorioMemoria[loja];
             localStorage.setItem('relatorioMemoria', JSON.stringify(relatorioMemoria));
             setTimeout(() => location.reload(), 500);
