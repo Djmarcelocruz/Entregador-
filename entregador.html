@@ -3,122 +3,379 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marcelo Entregas</title>
+    <title>Marcelo - Painel de Entregas</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.3); opacity: 0; } }
+        .animate-pulse-ring { animation: pulse-ring 2s infinite; }
+        @keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .slide-in { animation: slideIn 0.3s ease-out; }
+        .modo-correria { filter: grayscale(100%) contrast(120%); }
+        .modo-correria .nao-essencial { display: none !important; }
+    </style>
 </head>
-<body class="bg-slate-100 p-4">
-    <div class="max-w-md mx-auto">
-        <div id="avisoSom" class="bg-blue-600 text-white p-4 rounded-2xl mb-4 text-center font-black animate-pulse cursor-pointer" onclick="this.remove()">
-            CLIQUE AQUI PARA ATIVAR O SOM 🔊
+<body class="bg-slate-100 p-4 font-sans min-h-screen">
+    <div class="max-w-md mx-auto pb-24" id="appContainer">
+        
+        <!-- Header -->
+        <div class="bg-white p-4 rounded-2xl shadow-lg mb-4 border-b-4 border-blue-600">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase">Olá, Marcelo</p>
+                    <h1 class="text-xl font-black text-blue-900">Painel de Entregas</h1>
+                </div>
+                <button onclick="toggleOnline()" id="btnOnline" class="px-4 py-2 rounded-full font-black text-xs uppercase shadow-lg transition-all bg-red-500 text-white">
+                    ● Offline
+                </button>
+            </div>
+            
+            <!-- Stats -->
+            <div class="flex justify-around mt-4 pt-4 border-t border-gray-100">
+                <div class="text-center">
+                    <p class="text-2xl font-black text-blue-600" id="totalHoje">0</p>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase">Hoje</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-2xl font-black text-orange-600" id="emAndamento">0</p>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase">Pendentes</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-2xl font-black text-green-600" id="concluidas">0</p>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase">Feitas</p>
+                </div>
+            </div>
         </div>
 
-        <div class="bg-white p-4 rounded-3xl shadow-lg mb-4 flex justify-around">
-            <div class="text-center"><p class="text-[9px] font-black italic">CONCLUÍDAS</p><p id="totalDia" class="text-2xl font-black text-blue-600">0</p></div>
-            <div class="text-center"><p class="text-[9px] font-black italic">MEU STATUS</p><div id="stTrabalho" class="text-xs font-black uppercase">...</div></div>
-        </div>
+        <!-- Botão Modo Correria (aparece quando +4 entregas) -->
+        <button id="btnModoCorreria" onclick="toggleModoCorreria()" class="hidden w-full bg-red-600 text-white p-3 rounded-xl font-black uppercase text-sm mb-4 shadow-lg animate-pulse">
+            🚨 ATIVAR MODO CORRERIA
+        </button>
 
+        <!-- Chamadas -->
         <div id="listaChamadas" class="mb-4 space-y-2"></div>
-        <div id="entregas" class="space-y-6"></div>
+
+        <!-- Entregas por Loja -->
+        <div id="entregas" class="space-y-4"></div>
+
+        <!-- Checklist do Dia -->
+        <div class="bg-white p-4 rounded-2xl shadow-lg mt-4 nao-essencial">
+            <h3 class="font-black text-gray-800 uppercase text-sm mb-3">✓ Checklist</h3>
+            <div class="space-y-2 text-sm">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="checkCapacete" class="w-5 h-5 rounded border-gray-300">
+                    <span class="text-gray-700">Capacete e documentos</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="checkBateria" class="w-5 h-5 rounded border-gray-300">
+                    <span class="text-gray-700">Celular carregado</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="checkBag" class="w-5 h-5 rounded border-gray-300">
+                    <span class="text-gray-700">Bag térmica limpa</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Botão Emergência -->
+        <button onclick="emergencia()" class="fixed bottom-4 right-4 w-12 h-12 bg-red-600 rounded-full shadow-2xl flex items-center justify-center text-xl z-50 hover:scale-110 transition-transform" title="Emergência">
+            🚨
+        </button>
     </div>
 
-    <audio id="som" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+    <!-- Áudio -->
+    <audio id="somNotificacao" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", authDomain: "meuappentregas.firebaseapp.com", projectId: "meuappentregas", storageBucket: "meuappentregas.firebasestorage.app", messagingSenderId: "442484186787", appId: "1:442484186787:web:ac914827ebebda987f2916" };
-        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
-
-        let memoriaRelatorio = JSON.parse(localStorage.getItem('relatorio_marcelo')) || {};
-        let ultimaQtd = 0;
-
-        // Monitorar Chamadas
-        onSnapshot(collection(db, "chamadas"), (snaps) => {
-            const div = document.getElementById('listaChamadas');
-            div.innerHTML = '';
-            if(snaps.size > ultimaQtd) { document.getElementById('som').play().catch(()=>{}); }
-            ultimaQtd = snaps.size;
-
-            snaps.forEach(d => {
-                const c = d.data();
-                if(c.status === "Pendente") {
-                    div.innerHTML += `<div class="bg-orange-500 text-white p-4 rounded-2xl flex justify-between items-center shadow-lg mb-2 border-2 border-white"><div><p class="font-black text-xs">🔔 ${c.loja}</p><p class="text-[8px] uppercase">${c.enderecoLoja}</p></div><button onclick="ver('${d.id}')" class="bg-white text-orange-600 px-4 py-2 rounded-xl font-black text-xs">OK!</button></div>`;
-                } else {
-                    div.innerHTML += `<div class="bg-slate-800 text-white p-3 rounded-xl flex justify-between items-center mb-2 border-l-8 border-green-500"><div class="text-[9px] font-black uppercase">${c.loja}</div><button onclick="limpar('${d.id}')" class="bg-red-500 px-3 py-1 rounded text-[8px]">COLETEI</button></div>`;
-                }
-            });
-        });
-
-        window.ver = async (id) => await updateDoc(doc(db, "chamadas", id), { status: "Visualizado" });
-        window.limpar = async (id) => await deleteDoc(doc(db, "chamadas", id));
-
-        // Monitorar Pedidos
-        onSnapshot(collection(db, "pedidos"), (snaps) => {
-            let porLoja = {};
-            snaps.forEach(d => {
-                const p = {id: d.id, ...d.data()};
-                if(!porLoja[p.loja]) porLoja[p.loja] = [];
-                porLoja[p.loja].push(p);
-            });
-
-            const divGeral = document.getElementById('entregas');
-            divGeral.innerHTML = '';
-            
-            for (let loja in porLoja) {
-                divGeral.innerHTML += `
-                <div class="bg-white rounded-3xl shadow-xl mb-6 p-4 border-t-8 border-blue-600">
-                    <h2 class="font-black text-blue-900 mb-4 text-xs italic uppercase">${loja}</h2>
-                    <div class="space-y-3">
-                        ${porLoja[loja].map(p => `
-                        <div class="p-3 bg-gray-50 rounded-2xl border-l-4 border-orange-500">
-                            <p class="text-[10px] font-black uppercase">${p.local}</p>
-                            <p class="text-[8px] font-bold text-gray-400 mb-2">${p.pag}</p>
-                            <div class="flex gap-2">
-                                <input id="rec-${p.id}" placeholder="Quem recebeu?" class="flex-1 p-2 rounded-lg border text-[10px]">
-                                <button onclick="concluir('${p.id}','${loja}','${p.local}','${p.zap}','${p.pag}')" class="bg-green-600 text-white px-4 rounded-xl font-black">✓</button>
-                            </div>
-                        </div>`).join('')}
-                    </div>
-                </div>`;
-            }
-
-            // Exibir botões de finalizar para lojas concluídas
-            for (let l in memoriaRelatorio) {
-                if (!porLoja[l]) {
-                    divGeral.innerHTML += `<div class="bg-purple-600 p-6 rounded-3xl text-center mb-10"><p class="text-white font-black text-xs mb-4 uppercase italic">${l} CONCLUÍDA!</p><button onclick="zap('${l}')" class="w-full bg-white text-purple-700 p-4 rounded-2xl font-black text-xs">ENVIAR RELATÓRIO WHATSAPP</button></div>`;
-                }
-            }
-            atualizarContador();
-        });
-
-        window.concluir = async (id, loja, local, zap, pag) => {
-            const rec = document.getElementById(`rec-${id}`).value || "N/I";
-            if(!memoriaRelatorio[loja]) memoriaRelatorio[loja] = { zap, itens: [] };
-            memoriaRelatorio[loja].itens.push(`✅ *${local}*\n💰 ${pag}\n👤 Rec: ${rec}`);
-            localStorage.setItem('relatorio_marcelo', JSON.stringify(memoriaRelatorio));
-            await deleteDoc(doc(db, "pedidos", id));
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
+            authDomain: "meuappentregas.firebaseapp.com", 
+            projectId: "meuappentregas", 
+            storageBucket: "meuappentregas.firebasestorage.app", 
+            messagingSenderId: "442484186787", 
+            appId: "1:442484186787:web:ac914827ebebda987f2916" 
         };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        signInAnonymously(auth);
+        
+        let online = false;
+        let modoCorreria = false;
+        let entregasDoDia = [];
+        let chamadasPendentes = [];
 
-        window.zap = (loja) => {
-            const r = memoriaRelatorio[loja];
-            const msg = `*FECHAMENTO MARCELO*\n\n${r.itens.join('\n\n')}`;
-            window.open(`https://wa.me/55${r.zap}?text=${encodeURIComponent(msg)}`);
-            delete memoriaRelatorio[loja];
-            localStorage.setItem('relatorio_marcelo', JSON.stringify(memoriaRelatorio));
-            location.reload();
+        // Status Online/Offline
+        window.toggleOnline = async () => {
+            online = !online;
+            await setDoc(doc(db, "config", "status"), { 
+                online: online, 
+                ocupado: false,
+                hora: serverTimestamp()
+            });
         };
-
-        function atualizarContador() {
-            let total = 0;
-            for(let l in memoriaRelatorio) total += memoriaRelatorio[l].itens.length;
-            document.getElementById('totalDia').innerText = total;
-        }
 
         onSnapshot(doc(db, "config", "status"), (d) => {
             const s = d.data() || { online: false };
-            document.getElementById('stTrabalho').innerText = s.online ? "ONLINE" : "OFFLINE";
+            online = s.online;
+            const btn = document.getElementById('btnOnline');
+            
+            if(online) {
+                btn.className = "px-4 py-2 rounded-full font-black text-xs uppercase shadow-lg transition-all bg-green-600 text-white animate-pulse";
+                btn.innerHTML = "● Online";
+            } else {
+                btn.className = "px-4 py-2 rounded-full font-black text-xs uppercase shadow-lg transition-all bg-red-500 text-white";
+                btn.innerHTML = "● Offline";
+            }
         });
+
+        // Escutar Chamadas
+        onSnapshot(collection(db, "chamadas"), (snaps) => {
+            const div = document.getElementById('listaChamadas');
+            chamadasPendentes = [];
+            
+            if(!snaps.empty && online) {
+                const audio = document.getElementById('somNotificacao');
+                audio.play().catch(()=>{});
+            }
+            
+            div.innerHTML = '';
+            snaps.forEach(d => {
+                const c = d.data();
+                chamadasPendentes.push({id: d.id, ...c});
+                
+                if(c.status === "Pendente") {
+                    div.innerHTML += `
+                    <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-2xl shadow-lg slide-in relative overflow-hidden">
+                        <div class="absolute inset-0 bg-white opacity-10 animate-pulse"></div>
+                        <div class="relative flex justify-between items-center">
+                            <div>
+                                <p class="font-black text-lg flex items-center gap-2">
+                                    <span class="animate-bounce">🔔</span> ${c.loja}
+                                </p>
+                                <p class="text-xs opacity-90 mt-1">${c.enderecoLoja}</p>
+                                <a href="tel:${c.zap}" class="text-xs underline mt-1 block">📞 ${c.zap}</a>
+                            </div>
+                            <button onclick="aceitarChamada('${d.id}')" class="bg-white text-orange-600 px-4 py-2 rounded-xl font-black text-xs uppercase shadow-lg hover:scale-105 transition-transform">
+                                VOU! 🏍️
+                            </button>
+                        </div>
+                    </div>`;
+                } else if(c.status === "Visualizado") {
+                    div.innerHTML += `
+                    <div class="bg-slate-800 text-white p-3 rounded-xl border-l-4 border-green-500 slide-in">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-black text-sm">${c.loja}</p>
+                                <p class="text-xs text-gray-400">Aguardando coleta</p>
+                            </div>
+                            <button onclick="finalizarChamada('${d.id}')" class="bg-green-600 text-white px-3 py-1 rounded-lg font-black text-xs">
+                                ✅ Coletei
+                            </button>
+                        </div>
+                    </div>`;
+                }
+            });
+        });
+
+        window.aceitarChamada = async (id) => {
+            await updateDoc(doc(db, "chamadas", id), { 
+                status: "Visualizado",
+                horaResposta: serverTimestamp()
+            });
+            await setDoc(doc(db, "config", "status"), { online: true, ocupado: true }, { merge: true });
+        };
+
+        window.finalizarChamada = async (id) => {
+            await deleteDoc(doc(db, "chamadas", id));
+            await setDoc(doc(db, "config", "status"), { online: true, ocupado: false }, { merge: true });
+        };
+
+        // Escutar Entregas
+        onSnapshot(collection(db, "pedidos"), (snaps) => {
+            let porLoja = {};
+            entregasDoDia = [];
+            
+            snaps.forEach(d => {
+                const p = {id: d.id, ...d.data()};
+                entregasDoDia.push(p);
+                
+                if(p.status !== "Concluido") {
+                    if(!porLoja[p.loja]) porLoja[p.loja] = [];
+                    porLoja[p.loja].push(p);
+                }
+            });
+
+            // Atualizar contadores
+            const pendentes = entregasDoDia.filter(e => e.status !== "Concluido").length;
+            const feitas = entregasDoDia.filter(e => e.status === "Concluido").length;
+            
+            document.getElementById('emAndamento').innerText = pendentes;
+            document.getElementById('concluidas').innerText = feitas;
+            document.getElementById('totalHoje').innerText = entregasDoDia.length;
+
+            // Mostrar/ocultar modo correria
+            const btnCorreria = document.getElementById('btnModoCorreria');
+            if(pendentes >= 4) {
+                btnCorreria.classList.remove('hidden');
+                btnCorreria.innerHTML = `🚨 MODO CORRERIA (${pendentes} entregas)`;
+            } else {
+                btnCorreria.classList.add('hidden');
+                if(modoCorreria) toggleModoCorreria();
+            }
+
+            // Renderizar entregas
+            const div = document.getElementById('entregas');
+            div.innerHTML = '';
+            
+            for(let loja in porLoja) {
+                const entregas = porLoja[loja];
+                
+                div.innerHTML += `
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+                    <div class="bg-blue-600 p-3 text-white flex justify-between items-center">
+                        <div>
+                            <h3 class="font-black text-sm uppercase">${loja}</h3>
+                            <p class="text-[10px] opacity-80">${entregas.length} entrega(s)</p>
+                        </div>
+                        <button onclick="abrirMapa('${loja}')" class="bg-white/20 p-2 rounded-lg text-xs hover:bg-white/30">
+                            🗺️ Mapa
+                        </button>
+                    </div>
+                    
+                    <div class="p-3 space-y-2">
+                        ${entregas.map((p, idx) => `
+                        <div class="p-3 bg-gray-50 rounded-xl border-l-4 ${p.status === 'SaiuParaEntrega' ? 'border-orange-500' : 'border-blue-500'}">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex-1">
+                                    <p class="font-black text-sm text-gray-800">${p.local}</p>
+                                    ${p.referencia ? `<p class="text-xs text-gray-500">📍 ${p.referencia}</p>` : ''}
+                                    <p class="text-xs font-bold text-blue-600 mt-1">${p.pag}</p>
+                                    ${p.obs ? `<p class="text-[10px] text-orange-600 mt-1 bg-orange-50 p-1 rounded">⚠️ ${p.obs}</p>` : ''}
+                                </div>
+                                <span class="text-xs font-bold text-gray-400">#${idx + 1}</span>
+                            </div>
+                            
+                            <div class="flex gap-2 mt-2">
+                                ${p.status !== 'SaiuParaEntrega' ? `
+                                <button onclick="saiuParaEntrega('${p.id}')" class="flex-1 bg-orange-500 text-white py-2 rounded-lg font-black text-xs">
+                                    🛵 Sair
+                                </button>` : `
+                                <button onclick="chegouEntrega('${p.id}', '${p.loja}', '${p.zap}')" class="flex-1 bg-green-600 text-white py-2 rounded-lg font-black text-xs">
+                                    ✅ Cheguei
+                                </button>`}
+                                
+                                <button onclick="abrirRota('${p.local}')" class="bg-blue-100 text-blue-600 px-3 rounded-lg font-black text-sm" title="Ver rota">
+                                    📍
+                                </button>
+                            </div>
+                        </div>`).join('')}
+                    </div>
+                    
+                    ${entregas.every(e => e.status === 'Concluido') ? `
+                    <div class="p-3 bg-green-50 border-t border-green-200">
+                        <button onclick="fecharLoja('${loja}', '${entregas[0].zap}')" class="w-full bg-green-600 text-white py-3 rounded-xl font-black uppercase text-sm shadow-lg">
+                            📱 Enviar Resumo WhatsApp
+                        </button>
+                    </div>` : ''}
+                </div>`;
+            }
+        });
+
+        window.saiuParaEntrega = async (id) => {
+            await updateDoc(doc(db, "pedidos", id), { 
+                status: "SaiuParaEntrega",
+                horaSaida: serverTimestamp()
+            });
+        };
+
+        window.chegouEntrega = async (id, loja, zap) => {
+            const nome = prompt("Quem recebeu a entrega?");
+            if(!nome) return;
+            
+            await updateDoc(doc(db, "pedidos", id), {
+                status: "Concluido",
+                recebedor: nome,
+                horaEntrega: serverTimestamp()
+            });
+            
+            // Avisar loja
+            const msg = `✅ *Entrega Concluída*\n\nPedido entregue para: *${nome}*\n⏰ ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
+            window.open(`https://wa.me/55${zap}?text=${encodeURIComponent(msg)}`);
+        };
+
+        window.abrirRota = (endereco) => {
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(endereco)}`, '_blank');
+        };
+
+        window.abrirMapa = (loja) => {
+            // Abrir mapa com todas as entregas da loja
+            const entregasLoja = entregasDoDia.filter(e => e.loja === loja && e.status !== 'Concluido');
+            if(entregasLoja.length > 0) {
+                const destinos = entregasLoja.map(e => encodeURIComponent(e.local)).join('|');
+                window.open(`https://www.google.com/maps/dir/?api=1&destination=${destinos}`, '_blank');
+            }
+        };
+
+        window.toggleModoCorreria = () => {
+            modoCorreria = !modoCorreria;
+            const container = document.getElementById('appContainer');
+            const btn = document.getElementById('btnModoCorreria');
+            
+            if(modoCorreria) {
+                container.classList.add('modo-correria');
+                btn.innerHTML = "🛑 DESATIVAR MODO CORRERIA";
+                btn.classList.remove('animate-pulse');
+                
+                // Mostrar apenas próxima entrega
+                const pendentes = entregasDoDia.filter(e => e.status !== 'Concluido');
+                if(pendentes.length > 0) {
+                    const proxima = pendentes[0];
+                    alert(`🚀 PRÓXIMA ENTREGA:\n\n${proxima.local}\n${proxima.pag}\n\n${proxima.obs || ''}`);
+                }
+            } else {
+                container.classList.remove('modo-correria');
+                btn.innerHTML = `🚨 MODO CORRERIA (${pendentes.length} entregas)`;
+                btn.classList.add('animate-pulse');
+            }
+        };
+
+        window.fecharLoja = (loja, zap) => {
+            const entregasLoja = entregasDoDia.filter(e => e.loja === loja && e.status === 'Concluido');
+            const data = new Date().toLocaleDateString('pt-BR');
+            
+            let msg = `*RESUMO MARCELO - ${data}*\n\n`;
+            msg += `*Loja:* ${loja}\n`;
+            msg += `*Total de entregas:* ${entregasLoja.length}\n\n`;
+            
+            entregasLoja.forEach((e, i) => {
+                msg += `${i + 1}. ${e.local}\n`;
+                msg += `   ${e.pag} | ${e.recebedor}\n\n`;
+            });
+            
+            msg += `\nObrigado pela parceria! 🚀`;
+            
+            window.open(`https://wa.me/55${zap}?text=${encodeURIComponent(msg)}`);
+        };
+
+        window.emergencia = () => {
+            if(!confirm("🚨 CONFIRMA ALERTA DE EMERGÊNCIA?\n\nIsso enviará sua localização para contatos de segurança.")) return;
+            
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const link = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                const msg = `🚨 *ALERTA DE EMERGÊNCIA*\n\nMarcelo precisa de ajuda!\n📍 Local: ${link}\n⏰ ${new Date().toLocaleTimeString()}`;
+                
+                // Enviar para contatos (adicione números reais)
+                ['14999999999'].forEach(num => {
+                    window.open(`https://wa.me/55${num}?text=${encodeURIComponent(msg)}`);
+                });
+            });
+        };
     </script>
 </body>
 </html>
