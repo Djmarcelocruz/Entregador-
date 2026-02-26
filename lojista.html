@@ -3,103 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Marcelo Entregas</title>
+    <title>Marcelo Entregas - Lojista</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(249, 115, 22, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+        }
+        .slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
 </head>
 <body class="bg-gray-50 p-4 font-sans min-h-screen">
     <div class="max-w-md mx-auto pb-20">
         
         <!-- CADASTRO -->
-        <div id="cadastro" class="hidden bg-white p-6 rounded-3xl shadow-xl">
+        <div id="cadastro" class="hidden bg-white p-6 rounded-3xl shadow-xl slide-up">
             <div class="text-center mb-6">
-                <div class="w-20 h-20 bg-blue-600 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-3xl">🏪</div>
+                <div class="w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-3xl shadow-lg">🏪</div>
                 <h2 class="text-2xl font-black text-gray-800">Bem-vindo!</h2>
+                <p class="text-sm text-gray-500 mt-2">Configure sua loja para começar</p>
             </div>
             
             <div class="space-y-4">
-                <input id="nLoja" placeholder="Nome da loja" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm">
-                <input id="zLoja" placeholder="WhatsApp (11 digitos)" type="tel" maxlength="11" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm">
-                <input id="eLoja" placeholder="Endereco completo" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm">
-                <button onclick="salvar()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-black uppercase shadow-lg">
-                    Comecar
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">Nome da Loja</label>
+                    <input id="nLoja" placeholder="Ex: Mercado do João" autocomplete="off" 
+                        class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm transition-colors">
+                </div>
+                
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">WhatsApp (com DDD)</label>
+                    <input id="zLoja" placeholder="14999999999" type="tel" maxlength="11" autocomplete="off" 
+                        class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm transition-colors">
+                </div>
+                
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">Endereço Completo</label>
+                    <input id="eLoja" placeholder="Rua, número, bairro, cidade" autocomplete="off" 
+                        class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm transition-colors">
+                </div>
+                
+                <button onclick="salvar()" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-xl font-black uppercase shadow-lg active:scale-95 transition-transform mt-4">
+                    Começar a Usar
                 </button>
             </div>
         </div>
 
-        <!-- PAINEL -->
+        <!-- PAINEL PRINCIPAL -->
         <div id="painel" class="hidden space-y-4">
             
             <!-- HEADER -->
-            <div class="bg-blue-600 p-4 rounded-2xl shadow-lg text-white flex justify-between items-center">
-                <div>
-                    <p class="text-xs opacity-80">Sua Loja</p>
-                    <h1 id="nomeLoja" class="text-lg font-black"></h1>
-                </div>
-                <div class="text-right">
-                    <p class="text-xs opacity-80">Marcelo</p>
-                    <span id="statusMarcelo" class="text-xs font-bold bg-white/20 px-2 py-1 rounded">...</span>
-                </div>
-            </div>
-
-            <!-- STATUS DO CHAMADO -->
-            <div id="statusChamado" class="hidden">
-                <div id="boxChamado" class="bg-white p-4 rounded-2xl shadow-lg border-l-4 border-gray-400">
-                    <p id="txtChamado" class="font-black text-center">Chamando...</p>
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-2xl shadow-lg text-white">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-xs opacity-80">Sua Loja</p>
+                        <h1 id="nomeLoja" class="text-lg font-black truncate max-w-[200px]"></h1>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs opacity-80">Marcelo</p>
+                        <span id="statusMarcelo" class="inline-flex items-center gap-1 text-xs font-bold bg-white/20 px-3 py-1 rounded-full">
+                            <span class="w-2 h-2 rounded-full bg-gray-400 animate-pulse"></span>
+                            ...
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            <!-- BOTAO CHAMAR -->
-            <button id="btnChamar" onclick="chamar()" class="w-full bg-orange-500 text-white p-5 rounded-2xl font-black shadow-xl uppercase text-lg disabled:opacity-50">
-                🔔 Chamar Marcelo
+            <!-- ALERTA DE CHAMADO ATIVO -->
+            <div id="alertaChamado" class="hidden bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 p-4 rounded-2xl shadow-lg">
+                <div class="flex items-center gap-3">
+                    <div class="text-2xl">⏳</div>
+                    <div>
+                        <p class="font-black">Chamando Marcelo...</p>
+                        <p class="text-xs">Aguarde confirmação</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTÃO CHAMAR -->
+            <button id="btnChamar" onclick="chamar()" disabled
+                class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-2xl font-black shadow-xl uppercase text-lg disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 transition-all pulse-ring">
+                <span class="flex items-center justify-center gap-2">
+                    <span class="text-2xl">🔔</span>
+                    <span>Chamar Marcelo</span>
+                </span>
             </button>
 
+            <!-- STATUS DA CHAMADA -->
+            <div id="statusChamado" class="hidden">
+                <div class="bg-white p-4 rounded-2xl shadow-lg border-l-4 border-green-500">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-2xl">✅</div>
+                        <div>
+                            <p class="font-black text-green-800">Marcelo está vindo!</p>
+                            <p class="text-xs text-green-600">Sua entrega será coletada em breve</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- NOVA ENTREGA -->
-            <div class="bg-white p-5 rounded-2xl shadow-lg">
-                <h2 class="font-black text-gray-800 mb-3 flex items-center gap-2">
-                    <span>📦</span> Nova Entrega
+            <div class="bg-white p-5 rounded-2xl shadow-lg slide-up">
+                <h2 class="font-black text-gray-800 mb-4 flex items-center gap-2 text-lg">
+                    <span class="bg-blue-100 p-2 rounded-lg">📦</span> 
+                    Nova Entrega
                 </h2>
 
                 <div class="space-y-3">
-                    <input id="end" placeholder="Rua e numero" autocomplete="off" class="w-full p-4 bg-blue-50 rounded-xl font-bold text-sm outline-none">
-                    <input id="ref" placeholder="Referencia (opcional)" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl font-bold text-sm outline-none">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Endereço de Entrega</label>
+                        <input id="end" placeholder="Rua, número, bairro" autocomplete="off" 
+                            class="w-full p-4 bg-blue-50 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    </div>
+                    
+                    <input id="ref" placeholder="Ponto de referência (opcional)" autocomplete="off" 
+                        class="w-full p-4 bg-gray-50 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                     
                     <div class="grid grid-cols-2 gap-3">
-                        <select id="pag" class="p-4 bg-gray-50 rounded-xl font-bold text-xs outline-none">
-                            <option value="PAGO">Já Pago</option>
-                            <option value="DINHEIRO">Dinheiro</option>
-                            <option value="PIX">PIX</option>
-                            <option value="CARTAO">Cartão</option>
+                        <select id="pag" class="p-4 bg-gray-50 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                            <option value="PAGO">✅ Já Pago</option>
+                            <option value="DINHEIRO">💵 Dinheiro</option>
+                            <option value="PIX">📱 PIX</option>
+                            <option value="CARTAO">💳 Cartão</option>
                         </select>
-                        <input id="troco" type="number" placeholder="Troco?" class="hidden p-4 bg-gray-50 rounded-xl font-bold text-sm outline-none">
+                        <input id="troco" type="number" placeholder="Troco para quanto?" 
+                            class="hidden p-4 bg-gray-50 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                     </div>
 
-                    <button onclick="add()" class="w-full bg-slate-800 text-white p-4 rounded-xl font-black uppercase shadow-lg flex items-center justify-center gap-2">
-                        <span>+</span> Adicionar
+                    <button onclick="add()" 
+                        class="w-full bg-slate-800 text-white p-4 rounded-xl font-black uppercase shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-slate-700">
+                        <span class="text-xl">+</span> Adicionar à Lista
                     </button>
                 </div>
 
-                <div id="lista" class="space-y-2 mt-4"></div>
+                <!-- LISTA DE RASCUNHO -->
+                <div id="lista" class="space-y-2 mt-4 hidden"></div>
                 
-                <button id="btnEnv" onclick="enviar()" class="hidden w-full bg-green-600 text-white p-4 rounded-xl font-black shadow-xl uppercase mt-4">
-                    Enviar <span id="qtd">0</span>
+                <button id="btnEnv" onclick="enviar()" class="hidden w-full bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-xl font-black shadow-xl uppercase mt-4 active:scale-95 transition-transform">
+                    Enviar <span id="qtd">0</span> entrega(s) 🚀
                 </button>
             </div>
 
             <!-- MINHAS ENTREGAS -->
             <div class="bg-white p-4 rounded-2xl shadow-lg">
-                <h3 class="font-black text-gray-800 mb-3">📋 Entregas Hoje</h3>
-                <div id="minhas" class="space-y-2 text-sm"></div>
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-black text-gray-800">📋 Entregas de Hoje</h3>
+                    <span id="contadorEntregas" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full font-bold">0 ativas</span>
+                </div>
+                <div id="minhas" class="space-y-2 text-sm max-h-64 overflow-y-auto">
+                    <p class="text-gray-400 text-center py-4">Nenhuma entrega ativa</p>
+                </div>
             </div>
 
         </div>
     </div>
 
-    <!-- SOM -->
+    <!-- SOM DE CONFIRMAÇÃO -->
     <audio id="somChamado" preload="auto"></audio>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, Timestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { 
+            getFirestore, collection, addDoc, onSnapshot, doc, 
+            updateDoc, Timestamp, query, where, getDocs, deleteDoc 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
@@ -115,191 +192,248 @@
         
         let loja = JSON.parse(localStorage.getItem('marcelo_loja'));
         let rascunho = [];
-        let meuChamado = null;
+        let meuChamadoAtivo = null;
         let somAtivado = false;
 
-        // ATIVAR SOM NO PRIMEIRO CLIQUE
-        document.body.addEventListener('click', () => {
-            if (!somAtivado) {
-                const audio = document.getElementById('somChamado');
-                audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVanu8LdnGgU1k9n1unEiBC13yO/eizEIHWq+8+OZURE';
-                somAtivado = true;
-            }
-        }, { once: true });
+        // 🎵 SISTEMA DE ÁUDIO CORRIGIDO
+        function initAudio() {
+            if (somAtivado) return;
+            
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            window.tocarSomConfirmacao = () => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                // Som de "ding" agradável
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // Dó
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // Mi
+                osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // Sol
+                
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.5);
+            };
+            
+            somAtivado = true;
+        }
 
+        document.body.addEventListener('click', initAudio, { once: true });
+
+        // Mostrar/esconder campo de troco
         document.getElementById('pag').addEventListener('change', function() {
-            document.getElementById('troco').classList.toggle('hidden', !['DINHEIRO', 'PIX'].includes(this.value));
+            const mostrar = ['DINHEIRO', 'PIX'].includes(this.value);
+            document.getElementById('troco').classList.toggle('hidden', !mostrar);
+            if (mostrar) document.getElementById('troco').focus();
         });
 
         function init() {
             if (!loja || !loja.endereco) {
                 document.getElementById('cadastro').classList.remove('hidden');
             } else {
-                mostrar();
+                mostrarPainel();
             }
         }
 
-        function mostrar() {
+        function mostrarPainel() {
             document.getElementById('painel').classList.remove('hidden');
             document.getElementById('nomeLoja').textContent = loja.nome;
 
+            // Monitorar status do Marcelo
             onSnapshot(doc(db, 'config', 'status'), (doc) => {
                 const s = doc.data() || { online: false, ocupado: false };
                 const el = document.getElementById('statusMarcelo');
                 const btn = document.getElementById('btnChamar');
                 
                 if (s.online && !s.ocupado) {
-                    el.textContent = 'Disponível';
-                    el.className = 'text-xs font-bold bg-green-500 px-2 py-1 rounded text-white';
+                    el.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-400"></span> Disponível';
+                    el.className = 'inline-flex items-center gap-1 text-xs font-bold bg-green-500 text-white px-3 py-1 rounded-full';
                     btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
                 } else if (s.ocupado) {
-                    el.textContent = 'Em entrega';
-                    el.className = 'text-xs font-bold bg-orange-500 px-2 py-1 rounded text-white';
+                    el.innerHTML = '<span class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span> Em entrega';
+                    el.className = 'inline-flex items-center gap-1 text-xs font-bold bg-orange-500 text-white px-3 py-1 rounded-full';
                     btn.disabled = true;
                 } else {
-                    el.textContent = 'Offline';
-                    el.className = 'text-xs font-bold bg-red-500 px-2 py-1 rounded text-white';
+                    el.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-400"></span> Offline';
+                    el.className = 'inline-flex items-center gap-1 text-xs font-bold bg-red-500 text-white px-3 py-1 rounded-full';
                     btn.disabled = true;
                 }
             });
 
-            // MONITORAR MEUS CHAMADOS
-            onSnapshot(collection(db, 'chamadas'), (snap) => {
-                let meuChamadoAtivo = null;
+            // Monitorar MEUS chamados (anti-duplicata)
+            const q = query(collection(db, 'chamadas'), where('loja', '==', loja.nome));
+            onSnapshot(q, (snap) => {
+                let chamadoAtivo = null;
                 
                 snap.forEach((d) => {
                     const c = d.data();
-                    if (c.loja === loja.nome) {
-                        meuChamadoAtivo = { id: d.id, ...c };
+                    if (['Pendente', 'Visualizado'].includes(c.status)) {
+                        chamadoAtivo = { id: d.id, ...c };
                     }
                 });
 
-                const boxStatus = document.getElementById('statusChamado');
-                const box = document.getElementById('boxChamado');
-                const txt = document.getElementById('txtChamado');
+                atualizarUIChamado(chamadoAtivo);
+            });
 
-                if (meuChamadoAtivo) {
+            carregarEntregas();
+            setInterval(carregarEntregas, 10000);
+        }
+
+        function atualizarUIChamado(chamado) {
+            const boxStatus = document.getElementById('statusChamado');
+            const alerta = document.getElementById('alertaChamado');
+            const btn = document.getElementById('btnChamar');
+            
+            meuChamadoAtivo = chamado;
+
+            if (chamado) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="flex items-center justify-center gap-2"><span>⏳</span><span>Aguardando...</span></span>';
+                
+                if (chamado.status === 'Pendente') {
+                    alerta.classList.remove('hidden');
+                    boxStatus.classList.add('hidden');
+                } else if (chamado.status === 'Visualizado') {
+                    alerta.classList.add('hidden');
                     boxStatus.classList.remove('hidden');
                     
-                    if (meuChamadoAtivo.status === 'Pendente') {
-                        box.className = 'bg-yellow-100 p-4 rounded-2xl shadow-lg border-l-4 border-yellow-500 animate-pulse';
-                        txt.textContent = '⏳ Chamando Marcelo...';
-                        txt.className = 'font-black text-center text-yellow-800';
-                    } else if (meuChamadoAtivo.status === 'Visualizado') {
-                        box.className = 'bg-green-100 p-4 rounded-2xl shadow-lg border-l-4 border-green-500';
-                        txt.innerHTML = '✅ <span class="text-green-700">MARCELO ESTÁ VINDO!</span>';
-                        txt.className = 'font-black text-center text-green-800 text-lg';
-                        
-                        // TOCAR SOM DE CONFIRMAÇÃO
-                        if (somAtivado && meuChamado !== meuChamadoAtivo.id) {
-                            document.getElementById('somChamado').play().catch(() => {});
-                        }
+                    // Tocar som de confirmação apenas uma vez
+                    if (somAtivado && window.tocarSomConfirmacao && !chamado.notificado) {
+                        window.tocarSomConfirmacao();
+                        // Marcar como notificado
+                        updateDoc(doc(db, 'chamadas', chamado.id), { notificado: true });
                     }
-                    
-                    meuChamado = meuChamadoAtivo.id;
-                } else {
-                    boxStatus.classList.add('hidden');
-                    meuChamado = null;
                 }
-            });
-
-            carregar();
-            setInterval(carregar, 10000);
+            } else {
+                alerta.classList.add('hidden');
+                boxStatus.classList.add('hidden');
+                btn.disabled = false;
+                btn.innerHTML = '<span class="flex items-center justify-center gap-2"><span class="text-2xl">🔔</span><span>Chamar Marcelo</span></span>';
+            }
         }
 
-        async function carregar() {
-            const div = document.getElementById('minhas');
-            const snap = await getDocs(collection(db, 'pedidos'));
-            const entregas = [];
-            
-            snap.forEach(d => {
-                const p = d.data();
-                if (p.loja === loja.nome && p.status !== 'Concluido') entregas.push(p);
-            });
-
-            div.innerHTML = entregas.length === 0 ? '<p class="text-gray-400 text-xs">Nenhuma ativa</p>' : '';
-            
-            entregas.forEach(p => {
-                const status = { 'Ativo': '⏳', 'SaiuParaEntrega': '🛵', 'Chegou': '✅' };
-                div.innerHTML += `
-                    <div class="p-3 bg-gray-50 rounded-xl border-l-4 border-blue-500">
-                        <div class="flex justify-between">
-                            <p class="font-bold text-xs truncate">${p.local}</p>
-                            <span>${status[p.status] || '⏳'}</span>
-                        </div>
-                        <p class="text-xs text-gray-500">${p.pag}</p>
-                    </div>
-                `;
-            });
-        }
-
+        // 🔔 CHAMAR COM ANTI-DUPLICATA
         window.chamar = async () => {
+            if (meuChamadoAtivo) {
+                alert('Você já tem um chamado ativo! Aguarde.');
+                return;
+            }
+
             const btn = document.getElementById('btnChamar');
             btn.disabled = true;
-            btn.textContent = 'Chamando...';
-            
-            // TOCAR SOM AO CHAMAR
-            if (somAtivado) {
-                document.getElementById('somChamado').play().catch(() => {});
-            }
+            btn.innerHTML = '<span class="animate-spin">⏳</span> Chamando...';
             
             try {
+                // Verificar novamente se não existe chamado (double-check)
+                const q = query(
+                    collection(db, 'chamadas'), 
+                    where('loja', '==', loja.nome),
+                    where('status', 'in', ['Pendente', 'Visualizado'])
+                );
+                const existentes = await getDocs(q);
+                
+                if (!existentes.empty) {
+                    alert('Você já tem um chamado em andamento!');
+                    return;
+                }
+
+                // Obter localização para cálculo de distância
+                let coords = null;
+                try {
+                    const pos = await new Promise((resolve, reject) => {
+                        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+                    });
+                    coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                } catch (e) {
+                    console.log('Sem geolocalização, continuando...');
+                }
+
                 await addDoc(collection(db, 'chamadas'), {
                     loja: loja.nome,
                     zap: loja.zap,
                     enderecoLoja: loja.endereco,
+                    coords: coords,
                     hora: Timestamp.now(),
-                    status: 'Pendente'
+                    status: 'Pendente',
+                    notificado: false
                 });
                 
-                btn.textContent = '🔔 Chamar Marcelo';
-                // Não reabilita - aguarda Marcelo aceitar ou timeout
-                setTimeout(() => {
-                    if (btn.disabled) btn.disabled = false;
-                }, 30000); // 30 segundos timeout
+                // Tocar som ao chamar
+                if (somAtivado && window.tocarSomConfirmacao) {
+                    window.tocarSomConfirmacao();
+                }
                 
             } catch (e) {
-                alert('Erro: ' + e.message);
+                alert('Erro ao chamar: ' + e.message);
                 btn.disabled = false;
-                btn.textContent = '🔔 Chamar Marcelo';
             }
         };
 
+        // 📦 SISTEMA DE ENTREGAS
         window.add = () => {
             const rua = document.getElementById('end').value.trim();
-            if (!rua) return alert('Informe o endereço');
+            if (!rua) {
+                document.getElementById('end').focus();
+                return alert('Informe o endereço de entrega');
+            }
             
             let pag = document.getElementById('pag').value;
             const troco = document.getElementById('troco').value;
-            if (troco) pag += ` (Troco: R$${troco})`;
+            
+            if (troco && ['DINHEIRO', 'PIX'].includes(pag)) {
+                pag += ` (Troco: R$${troco})`;
+            }
             
             rascunho.push({
                 local: rua,
                 ref: document.getElementById('ref').value,
-                pag: pag
+                pag: pag,
+                id: Date.now()
             });
             
+            // Limpar campos
             document.getElementById('end').value = '';
             document.getElementById('ref').value = '';
             document.getElementById('troco').value = '';
+            document.getElementById('pag').value = 'PAGO';
+            document.getElementById('troco').classList.add('hidden');
+            
             mostrarLista();
+            document.getElementById('end').focus();
         };
 
         function mostrarLista() {
             const div = document.getElementById('lista');
+            const btn = document.getElementById('btnEnv');
+            
+            if (rascunho.length === 0) {
+                div.classList.add('hidden');
+                btn.classList.add('hidden');
+                return;
+            }
+            
+            div.classList.remove('hidden');
             div.innerHTML = rascunho.map((item, i) => `
-                <div class="p-3 bg-blue-50 rounded-xl border-l-4 border-blue-600 flex justify-between">
-                    <div>
+                <div class="p-3 bg-blue-50 rounded-xl border-l-4 border-blue-600 flex justify-between items-center animate-pulse">
+                    <div class="flex-1">
                         <p class="font-bold text-sm">${item.local}</p>
                         <p class="text-xs text-blue-600">${item.pag}</p>
+                        ${item.ref ? `<p class="text-xs text-gray-500">Ref: ${item.ref}</p>` : ''}
                     </div>
-                    <button onclick="remover(${i})" class="text-red-500 font-black">×</button>
+                    <button onclick="remover(${i})" class="w-8 h-8 bg-red-100 text-red-500 rounded-full font-black hover:bg-red-200 transition-colors">
+                        ×
+                    </button>
                 </div>
             `).join('');
             
-            const btn = document.getElementById('btnEnv');
             document.getElementById('qtd').textContent = rascunho.length;
-            rascunho.length > 0 ? btn.classList.remove('hidden') : btn.classList.add('hidden');
+            btn.classList.remove('hidden');
         }
 
         window.remover = (i) => {
@@ -309,7 +443,9 @@
 
         window.enviar = async () => {
             const btn = document.getElementById('btnEnv');
-            btn.textContent = 'Enviando...';
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="animate-spin inline-block mr-2">⏳</span>Enviando...';
+            btn.disabled = true;
             
             try {
                 for (const item of rascunho) {
@@ -326,26 +462,86 @@
                 
                 rascunho = [];
                 mostrarLista();
-                btn.textContent = '✅ Enviado!';
+                
+                btn.innerHTML = '✅ Enviado com sucesso!';
+                btn.classList.remove('from-green-600', 'to-green-700');
+                btn.classList.add('bg-gray-600');
+                
                 setTimeout(() => {
                     btn.classList.add('hidden');
-                    btn.textContent = 'Enviar <span id="qtd">0</span>';
+                    btn.classList.remove('bg-gray-600');
+                    btn.classList.add('from-green-600', 'to-green-700');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
                 }, 2000);
+                
             } catch (e) {
-                alert('Erro: ' + e.message);
-                btn.textContent = 'Enviar <span id="qtd">' + rascunho.length + '</span>';
+                alert('Erro ao enviar: ' + e.message);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         };
+
+        async function carregarEntregas() {
+            const div = document.getElementById('minhas');
+            const contador = document.getElementById('contadorEntregas');
+            
+            const q = query(
+                collection(db, 'pedidos'), 
+                where('loja', '==', loja.nome)
+            );
+            
+            const snap = await getDocs(q);
+            const entregas = [];
+            
+            snap.forEach(d => {
+                const p = d.data();
+                if (p.status !== 'Concluido') entregas.push({ id: d.id, ...p });
+            });
+
+            contador.textContent = `${entregas.length} ativa${entregas.length !== 1 ? 's' : ''}`;
+            
+            if (entregas.length === 0) {
+                div.innerHTML = '<p class="text-gray-400 text-xs text-center py-4">Nenhuma entrega ativa no momento</p>';
+                return;
+            }
+
+            const statusIcons = { 
+                'Ativo': '⏳', 
+                'SaiuParaEntrega': '🛵', 
+                'Chegou': '✅' 
+            };
+            const statusColors = {
+                'Ativo': 'border-blue-500 bg-blue-50',
+                'SaiuParaEntrega': 'border-orange-500 bg-orange-50',
+                'Chegou': 'border-green-500 bg-green-50'
+            };
+            
+            div.innerHTML = entregas.map(p => `
+                <div class="p-3 rounded-xl border-l-4 ${statusColors[p.status] || 'border-gray-500 bg-gray-50'} flex justify-between items-center">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-xs truncate">${p.local}</p>
+                        <p class="text-xs text-gray-500">${p.pag}</p>
+                    </div>
+                    <span class="text-lg" title="${p.status}">${statusIcons[p.status] || '⏳'}</span>
+                </div>
+            `).join('');
+        }
 
         window.salvar = () => {
             const n = document.getElementById('nLoja').value.trim();
             const z = document.getElementById('zLoja').value.trim();
             const e = document.getElementById('eLoja').value.trim();
             
-            if (!n || !z || !e) return alert('Preencha tudo');
-            if (z.length !== 11) return alert('WhatsApp inválido');
+            if (!n || !z || !e) return alert('Preencha todos os campos');
+            if (z.length !== 11) return alert('WhatsApp deve ter 11 dígitos (com DDD)');
             
-            localStorage.setItem('marcelo_loja', JSON.stringify({ nome: n, zap: z, endereco: e }));
+            localStorage.setItem('marcelo_loja', JSON.stringify({ 
+                nome: n, 
+                zap: z, 
+                endereco: e 
+            }));
+            
             location.reload();
         };
 
