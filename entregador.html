@@ -28,43 +28,46 @@
             from { transform: translateY(-100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+        .resumo-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
     </style>
 </head>
-<body class="bg-slate-100 p-4 font-sans min-h-screen">
-    <div class="max-w-md mx-auto pb-24">
+<body class="bg-slate-100 p-4 font-sans min-h-screen pb-32">
+    <div class="max-w-md mx-auto">
         
         <!-- BOTAO INSTALAR -->
         <div id="areaInstalar" class="hidden bg-gradient-to-r from-green-500 to-green-600 p-4 rounded-2xl shadow-lg mb-4 text-white">
             <p class="text-sm font-bold mb-2">📲 Instale o App</p>
             <p class="text-xs mb-3 opacity-90">Receba notificações mesmo com o app fechado</p>
-            <button onclick="instalarApp()" class="w-full bg-white text-green-600 p-3 rounded-xl font-black uppercase shadow-lg">
+            <button onclick="instalarApp()" class="w-full bg-white text-green-600 p-3 rounded-xl font-black uppercase shadow-lg active:scale-95 transition-transform">
                 Instalar Agora
             </button>
         </div>
 
         <!-- CONFIGURAÇÃO DE TAXA -->
-        <div id="configTaxa" class="hidden bg-white p-4 rounded-2xl shadow-lg mb-4">
-            <p class="text-xs font-bold text-gray-400 uppercase mb-2">💰 Configurar Taxa</p>
-            <div class="flex gap-2">
-                <select id="tipoTaxa" class="flex-1 p-3 bg-gray-50 rounded-xl font-bold text-sm outline-none border-2 border-gray-200">
-                    <option value="fixa">Taxa Fixa</option>
-                    <option value="km">Por KM</option>
+        <div id="configTaxa" class="bg-white p-4 rounded-2xl shadow-lg mb-4">
+            <p class="text-xs font-bold text-gray-400 uppercase mb-2">💰 Configurar Taxa de Entrega</p>
+            <div class="flex gap-2 mb-2">
+                <select id="tipoTaxa" class="flex-1 p-3 bg-gray-50 rounded-xl font-bold text-sm outline-none border-2 border-gray-200 focus:border-blue-500">
+                    <option value="fixa">Taxa Fixa (R$)</option>
+                    <option value="km">Por Quilômetro (R$/km)</option>
                 </select>
-                <input id="valorTaxa" type="number" placeholder="R$" class="w-24 p-3 bg-gray-50 rounded-xl font-bold text-sm outline-none border-2 border-gray-200">
+                <input id="valorTaxa" type="number" step="0.01" placeholder="0.00" class="w-28 p-3 bg-gray-50 rounded-xl font-bold text-sm outline-none border-2 border-gray-200 focus:border-blue-500 text-center">
             </div>
-            <button onclick="salvarTaxa()" class="w-full mt-2 bg-blue-600 text-white p-2 rounded-xl font-bold text-sm">
-                Salvar
+            <button onclick="salvarTaxa()" class="w-full bg-blue-600 text-white p-2 rounded-xl font-bold text-sm active:scale-95 transition-transform">
+                Salvar Configuração
             </button>
+            <p id="infoTaxa" class="text-xs text-gray-500 mt-2 text-center"></p>
         </div>
 
-        <!-- HEADER -->
+        <!-- HEADER STATUS -->
         <div id="headerStatus" class="bg-white p-4 rounded-2xl shadow-lg mb-4 flex justify-between items-center">
             <div>
-                <p class="text-xs font-bold text-gray-400 uppercase">Status</p>
+                <p class="text-xs font-bold text-gray-400 uppercase">Meu Status</p>
                 <p id="meuStatus" class="text-xl font-black text-red-600">● Offline</p>
-                <p id="infoTaxa" class="text-xs text-gray-500 mt-1"></p>
             </div>
-            <button onclick="mudarStatus()" id="btnStatus" class="bg-red-500 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg transition-all active:scale-95">
+            <button onclick="mudarStatus()" id="btnStatus" class="bg-red-500 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg active:scale-95 transition-transform">
                 Ficar Online
             </button>
         </div>
@@ -77,43 +80,72 @@
             </div>
             <div class="bg-white p-3 rounded-xl shadow text-center">
                 <p class="text-2xl font-black text-green-600" id="statValor">R$0</p>
-                <p class="text-xs text-gray-500">Ganho</p>
+                <p class="text-xs text-gray-500">A Receber</p>
             </div>
             <div class="bg-white p-3 rounded-xl shadow text-center">
-                <p class="text-2xl font-black text-purple-600" id="statKm">0</p>
-                <p class="text-xs text-gray-500">KM</p>
+                <p class="text-2xl font-black text-purple-600" id="statPendentes">0</p>
+                <p class="text-xs text-gray-500">Pendentes</p>
             </div>
         </div>
 
-        <!-- NOTIFICAÇÃO FLUTUANTE -->
+        <!-- NOTIFICAÇÃO DE CHAMADA -->
         <div id="notificacaoFlutuante" class="hidden fixed top-4 left-4 right-4 bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-2xl shadow-2xl z-50 chamada-ativa">
             <div class="flex items-center justify-between">
-                <div class="flex-1">
+                <div class="flex-1 pr-4">
                     <p class="text-xs font-bold uppercase mb-1 animate-pulse">🔔 NOVA CHAMADA!</p>
-                    <p id="nomeLojaChamada" class="text-2xl font-black">Loja</p>
+                    <p id="nomeLojaChamada" class="text-2xl font-black leading-tight">Loja</p>
                     <p id="enderecoLojaChamada" class="text-sm opacity-90 mt-1 line-clamp-2">Endereço</p>
-                    <p id="distanciaChamada" class="text-xs bg-white/20 inline-block px-2 py-1 rounded mt-2">Calculando...</p>
+                    <p id="distanciaChamada" class="text-xs bg-white/20 inline-block px-2 py-1 rounded mt-2 font-bold">Calculando...</p>
                 </div>
-                <div class="flex flex-col gap-2 ml-4">
-                    <button onclick="aceitarChamadaFlutuante()" class="bg-white text-red-600 px-6 py-3 rounded-xl font-black text-lg shadow-lg active:scale-95 transition-transform">
+                <div class="flex flex-col gap-2">
+                    <button onclick="aceitarChamadaFlutuante()" class="bg-white text-red-600 px-5 py-3 rounded-xl font-black text-lg shadow-lg active:scale-95 transition-transform">
                         VOU! 🏍️
                     </button>
-                    <button onclick="recusarChamada()" class="bg-red-800 text-white px-4 py-2 rounded-xl font-bold text-sm opacity-80">
+                    <button onclick="recusarChamada()" class="bg-red-800 text-white px-4 py-2 rounded-xl font-bold text-sm opacity-80 active:scale-95 transition-transform">
                         Não posso
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- CHAMADAS -->
+        <!-- CHAMADAS PENDENTES -->
         <div id="areaChamadas" class="mb-4"></div>
 
-        <!-- ENTREGAS -->
-        <div id="areaEntregas" class="space-y-4"></div>
+        <!-- ENTREGAS PENDENTES -->
+        <div id="areaEntregas" class="space-y-4 mb-4"></div>
 
-        <!-- RESUMO -->
-        <button id="btnResumo" onclick="gerarResumo()" class="hidden w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white p-4 rounded-2xl font-black uppercase shadow-lg mt-4 active:scale-95 transition-transform">
-            📊 Resumo do Dia
+        <!-- RESUMO DO DIA (WHATSAPP AQUI!) -->
+        <div id="areaResumo" class="hidden mb-4">
+            <div class="resumo-card text-white p-5 rounded-2xl shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <p class="text-xs font-bold uppercase opacity-80">Resumo do Dia</p>
+                        <p class="text-2xl font-black" id="resumoTitulo">0 Entregas</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs font-bold uppercase opacity-80">Total</p>
+                        <p class="text-2xl font-black" id="resumoValor">R$0</p>
+                    </div>
+                </div>
+                
+                <div id="listaResumo" class="bg-white/10 rounded-xl p-3 mb-4 max-h-40 overflow-y-auto text-sm space-y-1">
+                    <!-- Lista de entregas concluídas -->
+                </div>
+
+                <button onclick="enviarResumoWhatsApp()" class="w-full bg-white text-purple-700 p-4 rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                    <span class="text-2xl">📱</span>
+                    ENVIAR RESUMO NO WHATSAPP
+                </button>
+                
+                <p class="text-xs text-center mt-2 opacity-80">
+                    Só clique quando terminar todas as entregas!
+                </p>
+            </div>
+        </div>
+
+        <!-- BOTÃO LIMPAR RESUMO (Após enviar) -->
+        <button id="btnNovoDia" onclick="novoDia()" class="hidden w-full bg-gray-600 text-white p-4 rounded-2xl font-black uppercase shadow-lg mt-4 active:scale-95 transition-transform">
+            🌅 Iniciar Novo Dia
         </button>
 
     </div>
@@ -125,7 +157,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
             getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, 
-            updateDoc, Timestamp, query, where, getDocs, writeBatch 
+            updateDoc, Timestamp, query, where, getDocs 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { 
@@ -144,12 +176,14 @@
         let online = false;
         let somAtivado = false;
         let chamadoAtual = null;
-        let entregasHoje = [];
+        let entregasHoje = []; // Todas as entregas
+        let entregasConcluidas = []; // Só as concluídas
         let configTaxa = JSON.parse(localStorage.getItem('marcelo_taxa')) || { tipo: 'fixa', valor: 5 };
         let wakeLock = null;
         let audioContext = null;
+        let resumoEnviado = false; // Controle para não duplicar
 
-        // 🎵 SISTEMA DE ÁUDIO CORRIGIDO (Web Audio API)
+        // 🎵 SISTEMA DE ÁUDIO
         function initAudio() {
             if (somAtivado) return;
             
@@ -161,16 +195,12 @@
                 const playBeep = () => {
                     const osc = audioContext.createOscillator();
                     const gain = audioContext.createGain();
-                    
                     osc.connect(gain);
                     gain.connect(audioContext.destination);
-                    
-                    osc.frequency.setValueAtTime(880, audioContext.currentTime); // Nota A5
+                    osc.frequency.setValueAtTime(880, audioContext.currentTime);
                     osc.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.1);
-                    
                     gain.gain.setValueAtTime(0.3, audioContext.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-                    
                     osc.start(audioContext.currentTime);
                     osc.stop(audioContext.currentTime + 0.5);
                 };
@@ -189,28 +219,20 @@
             somAtivado = true;
         }
 
-        // Ativar áudio no primeiro toque
         document.addEventListener('click', initAudio, { once: true });
         document.addEventListener('touchstart', initAudio, { once: true });
 
-        // 🔔 NOTIFICAÇÕES PUSH (Funciona app fechado!)
+        // 🔔 NOTIFICAÇÕES PUSH
         async function initPushNotifications() {
             if (!('serviceWorker' in navigator)) return;
             
             try {
                 const registration = await navigator.serviceWorker.register('/sw.js');
-                console.log('SW registrado:', registration);
                 
-                // Verificar se já tem permissão
                 if ('Notification' in window) {
                     const permission = await Notification.requestPermission();
-                    if (permission === 'granted') {
-                        // Inscrever em push (simulado - em produção use Firebase Cloud Messaging)
-                        showToast('✅ Notificações ativadas!', 'success');
-                    }
                 }
                 
-                // Ouvir mensagens do SW
                 navigator.serviceWorker.addEventListener('message', (event) => {
                     if (event.data.type === 'ACEITAR_CHAMADA') {
                         aceitar(event.data.chamadaId);
@@ -218,8 +240,6 @@
                 });
                 
             } catch (err) {
-                console.error('Erro SW:', err);
-                // Fallback: registrar SW inline se falhar
                 registrarSWInline();
             }
         }
@@ -252,9 +272,9 @@
             navigator.serviceWorker.register(swUrl);
         }
 
-        // 📍 CALCULAR DISTÂNCIA (Haversine)
+        // 📍 CALCULAR DISTÂNCIA
         function calcularDistancia(lat1, lon1, lat2, lon2) {
-            const R = 6371; // Raio da Terra em km
+            const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -264,7 +284,7 @@
             return (R * c).toFixed(1);
         }
 
-        // 💰 CÁLCULO AUTOMÁTICO DE TAXA
+        // 💰 CÁLCULO DE TAXA
         function calcularTaxa(distanciaKm) {
             if (configTaxa.tipo === 'fixa') {
                 return parseFloat(configTaxa.valor);
@@ -276,17 +296,17 @@
         function salvarTaxa() {
             configTaxa = {
                 tipo: document.getElementById('tipoTaxa').value,
-                valor: document.getElementById('valorTaxa').value
+                valor: parseFloat(document.getElementById('valorTaxa').value) || 0
             };
             localStorage.setItem('marcelo_taxa', JSON.stringify(configTaxa));
             atualizarInfoTaxa();
-            showToast('Taxa salva!', 'success');
+            showToast('✅ Taxa salva!', 'success');
         }
 
         function atualizarInfoTaxa() {
             const info = configTaxa.tipo === 'fixa' 
-                ? `Taxa fixa: R$${configTaxa.valor}` 
-                : `R$${configTaxa.valor}/km`;
+                ? `Taxa fixa: R$${configTaxa.valor.toFixed(2)}` 
+                : `R$${configTaxa.valor.toFixed(2)} por km`;
             document.getElementById('infoTaxa').textContent = info;
         }
 
@@ -294,13 +314,10 @@
         window.mudarStatus = async () => {
             online = !online;
             
-            // Wake Lock para manter tela ligada
             if (online && 'wakeLock' in navigator) {
                 try {
                     wakeLock = await navigator.wakeLock.request('screen');
-                } catch (e) {
-                    console.log('Wake lock não suportado');
-                }
+                } catch (e) {}
             } else if (wakeLock) {
                 wakeLock.release();
                 wakeLock = null;
@@ -325,18 +342,18 @@
                 statusEl.textContent = '● Online';
                 statusEl.className = 'text-xl font-black text-green-600';
                 btn.textContent = 'Ficar Offline';
-                btn.className = 'bg-green-600 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg transition-all active:scale-95';
+                btn.className = 'bg-green-600 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg active:scale-95 transition-transform';
                 header.classList.add('online-ativo');
             } else {
                 statusEl.textContent = '● Offline';
                 statusEl.className = 'text-xl font-black text-red-600';
                 btn.textContent = 'Ficar Online';
-                btn.className = 'bg-red-500 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg transition-all active:scale-95';
+                btn.className = 'bg-red-500 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg active:scale-95 transition-transform';
                 header.classList.remove('online-ativo');
             }
         });
 
-        // 🔔 LISTENER DE CHAMADAS COM ANTI-DUPLICATA
+        // 🔔 CHAMADAS COM ANTI-DUPLICATA
         let chamadasProcessadas = new Set();
         
         onSnapshot(collection(db, 'chamadas'), (snap) => {
@@ -347,7 +364,6 @@
             
             snap.forEach((d) => {
                 const c = d.data();
-                // Verificar duplicatas (mesma loja, chamada recente)
                 if (c.status === 'Pendente' && !chamadasProcessadas.has(d.id)) {
                     chamadoParaMim = { id: d.id, ...c };
                 }
@@ -356,13 +372,11 @@
             if (chamadoParaMim && online && !chamadoAtual) {
                 processarNovaChamada(chamadoParaMim);
             } else if (!chamadoParaMim && chamadoAtual) {
-                // Chamada foi removida/aceita por outro
                 notifFlutuante.classList.add('hidden');
                 chamadoAtual = null;
                 window.pararSomChamada();
             }
 
-            // Renderizar lista de chamadas pendentes
             renderizarChamadas(snap);
         });
 
@@ -370,11 +384,9 @@
             chamadoAtual = chamado.id;
             chamadasProcessadas.add(chamado.id);
             
-            // Som e vibração
             if (somAtivado) window.tocarSomChamada();
             if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]);
             
-            // Calcular distância se tiver coordenadas
             let distanciaTexto = 'Distância desconhecida';
             if (chamado.coords && navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((pos) => {
@@ -383,25 +395,22 @@
                         chamado.coords.lat, chamado.coords.lng
                     );
                     const taxa = calcularTaxa(dist);
-                    distanciaTexto = `${dist}km - R$${taxa}`;
+                    distanciaTexto = `${dist}km - Taxa: R$${taxa}`;
                     document.getElementById('distanciaChamada').textContent = distanciaTexto;
                 });
             }
             
-            // Mostrar notificação flutuante
             document.getElementById('nomeLojaChamada').textContent = chamado.loja;
             document.getElementById('enderecoLojaChamada').textContent = chamado.enderecoLoja;
             document.getElementById('distanciaChamada').textContent = distanciaTexto;
             document.getElementById('notificacaoFlutuante').classList.remove('hidden');
             
-            // Notificação do navegador (funciona em background)
             if ('Notification' in window && Notification.permission === 'granted') {
                 try {
                     const registration = await navigator.serviceWorker.ready;
                     await registration.showNotification('🔔 NOVA CHAMADA!', {
                         body: `${chamado.loja} - ${chamado.enderecoLoja}`,
                         icon: 'https://cdn-icons-png.flaticon.com/512/2830/2830305.png',
-                        badge: 'https://cdn-icons-png.flaticon.com/512/2830/2830305.png',
                         tag: 'chamada-' + chamado.id,
                         requireInteraction: true,
                         actions: [
@@ -411,7 +420,6 @@
                         data: { chamadaId: chamado.id }
                     });
                 } catch (e) {
-                    // Fallback para notificação normal
                     new Notification('🔔 NOVA CHAMADA!', {
                         body: `${chamado.loja} - ${chamado.enderecoLoja}`,
                         requireInteraction: true
@@ -419,11 +427,8 @@
                 }
             }
             
-            // Timeout de 2 minutos para auto-recusar
             setTimeout(() => {
-                if (chamadoAtual === chamado.id) {
-                    recusarChamada();
-                }
+                if (chamadoAtual === chamado.id) recusarChamada();
             }, 120000);
         }
 
@@ -436,9 +441,9 @@
                 if (c.status === 'Pendente') {
                     html += `
                         <div class="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 rounded-2xl shadow-lg mb-2 flex justify-between items-center animate-pulse">
-                            <div>
+                            <div class="flex-1 pr-2">
                                 <p class="font-black text-lg">🔔 ${c.loja}</p>
-                                <p class="text-xs opacity-90">${c.enderecoLoja}</p>
+                                <p class="text-xs opacity-90 line-clamp-1">${c.enderecoLoja}</p>
                             </div>
                             <button onclick="aceitar('${d.id}')" class="bg-white text-orange-600 px-4 py-2 rounded-xl font-black text-lg shadow-lg active:scale-95 transition-transform">
                                 VOU!
@@ -450,10 +455,10 @@
                         <div class="bg-slate-800 text-white p-3 rounded-xl border-l-4 border-green-500 mb-2 flex justify-between items-center">
                             <div>
                                 <p class="font-black">${c.loja}</p>
-                                <p class="text-xs text-green-400">Marcelo a caminho</p>
+                                <p class="text-xs text-green-400">Você está indo!</p>
                             </div>
                             <button onclick="pronto('${d.id}')" class="bg-green-600 text-white px-3 py-1 rounded-lg font-black text-xs active:scale-95">
-                                ✅ Pronto
+                                ✅ Cheguei
                             </button>
                         </div>
                     `;
@@ -463,7 +468,7 @@
             div.innerHTML = html || '';
         }
 
-        // ✅ ACEITAR CHAMADA
+        // ✅ ACEITAR/RECUSAR/PRONTO
         window.aceitarChamadaFlutuante = () => {
             if (chamadoAtual) aceitar(chamadoAtual);
         };
@@ -484,7 +489,7 @@
                 }, { merge: true });
                 
                 document.getElementById('notificacaoFlutuante').classList.add('hidden');
-                showToast('✅ Chamada aceita!', 'success');
+                showToast('✅ Chamada aceita! Vá até a loja.', 'success');
                 
             } catch (e) {
                 showToast('❌ Erro ao aceitar', 'error');
@@ -497,7 +502,6 @@
             window.pararSomChamada();
             document.getElementById('notificacaoFlutuante').classList.add('hidden');
             
-            // Marcar como recusado (opcional: remover ou manter histórico)
             await updateDoc(doc(db, 'chamadas', chamadoAtual), { 
                 status: 'Recusado',
                 recusadoEm: Timestamp.now()
@@ -515,76 +519,117 @@
                 entregaAtual: null
             }, { merge: true });
             
-            showToast('✅ Entrega finalizada!', 'success');
+            showToast('✅ Chegou na loja! Aguardando entregas.', 'success');
         };
 
-        // 📦 ENTREGAS COM CÁLCULO AUTOMÁTICO
+        // 📦 ENTREGAS - ATUALIZAÇÃO EM TEMPO REAL
         onSnapshot(collection(db, 'pedidos'), (snap) => {
-            const porLoja = {};
             entregasHoje = [];
-            let totalEntregas = 0;
+            entregasConcluidas = [];
+            let pendentes = 0;
             let totalValor = 0;
             
             snap.forEach((d) => {
                 const p = d.data();
-                entregasHoje.push({ id: d.id, ...p });
+                const entrega = { id: d.id, ...p };
+                entregasHoje.push(entrega);
                 
                 if (p.status === 'Concluido') {
-                    totalEntregas++;
+                    entregasConcluidas.push(entrega);
                     totalValor += parseFloat(p.taxa || 0);
                 } else {
-                    if (!porLoja[p.loja]) porLoja[p.loja] = [];
-                    porLoja[p.loja].push({ id: d.id, ...p });
+                    pendentes++;
                 }
             });
 
             // Atualizar estatísticas
-            document.getElementById('statEntregas').textContent = totalEntregas;
+            document.getElementById('statEntregas').textContent = entregasConcluidas.length;
             document.getElementById('statValor').textContent = `R$${totalValor.toFixed(0)}`;
-            
-            const btnResumo = document.getElementById('btnResumo');
-            btnResumo.classList.toggle('hidden', totalEntregas === 0);
-            btnResumo.innerHTML = `📊 Resumo (${totalEntregas} entregas - R$${totalValor.toFixed(2)})`;
+            document.getElementById('statPendentes').textContent = pendentes;
 
-            renderizarEntregas(porLoja);
+            // Mostrar/esconder resumo
+            atualizarAreaResumo();
+
+            // Renderizar entregas pendentes
+            renderizarEntregasPendentes();
         });
 
-        function renderizarEntregas(porLoja) {
-            const div = document.getElementById('areaEntregas');
+        function atualizarAreaResumo() {
+            const areaResumo = document.getElementById('areaResumo');
+            const btnNovoDia = document.getElementById('btnNovoDia');
             
-            if (Object.keys(porLoja).length === 0) {
-                div.innerHTML = '<p class="text-center text-gray-400 py-8">Nenhuma entrega pendente 🎉</p>';
+            if (entregasConcluidas.length === 0 || resumoEnviado) {
+                areaResumo.classList.add('hidden');
+                if (resumoEnviado && entregasConcluidas.length > 0) {
+                    btnNovoDia.classList.remove('hidden');
+                } else {
+                    btnNovoDia.classList.add('hidden');
+                }
                 return;
             }
 
-            let html = '<h2 class="font-black text-gray-800 uppercase mb-2">📦 Entregas Pendentes</h2>';
+            // Calcular total
+            let total = 0;
+            entregasConcluidas.forEach(e => {
+                total += parseFloat(e.taxa || 0);
+            });
+
+            // Atualizar título
+            document.getElementById('resumoTitulo').textContent = `${entregasConcluidas.length} Entrega${entregasConcluidas.length > 1 ? 's' : ''}`;
+            document.getElementById('resumoValor').textContent = `R$${total.toFixed(2)}`;
+
+            // Montar lista visual
+            const lista = document.getElementById('listaResumo');
+            lista.innerHTML = entregasConcluidas.map((e, i) => `
+                <div class="flex justify-between items-center py-1 border-b border-white/20 last:border-0">
+                    <span class="truncate flex-1">${i+1}. ${e.loja} - ${e.local.substring(0, 20)}...</span>
+                    <span class="font-bold">R$${parseFloat(e.taxa || 0).toFixed(2)}</span>
+                </div>
+            `).join('');
+
+            areaResumo.classList.remove('hidden');
+        }
+
+        function renderizarEntregasPendentes() {
+            const div = document.getElementById('areaEntregas');
+            const pendentes = entregasHoje.filter(e => e.status !== 'Concluido');
+            
+            if (pendentes.length === 0) {
+                div.innerHTML = '';
+                return;
+            }
+
+            // Agrupar por loja
+            const porLoja = {};
+            pendentes.forEach(p => {
+                if (!porLoja[p.loja]) porLoja[p.loja] = [];
+                porLoja[p.loja].push(p);
+            });
+
+            let html = '<h2 class="font-black text-gray-800 uppercase mb-2 text-sm">📦 Entregas em Andamento</h2>';
             
             for (let loja in porLoja) {
                 const entregas = porLoja[loja];
                 html += `
-                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-4">
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-3">
                         <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-3 text-white">
-                            <p class="font-black">${loja}</p>
+                            <p class="font-black text-sm">${loja}</p>
                             <p class="text-xs opacity-90">${entregas.length} entrega(s)</p>
                         </div>
                         <div class="p-3 space-y-2">
                             ${entregas.map(e => `
                                 <div class="p-3 bg-gray-50 rounded-xl border-l-4 ${e.status === 'SaiuParaEntrega' ? 'border-orange-500' : 'border-blue-500'}">
-                                    <div class="flex justify-between items-start">
-                                        <div class="flex-1">
-                                            <p class="font-bold text-sm">${e.local}</p>
-                                            <p class="text-xs text-blue-600 font-bold">${e.pag}</p>
-                                            ${e.taxa ? `<p class="text-xs text-green-600 font-bold">Taxa: R$${e.taxa}</p>` : ''}
-                                            ${e.obs ? `<p class="text-xs text-orange-600 mt-1">⚠️ ${e.obs}</p>` : ''}
-                                        </div>
-                                    </div>
+                                    <p class="font-bold text-sm text-gray-800">${e.local}</p>
+                                    <p class="text-xs text-blue-600 font-bold">${e.pag}</p>
+                                    ${e.taxa ? `<p class="text-xs text-green-600">Taxa: R$${e.taxa}</p>` : ''}
+                                    ${e.obs ? `<p class="text-xs text-orange-600 mt-1">⚠️ ${e.obs}</p>` : ''}
                                     <div class="flex gap-2 mt-2">
                                         ${e.status !== 'SaiuParaEntrega' ? `
-                                            <button onclick="sair('${e.id}', '${e.local}')" class="flex-1 bg-orange-500 text-white py-2 rounded-lg font-black text-sm active:scale-95 transition-transform">
+                                            <button onclick="sair('${e.id}')" class="flex-1 bg-orange-500 text-white py-2 rounded-lg font-black text-sm active:scale-95 transition-transform">
                                                 🛵 Sair
                                             </button>
                                         ` : `
-                                            <button onclick="entregue('${e.id}', '${e.zap}', '${e.taxa || 0}')" class="flex-1 bg-green-600 text-white py-2 rounded-lg font-black text-sm active:scale-95 transition-transform">
+                                            <button onclick="entregue('${e.id}', '${e.taxa || 0}')" class="flex-1 bg-green-600 text-white py-2 rounded-lg font-black text-sm active:scale-95 transition-transform">
                                                 ✅ Entregue
                                             </button>
                                         `}
@@ -602,8 +647,7 @@
             div.innerHTML = html;
         }
 
-        window.sair = async (id, local) => {
-            // Calcular taxa automaticamente se possível
+        window.sair = async (id) => {
             let taxa = configTaxa.valor;
             
             if (configTaxa.tipo === 'km' && navigator.geolocation) {
@@ -611,26 +655,22 @@
                     const pos = await new Promise((resolve, reject) => {
                         navigator.geolocation.getCurrentPosition(resolve, reject);
                     });
-                    
-                    // Aqui você precisaria das coordenadas do destino
-                    // Por enquanto, usa valor fixo ou estimativa
-                    taxa = calcularTaxa(2); // Estimativa de 2km
-                } catch (e) {
-                    console.log('Sem geolocalização');
-                }
+                    taxa = calcularTaxa(2); // Estimativa
+                } catch (e) {}
             }
             
             await updateDoc(doc(db, 'pedidos', id), { 
                 status: 'SaiuParaEntrega',
-                taxa: taxa,
+                taxa: taxa.toFixed(2),
                 saiuEm: Timestamp.now()
             });
             
             showToast('🛵 Saiu para entrega!', 'success');
         };
 
-        window.entregue = async (id, zap, taxa) => {
-            const nome = prompt('Quem recebeu?');
+        // ✅ ENTREGUE - SEM WHATSAPP INDIVIDUAL!
+        window.entregue = async (id, taxa) => {
+            const nome = prompt('Quem recebeu a entrega?');
             if (!nome) return;
             
             try {
@@ -638,13 +678,14 @@
                     status: 'Concluido',
                     recebedor: nome,
                     horaEntrega: Timestamp.now(),
-                    taxa: taxa
+                    taxa: parseFloat(taxa).toFixed(2)
                 });
                 
-                const msg = `✅ *Entrega Concluída!*\n\n📦 Para: ${nome}\n⏰ ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}\n💰 Taxa: R$${taxa}`;
-                window.open(`https://wa.me/55${zap}?text=${encodeURIComponent(msg)}`, '_blank');
+                // ❌ NÃO ENVIA WHATSAPP AQUI!
+                // Apenas mostra confirmação local
+                showToast(`✅ Entrega concluída!`, 'success');
+                showToast(`💾 Salva no resumo do dia`, 'info');
                 
-                showToast('✅ Entrega concluída!', 'success');
             } catch (e) {
                 showToast('❌ Erro ao finalizar', 'error');
             }
@@ -654,36 +695,88 @@
             window.open(`https://www.google.com/maps/dir/?api=1&destination=${end}`, '_blank');
         };
 
-        // 📊 RESUMO DO DIA
-        window.gerarResumo = () => {
+        // 📱 ENVIAR RESUMO NO WHATSAPP (SÓ AQUI!)
+        window.enviarResumoWhatsApp = () => {
+            if (entregasConcluidas.length === 0) {
+                showToast('Nenhuma entrega concluída ainda!', 'error');
+                return;
+            }
+
             const hoje = new Date().toLocaleDateString('pt-BR');
-            const concluidas = entregasHoje.filter(e => e.status === 'Concluido');
-            const porLoja = {};
-            let totalTaxa = 0;
             
-            concluidas.forEach(e => {
+            // Agrupar por loja
+            const porLoja = {};
+            let totalGeral = 0;
+            
+            entregasConcluidas.forEach(e => {
                 if (!porLoja[e.loja]) porLoja[e.loja] = [];
                 porLoja[e.loja].push(e);
-                totalTaxa += parseFloat(e.taxa || 0);
+                totalGeral += parseFloat(e.taxa || 0);
             });
-            
-            let texto = `📊 *RESUMO - ${hoje}*\n\n`;
-            texto += `*Total:* ${concluidas.length} entregas\n`;
-            texto += `*Ganho:* R$${totalTaxa.toFixed(2)}\n\n`;
-            
+
+            // Montar mensagem
+            let texto = `📊 *RESUMO DO DIA - ${hoje}*\n\n`;
+            texto += `*Total de Entregas:* ${entregasConcluidas.length}\n`;
+            texto += `*Valor Total:* R$${totalGeral.toFixed(2)}\n\n`;
+            texto += `═══════════════════\n\n`;
+
             for (let loja in porLoja) {
-                texto += `*${loja}:*\n`;
-                porLoja[loja].forEach((e, i) => {
-                    texto += `${i+1}. ${e.local} | ${e.pag} | R$${e.taxa || 0}\n`;
+                const entregas = porLoja[loja];
+                let subtotal = 0;
+                
+                texto += `🏪 *${loja}*\n`;
+                texto += `───────────────────\n`;
+                
+                entregas.forEach((e, i) => {
+                    const taxa = parseFloat(e.taxa || 0);
+                    subtotal += taxa;
+                    
+                    const hora = e.horaEntrega?.toDate ? 
+                        e.horaEntrega.toDate().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) : 
+                        '--:--';
+                    
+                    texto += `\n*${i+1}.* ${e.local}\n`;
+                    texto += `   💰 Pagamento: ${e.pag}\n`;
+                    texto += `   💵 Taxa: R$${taxa.toFixed(2)}\n`;
+                    texto += `   👤 Recebedor: ${e.recebedor || 'Não informado'}\n`;
+                    texto += `   ⏰ ${hora}\n`;
                 });
-                texto += '\n';
+                
+                texto += `\n   *Subtotal: R$${subtotal.toFixed(2)}*\n`;
+                texto += `\n═══════════════════\n\n`;
             }
+
+            texto += `💰 *TOTAL GERAL: R$${totalGeral.toFixed(2)}*`;
+
+            // Confirmar antes de enviar
+            if (!confirm(`Enviar resumo de ${entregasConcluidas.length} entregas para seu WhatsApp?\n\nTotal: R$${totalGeral.toFixed(2)}`)) {
+                return;
+            }
+
+            // Número do entregador (configure aqui!)
+            const meuZap = '14999999999'; // ⬅️ ALTERE PARA SEU NÚMERO
             
-            const meuZap = '14999999999'; // Configure seu número
-            window.open(`https://wa.me/55${meuZap}?text=${encodeURIComponent(texto)}`, '_blank');
+            const url = `https://wa.me/55${meuZap}?text=${encodeURIComponent(texto)}`;
+            window.open(url, '_blank');
+            
+            resumoEnviado = true;
+            showToast('📱 Resumo enviado com sucesso!', 'success');
+            atualizarAreaResumo();
         };
 
-        // 🍞 TOAST NOTIFICATIONS
+        // 🌅 NOVO DIA - LIMPAR TUDO
+        window.novoDia = () => {
+            if (!confirm('Iniciar novo dia? Isso limpará o resumo atual.\n\nAs entregas continuarão salvas no histórico.')) {
+                return;
+            }
+            
+            resumoEnviado = false;
+            entregasConcluidas = [];
+            atualizarAreaResumo();
+            showToast('🌅 Novo dia iniciado! Boa sorte!', 'success');
+        };
+
+        // 🍞 TOAST
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -706,7 +799,7 @@
             }, 3000);
         }
 
-        // 📲 INSTALAÇÃO DO APP
+        // 📲 INSTALAÇÃO
         let deferredPrompt;
         
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -724,12 +817,10 @@
                     showToast('✅ App instalado!', 'success');
                 }
             } else {
-                // iOS ou navegador não suporta
                 showToast('📱 Adicione à tela inicial manualmente', 'info');
             }
         };
 
-        // Verificar se já está instalado
         if (window.matchMedia('(display-mode: standalone)').matches) {
             document.getElementById('areaInstalar').classList.add('hidden');
         }
@@ -739,16 +830,14 @@
             initPushNotifications();
             atualizarInfoTaxa();
             
-            // Verificar URL params (quando vem de notificação)
+            document.getElementById('tipoTaxa').value = configTaxa.tipo;
+            document.getElementById('valorTaxa').value = configTaxa.valor;
+            
+            // Verificar URL params
             const params = new URLSearchParams(window.location.search);
             if (params.has('aceitar')) {
                 setTimeout(() => aceitar(params.get('aceitar')), 1000);
             }
-            
-            // Mostrar config de taxa
-            document.getElementById('configTaxa').classList.remove('hidden');
-            document.getElementById('tipoTaxa').value = configTaxa.tipo;
-            document.getElementById('valorTaxa').value = configTaxa.valor;
         });
     </script>
 </body>
