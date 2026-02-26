@@ -3,173 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Marcelo Entregas - Lojista</title>
+    <title>Marcelo Entregas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .pulse-ring {
-            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        * { -webkit-tap-highlight-color: transparent; }
+        
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .btn-press { transition: transform 0.1s; }
+        .btn-press:active { transform: scale(0.95); }
+        
+        .input-focus:focus {
+            transform: scale(1.02);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
         }
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(249, 115, 22, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
-        }
-        .slide-up {
-            animation: slideUp 0.3s ease-out;
-        }
+        
+        .slide-up { animation: slideUp 0.3s ease-out; }
         @keyframes slideUp {
             from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+        
+        .pulse-soft {
+            animation: pulseSoft 2s infinite;
+        }
+        @keyframes pulseSoft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        /* Teclado numérico grande */
+        .num-key {
+            @apply h-16 text-2xl font-black bg-white rounded-2xl shadow active:bg-blue-50 btn-press;
+        }
     </style>
 </head>
-<body class="bg-gray-50 p-4 font-sans min-h-screen">
-    <div class="max-w-md mx-auto pb-20">
-        
-        <!-- CADASTRO -->
-        <div id="cadastro" class="hidden bg-white p-6 rounded-3xl shadow-xl slide-up">
-            <div class="text-center mb-6">
-                <div class="w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-3xl shadow-lg">🏪</div>
-                <h2 class="text-2xl font-black text-gray-800">Bem-vindo!</h2>
-                <p class="text-sm text-gray-500 mt-2">Configure sua loja para começar</p>
+<body class="bg-gray-100 font-sans h-screen overflow-hidden flex flex-col">
+
+    <!-- CADASTRO (Primeiro acesso) -->
+    <div id="cadastro" class="hidden flex-1 flex flex-col p-4 overflow-y-auto">
+        <div class="flex-1 flex flex-col justify-center max-w-md mx-auto w-full">
+            <div class="text-center mb-8">
+                <div class="w-24 h-24 bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl mx-auto mb-4 flex items-center justify-center text-white text-4xl shadow-xl">
+                    🏪
+                </div>
+                <h1 class="text-2xl font-black text-gray-800">Bem-vindo!</h1>
+                <p class="text-gray-500 mt-2">Configure sua loja</p>
             </div>
             
             <div class="space-y-4">
-                <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">Nome da Loja</label>
+                <div class="bg-white p-4 rounded-2xl shadow-sm">
+                    <label class="text-xs font-bold text-blue-600 uppercase mb-1 block">Nome da Loja</label>
                     <input id="nLoja" placeholder="Ex: Mercado do João" autocomplete="off" 
-                        class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm transition-colors">
+                        class="w-full text-lg font-bold outline-none bg-transparent">
                 </div>
                 
-                <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">WhatsApp (com DDD)</label>
+                <div class="bg-white p-4 rounded-2xl shadow-sm">
+                    <label class="text-xs font-bold text-blue-600 uppercase mb-1 block">WhatsApp (somente números)</label>
                     <input id="zLoja" placeholder="14999999999" type="tel" maxlength="11" autocomplete="off" 
-                        class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm transition-colors">
+                        class="w-full text-lg font-bold outline-none bg-transparent" inputmode="numeric">
                 </div>
                 
-                <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">Endereço Completo</label>
-                    <input id="eLoja" placeholder="Rua, número, bairro, cidade" autocomplete="off" 
-                        class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm transition-colors">
+                <div class="bg-white p-4 rounded-2xl shadow-sm">
+                    <label class="text-xs font-bold text-blue-600 uppercase mb-1 block">Endereço da Loja</label>
+                    <input id="eLoja" placeholder="Rua, número, bairro" autocomplete="off" 
+                        class="w-full text-lg font-bold outline-none bg-transparent">
                 </div>
                 
-                <button onclick="salvar()" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-xl font-black uppercase shadow-lg active:scale-95 transition-transform mt-4">
-                    Começar a Usar
+                <button onclick="salvar()" class="w-full bg-blue-600 text-white p-5 rounded-2xl font-black text-lg shadow-lg btn-press mt-6">
+                    COMEÇAR A USAR →
                 </button>
             </div>
-        </div>
-
-        <!-- PAINEL PRINCIPAL -->
-        <div id="painel" class="hidden space-y-4">
-            
-            <!-- HEADER -->
-            <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-2xl shadow-lg text-white">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-xs opacity-80">Sua Loja</p>
-                        <h1 id="nomeLoja" class="text-lg font-black truncate max-w-[200px]"></h1>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-xs opacity-80">Marcelo</p>
-                        <span id="statusMarcelo" class="inline-flex items-center gap-1 text-xs font-bold bg-white/20 px-3 py-1 rounded-full">
-                            <span class="w-2 h-2 rounded-full bg-gray-400 animate-pulse"></span>
-                            ...
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ALERTA DE CHAMADO ATIVO -->
-            <div id="alertaChamado" class="hidden bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 p-4 rounded-2xl shadow-lg">
-                <div class="flex items-center gap-3">
-                    <div class="text-2xl">⏳</div>
-                    <div>
-                        <p class="font-black">Chamando Marcelo...</p>
-                        <p class="text-xs">Aguarde confirmação</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- BOTÃO CHAMAR -->
-            <button id="btnChamar" onclick="chamar()" disabled
-                class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-2xl font-black shadow-xl uppercase text-lg disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 transition-all pulse-ring">
-                <span class="flex items-center justify-center gap-2">
-                    <span class="text-2xl">🔔</span>
-                    <span>Chamar Marcelo</span>
-                </span>
-            </button>
-
-            <!-- STATUS DA CHAMADA -->
-            <div id="statusChamado" class="hidden">
-                <div class="bg-white p-4 rounded-2xl shadow-lg border-l-4 border-green-500">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-2xl">✅</div>
-                        <div>
-                            <p class="font-black text-green-800">Marcelo está vindo!</p>
-                            <p class="text-xs text-green-600">Sua entrega será coletada em breve</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- NOVA ENTREGA -->
-            <div class="bg-white p-5 rounded-2xl shadow-lg slide-up">
-                <h2 class="font-black text-gray-800 mb-4 flex items-center gap-2 text-lg">
-                    <span class="bg-blue-100 p-2 rounded-lg">📦</span> 
-                    Nova Entrega
-                </h2>
-
-                <div class="space-y-3">
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Endereço de Entrega</label>
-                        <input id="end" placeholder="Rua, número, bairro" autocomplete="off" 
-                            class="w-full p-4 bg-blue-50 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                    </div>
-                    
-                    <input id="ref" placeholder="Ponto de referência (opcional)" autocomplete="off" 
-                        class="w-full p-4 bg-gray-50 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                    
-                    <div class="grid grid-cols-2 gap-3">
-                        <select id="pag" class="p-4 bg-gray-50 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                            <option value="PAGO">✅ Já Pago</option>
-                            <option value="DINHEIRO">💵 Dinheiro</option>
-                            <option value="PIX">📱 PIX</option>
-                            <option value="CARTAO">💳 Cartão</option>
-                        </select>
-                        <input id="troco" type="number" placeholder="Troco para quanto?" 
-                            class="hidden p-4 bg-gray-50 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                    </div>
-
-                    <button onclick="add()" 
-                        class="w-full bg-slate-800 text-white p-4 rounded-xl font-black uppercase shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-slate-700">
-                        <span class="text-xl">+</span> Adicionar à Lista
-                    </button>
-                </div>
-
-                <!-- LISTA DE RASCUNHO -->
-                <div id="lista" class="space-y-2 mt-4 hidden"></div>
-                
-                <button id="btnEnv" onclick="enviar()" class="hidden w-full bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-xl font-black shadow-xl uppercase mt-4 active:scale-95 transition-transform">
-                    Enviar <span id="qtd">0</span> entrega(s) 🚀
-                </button>
-            </div>
-
-            <!-- MINHAS ENTREGAS -->
-            <div class="bg-white p-4 rounded-2xl shadow-lg">
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="font-black text-gray-800">📋 Entregas de Hoje</h3>
-                    <span id="contadorEntregas" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full font-bold">0 ativas</span>
-                </div>
-                <div id="minhas" class="space-y-2 text-sm max-h-64 overflow-y-auto">
-                    <p class="text-gray-400 text-center py-4">Nenhuma entrega ativa</p>
-                </div>
-            </div>
-
         </div>
     </div>
 
-    <!-- SOM DE CONFIRMAÇÃO -->
-    <audio id="somChamado" preload="auto"></audio>
+    <!-- APP PRINCIPAL -->
+    <div id="app" class="hidden flex-1 flex flex-col h-screen">
+        
+        <!-- HEADER FIXO -->
+        <div class="bg-blue-600 text-white p-4 shadow-lg z-20">
+            <div class="flex justify-between items-center max-w-md mx-auto">
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs opacity-80">Sua Loja</p>
+                    <h1 id="nomeLoja" class="text-xl font-black truncate"></h1>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div id="statusMarcelo" class="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-xl">
+                        <span class="w-3 h-3 rounded-full bg-gray-400 animate-pulse"></span>
+                        <span class="text-sm font-bold">...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTEÚDO SCROLLÁVEL -->
+        <div class="flex-1 overflow-y-auto hide-scrollbar pb-32">
+            <div class="max-w-md mx-auto p-4 space-y-4">
+                
+                <!-- BOTÃO CHAMAR (Destaque máximo) -->
+                <button id="btnChamar" onclick="chamar()" disabled
+                    class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-3xl font-black text-xl shadow-2xl btn-press disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden">
+                    <div class="absolute inset-0 bg-white/20 translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-700"></div>
+                    <span class="flex items-center justify-center gap-3">
+                        <span class="text-3xl">🔔</span>
+                        <span>CHAMAR MARCELO</span>
+                    </span>
+                </button>
+
+                <!-- STATUS DO CHAMADO -->
+                <div id="statusChamado" class="hidden">
+                    <div id="boxPendente" class="hidden bg-yellow-100 border-2 border-yellow-400 p-4 rounded-2xl animate-pulse">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">⏳</span>
+                            <div>
+                                <p class="font-black text-yellow-800">Chamando...</p>
+                                <p class="text-sm text-yellow-700">Aguarde a confirmação</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="boxAceito" class="hidden bg-green-100 border-2 border-green-400 p-4 rounded-2xl">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">✅</span>
+                            <div>
+                                <p class="font-black text-green-800">Marcelo está vindo!</p>
+                                <p class="text-sm text-green-700">Prepare as entregas</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FORMULÁRIO RÁPIDO DE ENTREGA -->
+                <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
+                    <div class="bg-gray-50 p-4 border-b border-gray-100">
+                        <h2 class="font-black text-gray-800 flex items-center gap-2 text-lg">
+                            <span class="bg-blue-100 p-2 rounded-xl text-blue-600">📦</span>
+                            Nova Entrega
+                        </h2>
+                    </div>
+                    
+                    <div class="p-4 space-y-4">
+                        <!-- Endereço (Campo principal grande) -->
+                        <div>
+                            <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Endereço de Entrega</label>
+                            <input id="end" placeholder="Rua, número, bairro" autocomplete="off" 
+                                class="w-full p-4 bg-blue-50 rounded-2xl text-lg font-bold outline-none input-focus transition-all"
+                                onkeypress="if(event.key==='Enter') document.getElementById('ref').focus()">
+                        </div>
+
+                        <!-- Referência -->
+                        <input id="ref" placeholder="Ponto de referência (opcional)" autocomplete="off" 
+                            class="w-full p-3 bg-gray-50 rounded-xl font-bold outline-none input-focus transition-all"
+                            onkeypress="if(event.key==='Enter') document.getElementById('pag').focus()">
+
+                        <!-- Pagamento em grid -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <select id="pag" class="p-4 bg-gray-50 rounded-xl font-bold outline-none input-focus text-sm"
+                                onchange="toggleTroco()">
+                                <option value="PAGO">✅ Pago</option>
+                                <option value="DINHEIRO">💵 Dinheiro</option>
+                                <option value="PIX">📱 PIX</option>
+                                <option value="CARTAO">💳 Cartão</option>
+                            </select>
+                            
+                            <input id="troco" type="number" placeholder="Troco p/ quanto?" 
+                                class="hidden p-4 bg-yellow-50 rounded-xl font-bold outline-none input-focus text-sm placeholder:text-yellow-600/50"
+                                inputmode="numeric">
+                        </div>
+
+                        <!-- Botão Adicionar -->
+                        <button onclick="add()" class="w-full bg-slate-800 text-white p-4 rounded-2xl font-black text-lg shadow-lg btn-press flex items-center justify-center gap-2">
+                            <span class="text-2xl">+</span>
+                            ADICIONAR À LISTA
+                        </button>
+                    </div>
+                </div>
+
+                <!-- LISTA DE ENTREGAS DO DIA -->
+                <div id="areaLista" class="hidden slide-up">
+                    <div class="flex justify-between items-center mb-2 px-1">
+                        <h3 class="font-black text-gray-700 flex items-center gap-2">
+                            📋 Entregas Hoje
+                            <span id="badgeQtd" class="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">0</span>
+                        </h3>
+                        <button onclick="limparTudo()" class="text-red-500 text-sm font-bold">Limpar</button>
+                    </div>
+                    
+                    <div id="lista" class="space-y-2"></div>
+                    
+                    <button onclick="enviarTudo()" id="btnEnviar" 
+                        class="w-full bg-green-600 text-white p-5 rounded-2xl font-black text-lg shadow-xl btn-press mt-4 flex items-center justify-center gap-2">
+                        <span>🚀</span>
+                        ENVIAR <span id="qtdEnviar">0</span> ENTREGA(S)
+                    </button>
+                </div>
+
+                <!-- ENTREGAS ATIVAS (do Firebase) -->
+                <div class="bg-white rounded-3xl shadow-lg p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-black text-gray-800">🚚 Em Andamento</h3>
+                        <span id="contadorAtivas" class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full font-bold">0</span>
+                    </div>
+                    <div id="minhas" class="space-y-2 max-h-48 overflow-y-auto hide-scrollbar">
+                        <p class="text-gray-400 text-center py-4 text-sm">Nenhuma entrega ativa</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- BARRA INFERIOR FIXA -->
+        <div class="bg-white border-t border-gray-200 p-4 shadow-lg z-20">
+            <div class="max-w-md mx-auto flex justify-around">
+                <button onclick="scrollToTop()" class="flex flex-col items-center gap-1 text-blue-600">
+                    <span class="text-2xl">📦</span>
+                    <span class="text-xs font-bold">Nova</span>
+                </button>
+                <button onclick="document.getElementById('minhas').scrollIntoView({behavior: 'smooth'})" class="flex flex-col items-center gap-1 text-gray-400">
+                    <span class="text-2xl">🚚</span>
+                    <span class="text-xs font-bold">Ativas</span>
+                </button>
+                <button onclick="location.reload()" class="flex flex-col items-center gap-1 text-gray-400">
+                    <span class="text-2xl">🔄</span>
+                    <span class="text-xs font-bold">Atualizar</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO -->
+    <div id="modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm slide-up">
+            <div class="text-center mb-4">
+                <div class="w-16 h-16 bg-green-100 rounded-full mx-auto flex items-center justify-center text-3xl mb-2">✅</div>
+                <h3 class="font-black text-xl text-gray-800">Entregas Enviadas!</h3>
+                <p class="text-gray-500 text-sm">Marcelo foi notificado</p>
+            </div>
+            <button onclick="fecharModal()" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-black btn-press">
+                OK, VOLTAR
+            </button>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -193,55 +269,19 @@
         let loja = JSON.parse(localStorage.getItem('marcelo_loja'));
         let rascunho = [];
         let meuChamadoAtivo = null;
-        let somAtivado = false;
 
-        // 🎵 SISTEMA DE ÁUDIO CORRIGIDO
-        function initAudio() {
-            if (somAtivado) return;
-            
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            
-            window.tocarSomConfirmacao = () => {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                
-                // Som de "ding" agradável
-                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // Dó
-                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // Mi
-                osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // Sol
-                
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-                
-                osc.start(audioCtx.currentTime);
-                osc.stop(audioCtx.currentTime + 0.5);
-            };
-            
-            somAtivado = true;
-        }
-
-        document.body.addEventListener('click', initAudio, { once: true });
-
-        // Mostrar/esconder campo de troco
-        document.getElementById('pag').addEventListener('change', function() {
-            const mostrar = ['DINHEIRO', 'PIX'].includes(this.value);
-            document.getElementById('troco').classList.toggle('hidden', !mostrar);
-            if (mostrar) document.getElementById('troco').focus();
-        });
-
+        // Inicialização
         function init() {
             if (!loja || !loja.endereco) {
                 document.getElementById('cadastro').classList.remove('hidden');
+                document.getElementById('nLoja').focus();
             } else {
-                mostrarPainel();
+                iniciarApp();
             }
         }
 
-        function mostrarPainel() {
-            document.getElementById('painel').classList.remove('hidden');
+        function iniciarApp() {
+            document.getElementById('app').classList.remove('hidden');
             document.getElementById('nomeLoja').textContent = loja.nome;
 
             // Monitorar status do Marcelo
@@ -251,108 +291,91 @@
                 const btn = document.getElementById('btnChamar');
                 
                 if (s.online && !s.ocupado) {
-                    el.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-400"></span> Disponível';
-                    el.className = 'inline-flex items-center gap-1 text-xs font-bold bg-green-500 text-white px-3 py-1 rounded-full';
+                    el.innerHTML = '<span class="w-3 h-3 rounded-full bg-green-400"></span><span class="text-sm font-bold">Online</span>';
+                    el.className = 'flex items-center gap-2 bg-green-500 text-white px-3 py-2 rounded-xl';
                     btn.disabled = false;
-                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
                 } else if (s.ocupado) {
-                    el.innerHTML = '<span class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span> Em entrega';
-                    el.className = 'inline-flex items-center gap-1 text-xs font-bold bg-orange-500 text-white px-3 py-1 rounded-full';
+                    el.innerHTML = '<span class="w-3 h-3 rounded-full bg-orange-400 animate-pulse"></span><span class="text-sm font-bold">Ocupado</span>';
+                    el.className = 'flex items-center gap-2 bg-orange-500 text-white px-3 py-2 rounded-xl';
                     btn.disabled = true;
                 } else {
-                    el.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-400"></span> Offline';
-                    el.className = 'inline-flex items-center gap-1 text-xs font-bold bg-red-500 text-white px-3 py-1 rounded-full';
+                    el.innerHTML = '<span class="w-3 h-3 rounded-full bg-red-400"></span><span class="text-sm font-bold">Offline</span>';
+                    el.className = 'flex items-center gap-2 bg-red-500 text-white px-3 py-2 rounded-xl';
                     btn.disabled = true;
                 }
             });
 
-            // Monitorar MEUS chamados (anti-duplicata)
+            // Monitorar MEUS chamados
             const q = query(collection(db, 'chamadas'), where('loja', '==', loja.nome));
             onSnapshot(q, (snap) => {
-                let chamadoAtivo = null;
-                
+                let chamado = null;
                 snap.forEach((d) => {
                     const c = d.data();
                     if (['Pendente', 'Visualizado'].includes(c.status)) {
-                        chamadoAtivo = { id: d.id, ...c };
+                        chamado = { id: d.id, ...c };
                     }
                 });
-
-                atualizarUIChamado(chamadoAtivo);
+                atualizarUIChamado(chamado);
             });
 
             carregarEntregas();
             setInterval(carregarEntregas, 10000);
+            
+            // Focar no campo principal
+            setTimeout(() => document.getElementById('end').focus(), 100);
         }
 
         function atualizarUIChamado(chamado) {
-            const boxStatus = document.getElementById('statusChamado');
-            const alerta = document.getElementById('alertaChamado');
+            const box = document.getElementById('statusChamado');
+            const pendente = document.getElementById('boxPendente');
+            const aceito = document.getElementById('boxAceito');
             const btn = document.getElementById('btnChamar');
             
             meuChamadoAtivo = chamado;
 
             if (chamado) {
+                box.classList.remove('hidden');
                 btn.disabled = true;
-                btn.innerHTML = '<span class="flex items-center justify-center gap-2"><span>⏳</span><span>Aguardando...</span></span>';
+                btn.innerHTML = '<span class="flex items-center justify-center gap-2"><span class="animate-spin">⏳</span><span>AGUARDANDO...</span></span>';
                 
                 if (chamado.status === 'Pendente') {
-                    alerta.classList.remove('hidden');
-                    boxStatus.classList.add('hidden');
-                } else if (chamado.status === 'Visualizado') {
-                    alerta.classList.add('hidden');
-                    boxStatus.classList.remove('hidden');
-                    
-                    // Tocar som de confirmação apenas uma vez
-                    if (somAtivado && window.tocarSomConfirmacao && !chamado.notificado) {
-                        window.tocarSomConfirmacao();
-                        // Marcar como notificado
-                        updateDoc(doc(db, 'chamadas', chamado.id), { notificado: true });
-                    }
+                    pendente.classList.remove('hidden');
+                    aceito.classList.add('hidden');
+                } else {
+                    pendente.classList.add('hidden');
+                    aceito.classList.remove('hidden');
                 }
             } else {
-                alerta.classList.add('hidden');
-                boxStatus.classList.add('hidden');
+                box.classList.add('hidden');
                 btn.disabled = false;
-                btn.innerHTML = '<span class="flex items-center justify-center gap-2"><span class="text-2xl">🔔</span><span>Chamar Marcelo</span></span>';
+                btn.innerHTML = '<span class="flex items-center justify-center gap-3"><span class="text-3xl">🔔</span><span>CHAMAR MARCELO</span></span>';
             }
         }
 
-        // 🔔 CHAMAR COM ANTI-DUPLICATA
+        // Ações
         window.chamar = async () => {
-            if (meuChamadoAtivo) {
-                alert('Você já tem um chamado ativo! Aguarde.');
-                return;
-            }
-
+            if (meuChamadoAtivo) return;
+            
             const btn = document.getElementById('btnChamar');
             btn.disabled = true;
-            btn.innerHTML = '<span class="animate-spin">⏳</span> Chamando...';
             
             try {
-                // Verificar novamente se não existe chamado (double-check)
+                // Anti-duplicata
                 const q = query(
                     collection(db, 'chamadas'), 
                     where('loja', '==', loja.nome),
                     where('status', 'in', ['Pendente', 'Visualizado'])
                 );
                 const existentes = await getDocs(q);
-                
-                if (!existentes.empty) {
-                    alert('Você já tem um chamado em andamento!');
-                    return;
-                }
+                if (!existentes.empty) return;
 
-                // Obter localização para cálculo de distância
                 let coords = null;
                 try {
                     const pos = await new Promise((resolve, reject) => {
                         navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
                     });
                     coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                } catch (e) {
-                    console.log('Sem geolocalização, continuando...');
-                }
+                } catch (e) {}
 
                 await addDoc(collection(db, 'chamadas'), {
                     loja: loja.nome,
@@ -360,32 +383,36 @@
                     enderecoLoja: loja.endereco,
                     coords: coords,
                     hora: Timestamp.now(),
-                    status: 'Pendente',
-                    notificado: false
+                    status: 'Pendente'
                 });
-                
-                // Tocar som ao chamar
-                if (somAtivado && window.tocarSomConfirmacao) {
-                    window.tocarSomConfirmacao();
-                }
-                
             } catch (e) {
-                alert('Erro ao chamar: ' + e.message);
+                alert('Erro: ' + e.message);
                 btn.disabled = false;
             }
         };
 
-        // 📦 SISTEMA DE ENTREGAS
+        window.toggleTroco = () => {
+            const pag = document.getElementById('pag').value;
+            const troco = document.getElementById('troco');
+            const mostrar = ['DINHEIRO', 'PIX'].includes(pag);
+            
+            troco.classList.toggle('hidden', !mostrar);
+            if (mostrar) {
+                troco.focus();
+                troco.classList.add('animate-pulse');
+                setTimeout(() => troco.classList.remove('animate-pulse'), 1000);
+            }
+        };
+
         window.add = () => {
             const rua = document.getElementById('end').value.trim();
             if (!rua) {
                 document.getElementById('end').focus();
-                return alert('Informe o endereço de entrega');
+                return;
             }
             
             let pag = document.getElementById('pag').value;
             const troco = document.getElementById('troco').value;
-            
             if (troco && ['DINHEIRO', 'PIX'].includes(pag)) {
                 pag += ` (Troco: R$${troco})`;
             }
@@ -397,55 +424,66 @@
                 id: Date.now()
             });
             
-            // Limpar campos
+            // Limpar e focar
             document.getElementById('end').value = '';
             document.getElementById('ref').value = '';
             document.getElementById('troco').value = '';
             document.getElementById('pag').value = 'PAGO';
             document.getElementById('troco').classList.add('hidden');
             
-            mostrarLista();
+            atualizarLista();
             document.getElementById('end').focus();
+            
+            // Feedback visual
+            document.getElementById('areaLista').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
-        function mostrarLista() {
-            const div = document.getElementById('lista');
-            const btn = document.getElementById('btnEnv');
+        function atualizarLista() {
+            const area = document.getElementById('areaLista');
+            const lista = document.getElementById('lista');
+            const badge = document.getElementById('badgeQtd');
+            const btn = document.getElementById('btnEnviar');
+            const qtd = document.getElementById('qtdEnviar');
             
             if (rascunho.length === 0) {
-                div.classList.add('hidden');
-                btn.classList.add('hidden');
+                area.classList.add('hidden');
                 return;
             }
             
-            div.classList.remove('hidden');
-            div.innerHTML = rascunho.map((item, i) => `
-                <div class="p-3 bg-blue-50 rounded-xl border-l-4 border-blue-600 flex justify-between items-center animate-pulse">
-                    <div class="flex-1">
-                        <p class="font-bold text-sm">${item.local}</p>
-                        <p class="text-xs text-blue-600">${item.pag}</p>
-                        ${item.ref ? `<p class="text-xs text-gray-500">Ref: ${item.ref}</p>` : ''}
+            area.classList.remove('hidden');
+            badge.textContent = rascunho.length;
+            qtd.textContent = rascunho.length;
+            
+            lista.innerHTML = rascunho.map((item, i) => `
+                <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-blue-500 flex justify-between items-center">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-gray-800 truncate">${item.local}</p>
+                        <p class="text-sm text-blue-600 font-bold">${item.pag}</p>
+                        ${item.ref ? `<p class="text-xs text-gray-500 truncate">Ref: ${item.ref}</p>` : ''}
                     </div>
-                    <button onclick="remover(${i})" class="w-8 h-8 bg-red-100 text-red-500 rounded-full font-black hover:bg-red-200 transition-colors">
+                    <button onclick="remover(${i})" class="w-10 h-10 bg-red-100 text-red-500 rounded-xl font-black text-xl btn-press ml-2">
                         ×
                     </button>
                 </div>
             `).join('');
-            
-            document.getElementById('qtd').textContent = rascunho.length;
-            btn.classList.remove('hidden');
         }
 
         window.remover = (i) => {
             rascunho.splice(i, 1);
-            mostrarLista();
+            atualizarLista();
         };
 
-        window.enviar = async () => {
-            const btn = document.getElementById('btnEnv');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<span class="animate-spin inline-block mr-2">⏳</span>Enviando...';
+        window.limparTudo = () => {
+            if (confirm('Limpar todas as entregas da lista?')) {
+                rascunho = [];
+                atualizarLista();
+            }
+        };
+
+        window.enviarTudo = async () => {
+            const btn = document.getElementById('btnEnviar');
             btn.disabled = true;
+            btn.innerHTML = '<span class="animate-spin inline-block mr-2">⏳</span>ENVIANDO...';
             
             try {
                 for (const item of rascunho) {
@@ -461,36 +499,28 @@
                 }
                 
                 rascunho = [];
-                mostrarLista();
-                
-                btn.innerHTML = '✅ Enviado com sucesso!';
-                btn.classList.remove('from-green-600', 'to-green-700');
-                btn.classList.add('bg-gray-600');
-                
-                setTimeout(() => {
-                    btn.classList.add('hidden');
-                    btn.classList.remove('bg-gray-600');
-                    btn.classList.add('from-green-600', 'to-green-700');
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                }, 2000);
+                atualizarLista();
+                document.getElementById('modal').classList.remove('hidden');
                 
             } catch (e) {
-                alert('Erro ao enviar: ' + e.message);
-                btn.innerHTML = originalText;
+                alert('Erro: ' + e.message);
                 btn.disabled = false;
+                btn.innerHTML = '<span>🚀</span>ENVIAR <span id="qtdEnviar">' + rascunho.length + '</span> ENTREGA(S)';
             }
+        };
+
+        window.fecharModal = () => {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('btnEnviar').disabled = false;
+            document.getElementById('btnEnviar').innerHTML = '<span>🚀</span>ENVIAR <span id="qtdEnviar">0</span> ENTREGA(S)';
+            document.getElementById('end').focus();
         };
 
         async function carregarEntregas() {
             const div = document.getElementById('minhas');
-            const contador = document.getElementById('contadorEntregas');
+            const contador = document.getElementById('contadorAtivas');
             
-            const q = query(
-                collection(db, 'pedidos'), 
-                where('loja', '==', loja.nome)
-            );
-            
+            const q = query(collection(db, 'pedidos'), where('loja', '==', loja.nome));
             const snap = await getDocs(q);
             const entregas = [];
             
@@ -499,31 +529,23 @@
                 if (p.status !== 'Concluido') entregas.push({ id: d.id, ...p });
             });
 
-            contador.textContent = `${entregas.length} ativa${entregas.length !== 1 ? 's' : ''}`;
+            contador.textContent = entregas.length;
             
             if (entregas.length === 0) {
-                div.innerHTML = '<p class="text-gray-400 text-xs text-center py-4">Nenhuma entrega ativa no momento</p>';
+                div.innerHTML = '<p class="text-gray-400 text-center py-4 text-sm">Nenhuma entrega ativa</p>';
                 return;
             }
 
-            const statusIcons = { 
-                'Ativo': '⏳', 
-                'SaiuParaEntrega': '🛵', 
-                'Chegou': '✅' 
-            };
-            const statusColors = {
-                'Ativo': 'border-blue-500 bg-blue-50',
-                'SaiuParaEntrega': 'border-orange-500 bg-orange-50',
-                'Chegou': 'border-green-500 bg-green-50'
-            };
+            const icons = { 'Ativo': '⏳', 'SaiuParaEntrega': '🛵', 'Chegou': '✅' };
+            const colors = { 'Ativo': 'blue', 'SaiuParaEntrega': 'orange', 'Chegou': 'green' };
             
             div.innerHTML = entregas.map(p => `
-                <div class="p-3 rounded-xl border-l-4 ${statusColors[p.status] || 'border-gray-500 bg-gray-50'} flex justify-between items-center">
+                <div class="bg-gray-50 p-3 rounded-xl border-l-4 border-${colors[p.status] || 'gray'}-500 flex justify-between items-center">
                     <div class="flex-1 min-w-0">
-                        <p class="font-bold text-xs truncate">${p.local}</p>
-                        <p class="text-xs text-gray-500">${p.pag}</p>
+                        <p class="font-bold text-sm text-gray-800 truncate">${p.local}</p>
+                        <p class="text-xs text-${colors[p.status] || 'gray'}-600 font-bold">${p.pag}</p>
                     </div>
-                    <span class="text-lg" title="${p.status}">${statusIcons[p.status] || '⏳'}</span>
+                    <span class="text-xl" title="${p.status}">${icons[p.status] || '⏳'}</span>
                 </div>
             `).join('');
         }
@@ -534,15 +556,15 @@
             const e = document.getElementById('eLoja').value.trim();
             
             if (!n || !z || !e) return alert('Preencha todos os campos');
-            if (z.length !== 11) return alert('WhatsApp deve ter 11 dígitos (com DDD)');
+            if (z.length !== 11) return alert('WhatsApp deve ter 11 dígitos');
             
-            localStorage.setItem('marcelo_loja', JSON.stringify({ 
-                nome: n, 
-                zap: z, 
-                endereco: e 
-            }));
-            
+            localStorage.setItem('marcelo_loja', JSON.stringify({ nome: n, zap: z, endereco: e }));
             location.reload();
+        };
+
+        window.scrollToTop = () => {
+            document.querySelector('.overflow-y-auto').scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => document.getElementById('end').focus(), 300);
         };
 
         init();
