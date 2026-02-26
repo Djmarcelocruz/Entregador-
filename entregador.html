@@ -5,12 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marcelo - Entregas</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Manter tela sempre acesa quando online */
+        .online-ativo { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        
+        /* Notificação visual grande */
+        .chamada-ativa { animation: shake 0.5s infinite; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+    </style>
 </head>
 <body class="bg-slate-100 p-4 font-sans min-h-screen">
     <div class="max-w-md mx-auto pb-24">
         
-        <!-- STATUS -->
-        <div class="bg-white p-4 rounded-2xl shadow-lg mb-4 flex justify-between items-center">
+        <!-- HEADER -->
+        <div id="headerStatus" class="bg-white p-4 rounded-2xl shadow-lg mb-4 flex justify-between items-center">
             <div>
                 <p class="text-xs font-bold text-gray-400 uppercase">Status</p>
                 <p id="meuStatus" class="text-xl font-black text-red-600">● Offline</p>
@@ -20,20 +29,36 @@
             </button>
         </div>
 
-        <!-- CHAMADAS -->
+        <!-- NOTIFICAÇÃO FLUTUANTE (QUANDO CHAMADO) -->
+        <div id="notificacaoFlutuante" class="hidden fixed top-4 left-4 right-4 bg-red-600 text-white p-6 rounded-2xl shadow-2xl z-50 chamada-ativa">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold uppercase mb-1">🔔 NOVA CHAMADA!</p>
+                    <p id="nomeLojaChamada" class="text-2xl font-black">Loja</p>
+                    <p id="enderecoLojaChamada" class="text-sm opacity-90 mt-1">Endereço</p>
+                </div>
+                <button onclick="aceitarChamadaFlutuante()" class="bg-white text-red-600 px-6 py-3 rounded-xl font-black text-lg shadow-lg">
+                    VOU! 🏍️
+                </button>
+            </div>
+        </div>
+
+        <!-- CHAMADAS NORMAIS -->
         <div id="areaChamadas" class="mb-4"></div>
 
         <!-- ENTREGAS -->
         <div id="areaEntregas" class="space-y-4"></div>
 
-        <!-- RESUMO DO DIA (APARECE QUANDO TEM ENTREGAS) -->
+        <!-- RESUMO -->
         <button id="btnResumo" onclick="gerarResumo()" class="hidden w-full bg-purple-600 text-white p-4 rounded-2xl font-black uppercase shadow-lg mt-4">
             📊 Ver Resumo do Dia
         </button>
 
     </div>
 
-    <audio id="som" preload="auto"></audio>
+    <!-- SOM ALTO E REPETITIVO -->
+    <audio id="somChamada" preload="auto" loop></audio>
+    <audio id="somEntrega" preload="auto"></audio>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -53,66 +78,176 @@
         
         let online = false;
         let somAtivado = false;
+        let chamadoAtual = null;
+        let intervaloSom = null;
         let entregasHoje = [];
 
-        // SOM NO PRIMEIRO CLIQUE
-        document.body.addEventListener('click', () => {
-            if (!somAtivado) {
-                document.getElementById('som').src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVanu8LdnGgU1k9n1unEiBC13yO/eizEIHWq+8+OZURE';
-                document.getElementById('som').play().catch(() => {});
-                somAtivado = true;
+        // ATIVAR SOM NA PRIMEIRA INTERAÇÃO (OBRIGATÓRIO NOS NAVEGADORES)
+        function ativarAudio() {
+            if (somAtivado) return;
+            
+            const somChamada = document.getElementById('somChamada');
+            const somEntrega = document.getElementById('somEntrega');
+            
+            // Som de campainha (beep repetitivo)
+            somChamada.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+            
+            // Som de notificação mais elaborado
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            function tocarBeep() {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
             }
-        }, { once: true });
+            
+            // Tocar beep a cada 2 segundos quando chamado
+            window.tocarSomChamada = () => {
+                tocarBeep();
+                intervaloSom = setInterval(tocarBeep, 2000);
+            };
+            
+            window.pararSomChamada = () => {
+                clearInterval(intervaloSom);
+            };
+            
+            somAtivado = true;
+            console.log('Audio ativado');
+        }
 
+        // TENTAR ATIVAR EM QUALQUER CLIQUE
+        document.addEventListener('click', ativarAudio, { once: true });
+        document.addEventListener('touchstart', ativarAudio, { once: true });
+
+        // MUDAR STATUS
         window.mudarStatus = async () => {
             online = !online;
             await setDoc(doc(db, 'config', 'status'), { online, ocupado: false }, { merge: true });
+            
+            // Manter tela acesa quando online (wake lock)
+            if (online && 'wakeLock' in navigator) {
+                try {
+                    await navigator.wakeLock.request('screen');
+                } catch (e) {
+                    console.log('Wake lock não disponível');
+                }
+            }
         };
 
+        // LISTENER STATUS
         onSnapshot(doc(db, 'config', 'status'), (doc) => {
             const s = doc.data() || { online: false };
             online = s.online;
+            
             const statusEl = document.getElementById('meuStatus');
             const btn = document.getElementById('btnStatus');
+            const header = document.getElementById('headerStatus');
             
             if (online) {
                 statusEl.textContent = '● Online';
                 statusEl.className = 'text-xl font-black text-green-600';
                 btn.textContent = 'Ficar Offline';
                 btn.className = 'bg-green-600 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg';
+                header.classList.add('online-ativo');
             } else {
                 statusEl.textContent = '● Offline';
                 statusEl.className = 'text-xl font-black text-red-600';
                 btn.textContent = 'Ficar Online';
                 btn.className = 'bg-red-500 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg';
+                header.classList.remove('online-ativo');
             }
         });
 
+        // LISTENER CHAMADAS
         onSnapshot(collection(db, 'chamadas'), (snap) => {
             const div = document.getElementById('areaChamadas');
+            const notifFlutuante = document.getElementById('notificacaoFlutuante');
             
-            if (!online || snap.empty) {
-                div.innerHTML = '';
-                return;
-            }
-            
-            if (somAtivado) document.getElementById('som').play().catch(() => {});
-            
-            div.innerHTML = '<h2 class="font-black text-gray-800 uppercase mb-2">🔔 Chamadas</h2>';
+            // Verificar se tem chamada nova para mim
+            let chamadoParaMim = null;
             
             snap.forEach((d) => {
                 const c = d.data();
                 if (c.status === 'Pendente') {
+                    chamadoParaMim = { id: d.id, ...c };
+                }
+            });
+
+            // SE TEM CHAMADA NOVA E ESTOU ONLINE
+            if (chamadoParaMim && online) {
+                // Se é um chamado diferente do atual, tocar som
+                if (chamadoAtual !== chamadoParaMim.id) {
+                    chamadoAtual = chamadoParaMim.id;
+                    
+                    // Tocar som repetitivo
+                    if (somAtivado && window.tocarSomChamada) {
+                        window.tocarSomChamada();
+                    }
+                    
+                    // Mostrar notificação flutuante grande
+                    document.getElementById('nomeLojaChamada').textContent = chamadoParaMim.loja;
+                    document.getElementById('enderecoLojaChamada').textContent = chamadoParaMim.enderecoLoja;
+                    notifFlutuante.classList.remove('hidden');
+                    
+                    // Vibrar se possível
+                    if (navigator.vibrate) {
+                        navigator.vibrate([500, 200, 500, 200, 500]);
+                    }
+                    
+                    // Tentar notificação do navegador
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        new Notification('🔔 NOVA CHAMADA!', {
+                            body: `${chamadoParaMim.loja} - ${chamadoParaMim.enderecoLoja}`,
+                            icon: '🏍️',
+                            requireInteraction: true
+                        });
+                    } else if ('Notification' in window && Notification.permission !== 'denied') {
+                        Notification.requestPermission().then(permission => {
+                            if (permission === 'granted') {
+                                new Notification('🔔 NOVA CHAMADA!', {
+                                    body: `${chamadoParaMim.loja}`,
+                                    requireInteraction: true
+                                });
+                            }
+                        });
+                    }
+                }
+            } else {
+                // Esconder notificação se não tem chamada
+                if (!chamadoParaMim) {
+                    notifFlutuante.classList.add('hidden');
+                    chamadoAtual = null;
+                    if (window.pararSomChamada) window.pararSomChamada();
+                }
+            }
+
+            // Renderizar lista normal de chamadas
+            div.innerHTML = '';
+            snap.forEach((d) => {
+                const c = d.data();
+                
+                if (c.status === 'Pendente') {
                     div.innerHTML += `
                         <div class="bg-orange-500 text-white p-4 rounded-2xl shadow-lg mb-2 flex justify-between items-center">
                             <div>
-                                <p class="font-black text-lg">${c.loja}</p>
+                                <p class="font-black text-lg">🔔 ${c.loja}</p>
                                 <p class="text-xs">${c.enderecoLoja}</p>
                             </div>
-                            <button onclick="aceitar('${d.id}')" class="bg-white text-orange-600 px-4 py-2 rounded-xl font-black">VOU!</button>
+                            <button onclick="aceitar('${d.id}')" class="bg-white text-orange-600 px-4 py-2 rounded-xl font-black text-lg">VOU!</button>
                         </div>
                     `;
-                } else {
+                } else if (c.status === 'Visualizado') {
                     div.innerHTML += `
                         <div class="bg-slate-800 text-white p-3 rounded-xl border-l-4 border-green-500 mb-2 flex justify-between items-center">
                             <p class="font-black">${c.loja}</p>
@@ -123,9 +258,22 @@
             });
         });
 
+        // ACEITAR CHAMADA FLUTUANTE
+        window.aceitarChamadaFlutuante = () => {
+            if (chamadoAtual) {
+                aceitar(chamadoAtual);
+            }
+        };
+
         window.aceitar = async (id) => {
+            // Parar som
+            if (window.pararSomChamada) window.pararSomChamada();
+            
             await updateDoc(doc(db, 'chamadas', id), { status: 'Visualizado' });
             await setDoc(doc(db, 'config', 'status'), { online: true, ocupado: true }, { merge: true });
+            
+            // Esconder notificação flutuante
+            document.getElementById('notificacaoFlutuante').classList.add('hidden');
         };
 
         window.pronto = async (id) => {
@@ -133,6 +281,7 @@
             await setDoc(doc(db, 'config', 'status'), { online: true, ocupado: false }, { merge: true });
         };
 
+        // ENTREGAS (SIMPLIFICADO)
         onSnapshot(collection(db, 'pedidos'), (snap) => {
             const porLoja = {};
             entregasHoje = [];
@@ -150,13 +299,12 @@
             const div = document.getElementById('areaEntregas');
             const btnResumo = document.getElementById('btnResumo');
             
-            // Mostrar botão de resumo se tem entregas hoje
-            const concluidasHoje = entregasHoje.filter(e => e.status === 'Concluido').length;
-            btnResumo.classList.toggle('hidden', concluidasHoje === 0);
-            btnResumo.innerHTML = `📊 Ver Resumo do Dia (${concluidasHoje} entregas)`;
+            const concluidas = entregasHoje.filter(e => e.status === 'Concluido').length;
+            btnResumo.classList.toggle('hidden', concluidas === 0);
+            btnResumo.innerHTML = `📊 Resumo (${concluidas} entregas)`;
 
             if (Object.keys(porLoja).length === 0) {
-                div.innerHTML = '<p class="text-center text-gray-400 py-8">Nenhuma entrega pendente 🎉</p>';
+                div.innerHTML = '<p class="text-center text-gray-400 py-8">Nenhuma entrega 🎉</p>';
                 return;
             }
 
@@ -216,35 +364,27 @@
             window.open(`https://www.google.com/maps/dir/?api=1&destination=${end}`, '_blank');
         };
 
-        // GERAR RESUMO DO DIA
         window.gerarResumo = () => {
             const hoje = new Date().toLocaleDateString('pt-BR');
             const concluidas = entregasHoje.filter(e => e.status === 'Concluido');
             
-            // Agrupar por loja
             const porLoja = {};
             concluidas.forEach(e => {
                 if (!porLoja[e.loja]) porLoja[e.loja] = [];
                 porLoja[e.loja].push(e);
             });
             
-            let texto = `📊 *RESUMO DO DIA - ${hoje}*\n\n`;
-            texto += `*Total de entregas:* ${concluidas.length}\n\n`;
+            let texto = `📊 *RESUMO - ${hoje}*\n\n*Total:* ${concluidas.length} entregas\n\n`;
             
             for (let loja in porLoja) {
                 texto += `*${loja}:*\n`;
                 porLoja[loja].forEach((e, i) => {
-                    const hora = e.horaEntrega?.toDate?.() || new Date();
-                    texto += `${i+1}. ${e.local}\n`;
-                    texto += `   💰 ${e.pag}\n`;
-                    texto += `   👤 ${e.recebedor} (${hora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})})\n\n`;
+                    texto += `${i+1}. ${e.local} | ${e.pag}\n`;
                 });
+                texto += '\n';
             }
             
-            texto += `\n✅ Trabalho finalizado!`;
-            
-            // Enviar para WhatsApp do próprio Marcelo (ou salvar)
-            const meuZap = '14999999999'; // Colocar o número do Marcelo aqui
+            const meuZap = '14999999999'; // Número do Marcelo
             window.open(`https://wa.me/55${meuZap}?text=${encodeURIComponent(texto)}`, '_blank');
         };
     </script>
