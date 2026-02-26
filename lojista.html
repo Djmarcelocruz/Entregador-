@@ -41,7 +41,14 @@
                 </div>
             </div>
 
-            <!-- CHAMAR -->
+            <!-- STATUS DO CHAMADO -->
+            <div id="statusChamado" class="hidden">
+                <div id="boxChamado" class="bg-white p-4 rounded-2xl shadow-lg border-l-4 border-gray-400">
+                    <p id="txtChamado" class="font-black text-center">Chamando...</p>
+                </div>
+            </div>
+
+            <!-- BOTAO CHAMAR -->
             <button id="btnChamar" onclick="chamar()" class="w-full bg-orange-500 text-white p-5 rounded-2xl font-black shadow-xl uppercase text-lg disabled:opacity-50">
                 🔔 Chamar Marcelo
             </button>
@@ -87,6 +94,9 @@
         </div>
     </div>
 
+    <!-- SOM -->
+    <audio id="somChamado" preload="auto"></audio>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, Timestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -105,6 +115,17 @@
         
         let loja = JSON.parse(localStorage.getItem('marcelo_loja'));
         let rascunho = [];
+        let meuChamado = null;
+        let somAtivado = false;
+
+        // ATIVAR SOM NO PRIMEIRO CLIQUE
+        document.body.addEventListener('click', () => {
+            if (!somAtivado) {
+                const audio = document.getElementById('somChamado');
+                audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVanu8LdnGgU1k9n1unEiBC13yO/eizEIHWq+8+OZURE';
+                somAtivado = true;
+            }
+        }, { once: true });
 
         document.getElementById('pag').addEventListener('change', function() {
             document.getElementById('troco').classList.toggle('hidden', !['DINHEIRO', 'PIX'].includes(this.value));
@@ -139,6 +160,46 @@
                     el.textContent = 'Offline';
                     el.className = 'text-xs font-bold bg-red-500 px-2 py-1 rounded text-white';
                     btn.disabled = true;
+                }
+            });
+
+            // MONITORAR MEUS CHAMADOS
+            onSnapshot(collection(db, 'chamadas'), (snap) => {
+                let meuChamadoAtivo = null;
+                
+                snap.forEach((d) => {
+                    const c = d.data();
+                    if (c.loja === loja.nome) {
+                        meuChamadoAtivo = { id: d.id, ...c };
+                    }
+                });
+
+                const boxStatus = document.getElementById('statusChamado');
+                const box = document.getElementById('boxChamado');
+                const txt = document.getElementById('txtChamado');
+
+                if (meuChamadoAtivo) {
+                    boxStatus.classList.remove('hidden');
+                    
+                    if (meuChamadoAtivo.status === 'Pendente') {
+                        box.className = 'bg-yellow-100 p-4 rounded-2xl shadow-lg border-l-4 border-yellow-500 animate-pulse';
+                        txt.textContent = '⏳ Chamando Marcelo...';
+                        txt.className = 'font-black text-center text-yellow-800';
+                    } else if (meuChamadoAtivo.status === 'Visualizado') {
+                        box.className = 'bg-green-100 p-4 rounded-2xl shadow-lg border-l-4 border-green-500';
+                        txt.innerHTML = '✅ <span class="text-green-700">MARCELO ESTÁ VINDO!</span>';
+                        txt.className = 'font-black text-center text-green-800 text-lg';
+                        
+                        // TOCAR SOM DE CONFIRMAÇÃO
+                        if (somAtivado && meuChamado !== meuChamadoAtivo.id) {
+                            document.getElementById('somChamado').play().catch(() => {});
+                        }
+                    }
+                    
+                    meuChamado = meuChamadoAtivo.id;
+                } else {
+                    boxStatus.classList.add('hidden');
+                    meuChamado = null;
                 }
             });
 
@@ -177,6 +238,11 @@
             btn.disabled = true;
             btn.textContent = 'Chamando...';
             
+            // TOCAR SOM AO CHAMAR
+            if (somAtivado) {
+                document.getElementById('somChamado').play().catch(() => {});
+            }
+            
             try {
                 await addDoc(collection(db, 'chamadas'), {
                     loja: loja.nome,
@@ -186,11 +252,12 @@
                     status: 'Pendente'
                 });
                 
-                btn.textContent = '✅ Chamado!';
+                btn.textContent = '🔔 Chamar Marcelo';
+                // Não reabilita - aguarda Marcelo aceitar ou timeout
                 setTimeout(() => {
-                    btn.disabled = false;
-                    btn.textContent = '🔔 Chamar Marcelo';
-                }, 10000);
+                    if (btn.disabled) btn.disabled = false;
+                }, 30000); // 30 segundos timeout
+                
             } catch (e) {
                 alert('Erro: ' + e.message);
                 btn.disabled = false;
@@ -209,8 +276,7 @@
             rascunho.push({
                 local: rua,
                 ref: document.getElementById('ref').value,
-                pag: pag,
-                obs: ''
+                pag: pag
             });
             
             document.getElementById('end').value = '';
