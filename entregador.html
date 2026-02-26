@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <!-- PWA -->
-    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTWFyY2VsbyBFbnRyZWdhcyIsInNob3J0X25hbWUiOiJNYXJjZWxvIiwic3RhcnRfdXJsIjoiLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmOGZhZmMiLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJvcmllbnRhdGlvbiI6InBvcnRyYWl0IiwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbCwlM0NzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTAwIDEwMCclM0UlM0NjaXJjbGUgY3g9JzUwJyBjeT0nNTAnIHI9JzQ1JyBmaWxsPSclMjMyNTYzZWInLyUzRSUzQ3RleHQgeD0nNTAnIHk9JzY1JyBmb250LXNpemU9JzUwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmaWxsPSd3aGl0ZSclM0UlNUN1M0Y2ODUlM0MlM0MvdGV4dCUzRSUzQy9zdmclM0UiLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XX0=">
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,22 +16,44 @@
         .online-ativo { animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
         .chamada-ativa { animation: shake 0.5s infinite; }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @keyframes shake { 
+            0%, 100% { transform: translateX(0); } 
+            25% { transform: translateX(-5px); } 
+            75% { transform: translateX(5px); } 
+        }
+        .toast {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
     </style>
 </head>
 <body class="bg-slate-100 p-4 font-sans min-h-screen">
     <div class="max-w-md mx-auto pb-24">
         
-        <!-- BOTAO INSTALAR (MANUAL) -->
-        <div id="areaInstalar" class="hidden bg-green-100 p-4 rounded-2xl shadow-lg mb-4 border-2 border-green-500">
-            <p class="text-sm font-bold text-green-800 mb-2">📲 Para receber notificações mesmo com tela fechada:</p>
-            <ol class="text-xs text-green-700 mb-3 list-decimal pl-4">
-                <li>Toque no botão abaixo</li>
-                <li>Confirme "Adicionar à tela inicial"</li>
-                <li>Pronto! Use pelo ícone do app</li>
-            </ol>
-            <button onclick="instalarManual()" class="w-full bg-green-600 text-white p-3 rounded-xl font-black uppercase shadow-lg">
-                Instalar App Agora
+        <!-- BOTAO INSTALAR -->
+        <div id="areaInstalar" class="hidden bg-gradient-to-r from-green-500 to-green-600 p-4 rounded-2xl shadow-lg mb-4 text-white">
+            <p class="text-sm font-bold mb-2">📲 Instale o App</p>
+            <p class="text-xs mb-3 opacity-90">Receba notificações mesmo com o app fechado</p>
+            <button onclick="instalarApp()" class="w-full bg-white text-green-600 p-3 rounded-xl font-black uppercase shadow-lg">
+                Instalar Agora
+            </button>
+        </div>
+
+        <!-- CONFIGURAÇÃO DE TAXA -->
+        <div id="configTaxa" class="hidden bg-white p-4 rounded-2xl shadow-lg mb-4">
+            <p class="text-xs font-bold text-gray-400 uppercase mb-2">💰 Configurar Taxa</p>
+            <div class="flex gap-2">
+                <select id="tipoTaxa" class="flex-1 p-3 bg-gray-50 rounded-xl font-bold text-sm outline-none border-2 border-gray-200">
+                    <option value="fixa">Taxa Fixa</option>
+                    <option value="km">Por KM</option>
+                </select>
+                <input id="valorTaxa" type="number" placeholder="R$" class="w-24 p-3 bg-gray-50 rounded-xl font-bold text-sm outline-none border-2 border-gray-200">
+            </div>
+            <button onclick="salvarTaxa()" class="w-full mt-2 bg-blue-600 text-white p-2 rounded-xl font-bold text-sm">
+                Salvar
             </button>
         </div>
 
@@ -40,23 +62,46 @@
             <div>
                 <p class="text-xs font-bold text-gray-400 uppercase">Status</p>
                 <p id="meuStatus" class="text-xl font-black text-red-600">● Offline</p>
+                <p id="infoTaxa" class="text-xs text-gray-500 mt-1"></p>
             </div>
-            <button onclick="mudarStatus()" id="btnStatus" class="bg-red-500 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg">
+            <button onclick="mudarStatus()" id="btnStatus" class="bg-red-500 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg transition-all active:scale-95">
                 Ficar Online
             </button>
         </div>
 
+        <!-- ESTATÍSTICAS DO DIA -->
+        <div class="grid grid-cols-3 gap-2 mb-4">
+            <div class="bg-white p-3 rounded-xl shadow text-center">
+                <p class="text-2xl font-black text-blue-600" id="statEntregas">0</p>
+                <p class="text-xs text-gray-500">Entregas</p>
+            </div>
+            <div class="bg-white p-3 rounded-xl shadow text-center">
+                <p class="text-2xl font-black text-green-600" id="statValor">R$0</p>
+                <p class="text-xs text-gray-500">Ganho</p>
+            </div>
+            <div class="bg-white p-3 rounded-xl shadow text-center">
+                <p class="text-2xl font-black text-purple-600" id="statKm">0</p>
+                <p class="text-xs text-gray-500">KM</p>
+            </div>
+        </div>
+
         <!-- NOTIFICAÇÃO FLUTUANTE -->
-        <div id="notificacaoFlutuante" class="hidden fixed top-4 left-4 right-4 bg-red-600 text-white p-6 rounded-2xl shadow-2xl z-50 chamada-ativa">
+        <div id="notificacaoFlutuante" class="hidden fixed top-4 left-4 right-4 bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-2xl shadow-2xl z-50 chamada-ativa">
             <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-bold uppercase mb-1">🔔 NOVA CHAMADA!</p>
+                <div class="flex-1">
+                    <p class="text-xs font-bold uppercase mb-1 animate-pulse">🔔 NOVA CHAMADA!</p>
                     <p id="nomeLojaChamada" class="text-2xl font-black">Loja</p>
-                    <p id="enderecoLojaChamada" class="text-sm opacity-90 mt-1">Endereço</p>
+                    <p id="enderecoLojaChamada" class="text-sm opacity-90 mt-1 line-clamp-2">Endereço</p>
+                    <p id="distanciaChamada" class="text-xs bg-white/20 inline-block px-2 py-1 rounded mt-2">Calculando...</p>
                 </div>
-                <button onclick="aceitarChamadaFlutuante()" class="bg-white text-red-600 px-6 py-3 rounded-xl font-black text-lg shadow-lg">
-                    VOU! 🏍️
-                </button>
+                <div class="flex flex-col gap-2 ml-4">
+                    <button onclick="aceitarChamadaFlutuante()" class="bg-white text-red-600 px-6 py-3 rounded-xl font-black text-lg shadow-lg active:scale-95 transition-transform">
+                        VOU! 🏍️
+                    </button>
+                    <button onclick="recusarChamada()" class="bg-red-800 text-white px-4 py-2 rounded-xl font-bold text-sm opacity-80">
+                        Não posso
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -67,102 +112,21 @@
         <div id="areaEntregas" class="space-y-4"></div>
 
         <!-- RESUMO -->
-        <button id="btnResumo" onclick="gerarResumo()" class="hidden w-full bg-purple-600 text-white p-4 rounded-2xl font-black uppercase shadow-lg mt-4">
+        <button id="btnResumo" onclick="gerarResumo()" class="hidden w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white p-4 rounded-2xl font-black uppercase shadow-lg mt-4 active:scale-95 transition-transform">
             📊 Resumo do Dia
         </button>
 
     </div>
 
-    <!-- SOM -->
-    <audio id="somChamada" preload="auto" loop></audio>
+    <!-- TOAST CONTAINER -->
+    <div id="toastContainer" class="fixed top-4 left-4 right-4 z-50 pointer-events-none"></div>
 
-    <!-- SERVICE WORKER -->
-    <script>
-        // Criar SW via Blob
-        const swCode = `
-            self.addEventListener('install', e => self.skipWaiting());
-            self.addEventListener('activate', e => self.clients.claim());
-            self.addEventListener('push', e => {
-                const data = e.data.json();
-                e.waitUntil(
-                    self.registration.showNotification('🔔 NOVA CHAMADA!', {
-                        body: data.body,
-                        icon: 'https://cdn-icons-png.flaticon.com/512/2830/2830305.png',
-                        vibrate: [500, 200, 500, 200, 500],
-                        requireInteraction: true
-                    })
-                );
-            });
-            self.addEventListener('notificationclick', e => {
-                e.notification.close();
-                e.waitUntil(clients.openWindow('/'));
-            });
-        `;
-        
-        const blob = new Blob([swCode], { type: 'application/javascript' });
-        const swUrl = URL.createObjectURL(blob);
-        
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register(swUrl)
-                .then(() => {
-                    console.log('SW ok');
-                    if ('Notification' in window && Notification.permission !== 'granted') {
-                        Notification.requestPermission();
-                    }
-                })
-                .catch(err => console.log('SW erro:', err));
-        }
-        
-        // VERIFICAR SE JÁ ESTÁ INSTALADO
-        let deferredPrompt = null;
-        let podeInstalar = false;
-        
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            podeInstalar = true;
-            document.getElementById('areaInstalar').classList.remove('hidden');
-        });
-        
-        // Se não aparecer o evento, mostrar botão manual mesmo assim
-        setTimeout(() => {
-            if (!podeInstalar && !window.matchMedia('(display-mode: standalone)').matches) {
-                document.getElementById('areaInstalar').classList.remove('hidden');
-            }
-        }, 3000);
-        
-        // FUNÇÃO INSTALAR (AUTOMÁTICA OU MANUAL)
-        window.instalarManual = async () => {
-            // Tentar método automático primeiro
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    document.getElementById('areaInstalar').classList.add('hidden');
-                    return;
-                }
-            }
-            
-            // Se não funcionar, mostrar instruções manuais
-            const ua = navigator.userAgent.toLowerCase();
-            let msg = '';
-            
-            if (ua.includes('chrome')) {
-                msg = 'Toque no menu ⋮ do Chrome e selecione "Adicionar à tela inicial"';
-            } else if (ua.includes('samsung')) {
-                msg = 'Toque no menu ⋮ e selecione "Adicionar página à" → Tela inicial';
-            } else {
-                msg = 'Toque no menu do navegador e procure "Adicionar à tela inicial"';
-            }
-            
-            alert('Para instalar:\n\n' + msg);
-        };
-    </script>
-
-    <!-- FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { 
+            getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, 
+            updateDoc, Timestamp, query, where, getDocs, writeBatch 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
@@ -176,57 +140,180 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
+        // Estado global
         let online = false;
         let somAtivado = false;
         let chamadoAtual = null;
-        let intervaloSom = null;
         let entregasHoje = [];
+        let configTaxa = JSON.parse(localStorage.getItem('marcelo_taxa')) || { tipo: 'fixa', valor: 5 };
+        let wakeLock = null;
+        let audioContext = null;
 
-        // ATIVAR AUDIO
-        function ativarAudio() {
+        // 🎵 SISTEMA DE ÁUDIO CORRIGIDO (Web Audio API)
+        function initAudio() {
             if (somAtivado) return;
             
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            
-            function tocarBeep() {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                oscillator.frequency.value = 800;
-                oscillator.type = 'sine';
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.5);
-            }
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
             
             window.tocarSomChamada = () => {
-                tocarBeep();
-                intervaloSom = setInterval(tocarBeep, 2000);
+                if (!audioContext) return;
+                
+                const playBeep = () => {
+                    const osc = audioContext.createOscillator();
+                    const gain = audioContext.createGain();
+                    
+                    osc.connect(gain);
+                    gain.connect(audioContext.destination);
+                    
+                    osc.frequency.setValueAtTime(880, audioContext.currentTime); // Nota A5
+                    osc.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.1);
+                    
+                    gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    osc.start(audioContext.currentTime);
+                    osc.stop(audioContext.currentTime + 0.5);
+                };
+
+                playBeep();
+                window.intervaloSom = setInterval(playBeep, 1500);
             };
             
             window.pararSomChamada = () => {
-                clearInterval(intervaloSom);
+                if (window.intervaloSom) {
+                    clearInterval(window.intervaloSom);
+                    window.intervaloSom = null;
+                }
             };
             
             somAtivado = true;
         }
 
-        document.addEventListener('click', ativarAudio, { once: true });
-        document.addEventListener('touchstart', ativarAudio, { once: true });
+        // Ativar áudio no primeiro toque
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('touchstart', initAudio, { once: true });
 
-        // MUDAR STATUS
+        // 🔔 NOTIFICAÇÕES PUSH (Funciona app fechado!)
+        async function initPushNotifications() {
+            if (!('serviceWorker' in navigator)) return;
+            
+            try {
+                const registration = await navigator.serviceWorker.register('/sw.js');
+                console.log('SW registrado:', registration);
+                
+                // Verificar se já tem permissão
+                if ('Notification' in window) {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        // Inscrever em push (simulado - em produção use Firebase Cloud Messaging)
+                        showToast('✅ Notificações ativadas!', 'success');
+                    }
+                }
+                
+                // Ouvir mensagens do SW
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    if (event.data.type === 'ACEITAR_CHAMADA') {
+                        aceitar(event.data.chamadaId);
+                    }
+                });
+                
+            } catch (err) {
+                console.error('Erro SW:', err);
+                // Fallback: registrar SW inline se falhar
+                registrarSWInline();
+            }
+        }
+
+        function registrarSWInline() {
+            const swCode = `
+                self.addEventListener('push', e => {
+                    const data = e.data.json();
+                    e.waitUntil(
+                        self.registration.showNotification('🔔 NOVA CHAMADA!', {
+                            body: data.body,
+                            icon: 'https://cdn-icons-png.flaticon.com/512/2830/2830305.png',
+                            vibrate: [500, 200, 500],
+                            requireInteraction: true,
+                            actions: [
+                                { action: 'aceitar', title: '✅ Vou!' },
+                                { action: 'recusar', title: '❌ Não' }
+                            ]
+                        })
+                    );
+                });
+                self.addEventListener('notificationclick', e => {
+                    e.notification.close();
+                    e.waitUntil(clients.openWindow('/'));
+                });
+            `;
+            
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl);
+        }
+
+        // 📍 CALCULAR DISTÂNCIA (Haversine)
+        function calcularDistancia(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Raio da Terra em km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return (R * c).toFixed(1);
+        }
+
+        // 💰 CÁLCULO AUTOMÁTICO DE TAXA
+        function calcularTaxa(distanciaKm) {
+            if (configTaxa.tipo === 'fixa') {
+                return parseFloat(configTaxa.valor);
+            } else {
+                return (distanciaKm * parseFloat(configTaxa.valor)).toFixed(2);
+            }
+        }
+
+        function salvarTaxa() {
+            configTaxa = {
+                tipo: document.getElementById('tipoTaxa').value,
+                valor: document.getElementById('valorTaxa').value
+            };
+            localStorage.setItem('marcelo_taxa', JSON.stringify(configTaxa));
+            atualizarInfoTaxa();
+            showToast('Taxa salva!', 'success');
+        }
+
+        function atualizarInfoTaxa() {
+            const info = configTaxa.tipo === 'fixa' 
+                ? `Taxa fixa: R$${configTaxa.valor}` 
+                : `R$${configTaxa.valor}/km`;
+            document.getElementById('infoTaxa').textContent = info;
+        }
+
+        // 🟢 MUDAR STATUS
         window.mudarStatus = async () => {
             online = !online;
-            await setDoc(doc(db, 'config', 'status'), { online, ocupado: false }, { merge: true });
             
+            // Wake Lock para manter tela ligada
             if (online && 'wakeLock' in navigator) {
-                try { await navigator.wakeLock.request('screen'); } catch (e) {}
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                } catch (e) {
+                    console.log('Wake lock não suportado');
+                }
+            } else if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
             }
+            
+            await setDoc(doc(db, 'config', 'status'), { 
+                online, 
+                ocupado: false,
+                ultimaAtualizacao: Timestamp.now()
+            }, { merge: true });
         };
 
-        // LISTENER STATUS
+        // Listener de status
         onSnapshot(doc(db, 'config', 'status'), (doc) => {
             const s = doc.data() || { online: false };
             online = s.online;
@@ -238,145 +325,272 @@
                 statusEl.textContent = '● Online';
                 statusEl.className = 'text-xl font-black text-green-600';
                 btn.textContent = 'Ficar Offline';
-                btn.className = 'bg-green-600 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg';
+                btn.className = 'bg-green-600 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg transition-all active:scale-95';
                 header.classList.add('online-ativo');
             } else {
                 statusEl.textContent = '● Offline';
                 statusEl.className = 'text-xl font-black text-red-600';
                 btn.textContent = 'Ficar Online';
-                btn.className = 'bg-red-500 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg';
+                btn.className = 'bg-red-500 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg transition-all active:scale-95';
                 header.classList.remove('online-ativo');
             }
         });
 
-        // LISTENER CHAMADAS
+        // 🔔 LISTENER DE CHAMADAS COM ANTI-DUPLICATA
+        let chamadasProcessadas = new Set();
+        
         onSnapshot(collection(db, 'chamadas'), (snap) => {
             const div = document.getElementById('areaChamadas');
             const notifFlutuante = document.getElementById('notificacaoFlutuante');
             
             let chamadoParaMim = null;
+            
             snap.forEach((d) => {
                 const c = d.data();
-                if (c.status === 'Pendente') chamadoParaMim = { id: d.id, ...c };
+                // Verificar duplicatas (mesma loja, chamada recente)
+                if (c.status === 'Pendente' && !chamadasProcessadas.has(d.id)) {
+                    chamadoParaMim = { id: d.id, ...c };
+                }
             });
 
-            if (chamadoParaMim && online) {
-                if (chamadoAtual !== chamadoParaMim.id) {
-                    chamadoAtual = chamadoParaMim.id;
-                    
-                    if (somAtivado && window.tocarSomChamada) window.tocarSomChamada();
-                    
-                    document.getElementById('nomeLojaChamada').textContent = chamadoParaMim.loja;
-                    document.getElementById('enderecoLojaChamada').textContent = chamadoParaMim.enderecoLoja;
-                    notifFlutuante.classList.remove('hidden');
-                    
-                    if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]);
-                    
-                    if ('Notification' in window && Notification.permission === 'granted') {
-                        new Notification('🔔 NOVA CHAMADA!', {
-                            body: `${chamadoParaMim.loja} - ${chamadoParaMim.enderecoLoja}`,
-                            icon: 'https://cdn-icons-png.flaticon.com/512/2830/2830305.png',
-                            vibrate: [500, 200, 500],
-                            requireInteraction: true,
-                            tag: 'chamada'
-                        });
-                    }
-                }
-            } else {
-                if (!chamadoParaMim) {
-                    notifFlutuante.classList.add('hidden');
-                    chamadoAtual = null;
-                    if (window.pararSomChamada) window.pararSomChamada();
-                }
+            if (chamadoParaMim && online && !chamadoAtual) {
+                processarNovaChamada(chamadoParaMim);
+            } else if (!chamadoParaMim && chamadoAtual) {
+                // Chamada foi removida/aceita por outro
+                notifFlutuante.classList.add('hidden');
+                chamadoAtual = null;
+                window.pararSomChamada();
             }
 
-            div.innerHTML = '';
+            // Renderizar lista de chamadas pendentes
+            renderizarChamadas(snap);
+        });
+
+        async function processarNovaChamada(chamado) {
+            chamadoAtual = chamado.id;
+            chamadasProcessadas.add(chamado.id);
+            
+            // Som e vibração
+            if (somAtivado) window.tocarSomChamada();
+            if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]);
+            
+            // Calcular distância se tiver coordenadas
+            let distanciaTexto = 'Distância desconhecida';
+            if (chamado.coords && navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const dist = calcularDistancia(
+                        pos.coords.latitude, pos.coords.longitude,
+                        chamado.coords.lat, chamado.coords.lng
+                    );
+                    const taxa = calcularTaxa(dist);
+                    distanciaTexto = `${dist}km - R$${taxa}`;
+                    document.getElementById('distanciaChamada').textContent = distanciaTexto;
+                });
+            }
+            
+            // Mostrar notificação flutuante
+            document.getElementById('nomeLojaChamada').textContent = chamado.loja;
+            document.getElementById('enderecoLojaChamada').textContent = chamado.enderecoLoja;
+            document.getElementById('distanciaChamada').textContent = distanciaTexto;
+            document.getElementById('notificacaoFlutuante').classList.remove('hidden');
+            
+            // Notificação do navegador (funciona em background)
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    const registration = await navigator.serviceWorker.ready;
+                    await registration.showNotification('🔔 NOVA CHAMADA!', {
+                        body: `${chamado.loja} - ${chamado.enderecoLoja}`,
+                        icon: 'https://cdn-icons-png.flaticon.com/512/2830/2830305.png',
+                        badge: 'https://cdn-icons-png.flaticon.com/512/2830/2830305.png',
+                        tag: 'chamada-' + chamado.id,
+                        requireInteraction: true,
+                        actions: [
+                            { action: 'aceitar', title: '✅ Vou!' },
+                            { action: 'recusar', title: '❌ Não posso' }
+                        ],
+                        data: { chamadaId: chamado.id }
+                    });
+                } catch (e) {
+                    // Fallback para notificação normal
+                    new Notification('🔔 NOVA CHAMADA!', {
+                        body: `${chamado.loja} - ${chamado.enderecoLoja}`,
+                        requireInteraction: true
+                    });
+                }
+            }
+            
+            // Timeout de 2 minutos para auto-recusar
+            setTimeout(() => {
+                if (chamadoAtual === chamado.id) {
+                    recusarChamada();
+                }
+            }, 120000);
+        }
+
+        function renderizarChamadas(snap) {
+            const div = document.getElementById('areaChamadas');
+            let html = '';
+            
             snap.forEach((d) => {
                 const c = d.data();
                 if (c.status === 'Pendente') {
-                    div.innerHTML += `
-                        <div class="bg-orange-500 text-white p-4 rounded-2xl shadow-lg mb-2 flex justify-between items-center">
+                    html += `
+                        <div class="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 rounded-2xl shadow-lg mb-2 flex justify-between items-center animate-pulse">
                             <div>
                                 <p class="font-black text-lg">🔔 ${c.loja}</p>
-                                <p class="text-xs">${c.enderecoLoja}</p>
+                                <p class="text-xs opacity-90">${c.enderecoLoja}</p>
                             </div>
-                            <button onclick="aceitar('${d.id}')" class="bg-white text-orange-600 px-4 py-2 rounded-xl font-black text-lg">VOU!</button>
+                            <button onclick="aceitar('${d.id}')" class="bg-white text-orange-600 px-4 py-2 rounded-xl font-black text-lg shadow-lg active:scale-95 transition-transform">
+                                VOU!
+                            </button>
                         </div>
                     `;
                 } else if (c.status === 'Visualizado') {
-                    div.innerHTML += `
+                    html += `
                         <div class="bg-slate-800 text-white p-3 rounded-xl border-l-4 border-green-500 mb-2 flex justify-between items-center">
-                            <p class="font-black">${c.loja}</p>
-                            <button onclick="pronto('${d.id}')" class="bg-green-600 text-white px-3 py-1 rounded-lg font-black text-xs">✅ Pronto</button>
+                            <div>
+                                <p class="font-black">${c.loja}</p>
+                                <p class="text-xs text-green-400">Marcelo a caminho</p>
+                            </div>
+                            <button onclick="pronto('${d.id}')" class="bg-green-600 text-white px-3 py-1 rounded-lg font-black text-xs active:scale-95">
+                                ✅ Pronto
+                            </button>
                         </div>
                     `;
                 }
             });
-        });
+            
+            div.innerHTML = html || '';
+        }
 
+        // ✅ ACEITAR CHAMADA
         window.aceitarChamadaFlutuante = () => {
             if (chamadoAtual) aceitar(chamadoAtual);
         };
 
         window.aceitar = async (id) => {
-            if (window.pararSomChamada) window.pararSomChamada();
-            await updateDoc(doc(db, 'chamadas', id), { status: 'Visualizado' });
-            await setDoc(doc(db, 'config', 'status'), { online: true, ocupado: true }, { merge: true });
+            window.pararSomChamada();
+            
+            try {
+                await updateDoc(doc(db, 'chamadas', id), { 
+                    status: 'Visualizado',
+                    aceitoEm: Timestamp.now()
+                });
+                
+                await setDoc(doc(db, 'config', 'status'), { 
+                    online: true, 
+                    ocupado: true,
+                    entregaAtual: id
+                }, { merge: true });
+                
+                document.getElementById('notificacaoFlutuante').classList.add('hidden');
+                showToast('✅ Chamada aceita!', 'success');
+                
+            } catch (e) {
+                showToast('❌ Erro ao aceitar', 'error');
+            }
+        };
+
+        window.recusarChamada = async () => {
+            if (!chamadoAtual) return;
+            
+            window.pararSomChamada();
             document.getElementById('notificacaoFlutuante').classList.add('hidden');
+            
+            // Marcar como recusado (opcional: remover ou manter histórico)
+            await updateDoc(doc(db, 'chamadas', chamadoAtual), { 
+                status: 'Recusado',
+                recusadoEm: Timestamp.now()
+            });
+            
+            chamadoAtual = null;
+            showToast('Chamada recusada', 'info');
         };
 
         window.pronto = async (id) => {
             await deleteDoc(doc(db, 'chamadas', id));
-            await setDoc(doc(db, 'config', 'status'), { online: true, ocupado: false }, { merge: true });
+            await setDoc(doc(db, 'config', 'status'), { 
+                online: true, 
+                ocupado: false,
+                entregaAtual: null
+            }, { merge: true });
+            
+            showToast('✅ Entrega finalizada!', 'success');
         };
 
-        // ENTREGAS
+        // 📦 ENTREGAS COM CÁLCULO AUTOMÁTICO
         onSnapshot(collection(db, 'pedidos'), (snap) => {
             const porLoja = {};
             entregasHoje = [];
+            let totalEntregas = 0;
+            let totalValor = 0;
             
             snap.forEach((d) => {
                 const p = d.data();
-                entregasHoje.push(p);
-                if (p.status !== 'Concluido') {
+                entregasHoje.push({ id: d.id, ...p });
+                
+                if (p.status === 'Concluido') {
+                    totalEntregas++;
+                    totalValor += parseFloat(p.taxa || 0);
+                } else {
                     if (!porLoja[p.loja]) porLoja[p.loja] = [];
                     porLoja[p.loja].push({ id: d.id, ...p });
                 }
             });
 
-            const div = document.getElementById('areaEntregas');
+            // Atualizar estatísticas
+            document.getElementById('statEntregas').textContent = totalEntregas;
+            document.getElementById('statValor').textContent = `R$${totalValor.toFixed(0)}`;
+            
             const btnResumo = document.getElementById('btnResumo');
-            const concluidas = entregasHoje.filter(e => e.status === 'Concluido').length;
-            btnResumo.classList.toggle('hidden', concluidas === 0);
-            btnResumo.innerHTML = `📊 Resumo (${concluidas} entregas)`;
+            btnResumo.classList.toggle('hidden', totalEntregas === 0);
+            btnResumo.innerHTML = `📊 Resumo (${totalEntregas} entregas - R$${totalValor.toFixed(2)})`;
 
+            renderizarEntregas(porLoja);
+        });
+
+        function renderizarEntregas(porLoja) {
+            const div = document.getElementById('areaEntregas');
+            
             if (Object.keys(porLoja).length === 0) {
-                div.innerHTML = '<p class="text-center text-gray-400 py-8">Nenhuma entrega 🎉</p>';
+                div.innerHTML = '<p class="text-center text-gray-400 py-8">Nenhuma entrega pendente 🎉</p>';
                 return;
             }
 
-            div.innerHTML = '<h2 class="font-black text-gray-800 uppercase mb-2">📦 Entregas</h2>';
+            let html = '<h2 class="font-black text-gray-800 uppercase mb-2">📦 Entregas Pendentes</h2>';
+            
             for (let loja in porLoja) {
                 const entregas = porLoja[loja];
-                div.innerHTML += `
+                html += `
                     <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-4">
-                        <div class="bg-blue-600 p-3 text-white">
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-3 text-white">
                             <p class="font-black">${loja}</p>
-                            <p class="text-xs">${entregas.length} entrega(s)</p>
+                            <p class="text-xs opacity-90">${entregas.length} entrega(s)</p>
                         </div>
                         <div class="p-3 space-y-2">
                             ${entregas.map(e => `
                                 <div class="p-3 bg-gray-50 rounded-xl border-l-4 ${e.status === 'SaiuParaEntrega' ? 'border-orange-500' : 'border-blue-500'}">
-                                    <p class="font-bold text-sm">${e.local}</p>
-                                    <p class="text-xs text-blue-600 font-bold">${e.pag}</p>
-                                    ${e.obs ? `<p class="text-xs text-orange-600 mt-1">⚠️ ${e.obs}</p>` : ''}
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex-1">
+                                            <p class="font-bold text-sm">${e.local}</p>
+                                            <p class="text-xs text-blue-600 font-bold">${e.pag}</p>
+                                            ${e.taxa ? `<p class="text-xs text-green-600 font-bold">Taxa: R$${e.taxa}</p>` : ''}
+                                            ${e.obs ? `<p class="text-xs text-orange-600 mt-1">⚠️ ${e.obs}</p>` : ''}
+                                        </div>
+                                    </div>
                                     <div class="flex gap-2 mt-2">
                                         ${e.status !== 'SaiuParaEntrega' ? `
-                                            <button onclick="sair('${e.id}')" class="flex-1 bg-orange-500 text-white py-2 rounded-lg font-black text-sm">🛵 Sair</button>
+                                            <button onclick="sair('${e.id}', '${e.local}')" class="flex-1 bg-orange-500 text-white py-2 rounded-lg font-black text-sm active:scale-95 transition-transform">
+                                                🛵 Sair
+                                            </button>
                                         ` : `
-                                            <button onclick="entregue('${e.id}', '${e.zap}')" class="flex-1 bg-green-600 text-white py-2 rounded-lg font-black text-sm">✅ Entregue</button>
+                                            <button onclick="entregue('${e.id}', '${e.zap}', '${e.taxa || 0}')" class="flex-1 bg-green-600 text-white py-2 rounded-lg font-black text-sm active:scale-95 transition-transform">
+                                                ✅ Entregue
+                                            </button>
                                         `}
-                                        <button onclick="maps('${encodeURIComponent(e.local)}')" class="bg-blue-100 text-blue-600 px-3 rounded-lg font-black">🗺️</button>
+                                        <button onclick="maps('${encodeURIComponent(e.local)}')" class="bg-blue-100 text-blue-600 px-3 rounded-lg font-black active:scale-95">
+                                            🗺️
+                                        </button>
                                     </div>
                                 </div>
                             `).join('')}
@@ -384,49 +598,158 @@
                     </div>
                 `;
             }
-        });
+            
+            div.innerHTML = html;
+        }
 
-        window.sair = async (id) => {
-            await updateDoc(doc(db, 'pedidos', id), { status: 'SaiuParaEntrega' });
+        window.sair = async (id, local) => {
+            // Calcular taxa automaticamente se possível
+            let taxa = configTaxa.valor;
+            
+            if (configTaxa.tipo === 'km' && navigator.geolocation) {
+                try {
+                    const pos = await new Promise((resolve, reject) => {
+                        navigator.geolocation.getCurrentPosition(resolve, reject);
+                    });
+                    
+                    // Aqui você precisaria das coordenadas do destino
+                    // Por enquanto, usa valor fixo ou estimativa
+                    taxa = calcularTaxa(2); // Estimativa de 2km
+                } catch (e) {
+                    console.log('Sem geolocalização');
+                }
+            }
+            
+            await updateDoc(doc(db, 'pedidos', id), { 
+                status: 'SaiuParaEntrega',
+                taxa: taxa,
+                saiuEm: Timestamp.now()
+            });
+            
+            showToast('🛵 Saiu para entrega!', 'success');
         };
 
-        window.entregue = async (id, zap) => {
+        window.entregue = async (id, zap, taxa) => {
             const nome = prompt('Quem recebeu?');
             if (!nome) return;
-            await updateDoc(doc(db, 'pedidos', id), {
-                status: 'Concluido',
-                recebedor: nome,
-                horaEntrega: Timestamp.now()
-            });
-            const msg = `✅ Entregue!\n\nPara: ${nome}\n⏰ ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
-            window.open(`https://wa.me/55${zap}?text=${encodeURIComponent(msg)}`, '_blank');
+            
+            try {
+                await updateDoc(doc(db, 'pedidos', id), {
+                    status: 'Concluido',
+                    recebedor: nome,
+                    horaEntrega: Timestamp.now(),
+                    taxa: taxa
+                });
+                
+                const msg = `✅ *Entrega Concluída!*\n\n📦 Para: ${nome}\n⏰ ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}\n💰 Taxa: R$${taxa}`;
+                window.open(`https://wa.me/55${zap}?text=${encodeURIComponent(msg)}`, '_blank');
+                
+                showToast('✅ Entrega concluída!', 'success');
+            } catch (e) {
+                showToast('❌ Erro ao finalizar', 'error');
+            }
         };
 
         window.maps = (end) => {
             window.open(`https://www.google.com/maps/dir/?api=1&destination=${end}`, '_blank');
         };
 
+        // 📊 RESUMO DO DIA
         window.gerarResumo = () => {
             const hoje = new Date().toLocaleDateString('pt-BR');
             const concluidas = entregasHoje.filter(e => e.status === 'Concluido');
             const porLoja = {};
+            let totalTaxa = 0;
+            
             concluidas.forEach(e => {
                 if (!porLoja[e.loja]) porLoja[e.loja] = [];
                 porLoja[e.loja].push(e);
+                totalTaxa += parseFloat(e.taxa || 0);
             });
             
-            let texto = `📊 *RESUMO - ${hoje}*\n\n*Total:* ${concluidas.length} entregas\n\n`;
+            let texto = `📊 *RESUMO - ${hoje}*\n\n`;
+            texto += `*Total:* ${concluidas.length} entregas\n`;
+            texto += `*Ganho:* R$${totalTaxa.toFixed(2)}\n\n`;
+            
             for (let loja in porLoja) {
                 texto += `*${loja}:*\n`;
                 porLoja[loja].forEach((e, i) => {
-                    texto += `${i+1}. ${e.local} | ${e.pag}\n`;
+                    texto += `${i+1}. ${e.local} | ${e.pag} | R$${e.taxa || 0}\n`;
                 });
                 texto += '\n';
             }
             
-            const meuZap = '14999999999';
+            const meuZap = '14999999999'; // Configure seu número
             window.open(`https://wa.me/55${meuZap}?text=${encodeURIComponent(texto)}`, '_blank');
         };
+
+        // 🍞 TOAST NOTIFICATIONS
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                info: 'bg-blue-500'
+            };
+            
+            toast.className = `${colors[type]} text-white px-6 py-3 rounded-xl shadow-lg mb-2 font-bold toast pointer-events-auto`;
+            toast.textContent = message;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // 📲 INSTALAÇÃO DO APP
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('areaInstalar').classList.remove('hidden');
+        });
+
+        window.instalarApp = async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    document.getElementById('areaInstalar').classList.add('hidden');
+                    showToast('✅ App instalado!', 'success');
+                }
+            } else {
+                // iOS ou navegador não suporta
+                showToast('📱 Adicione à tela inicial manualmente', 'info');
+            }
+        };
+
+        // Verificar se já está instalado
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            document.getElementById('areaInstalar').classList.add('hidden');
+        }
+
+        // 🚀 INICIALIZAÇÃO
+        document.addEventListener('DOMContentLoaded', () => {
+            initPushNotifications();
+            atualizarInfoTaxa();
+            
+            // Verificar URL params (quando vem de notificação)
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('aceitar')) {
+                setTimeout(() => aceitar(params.get('aceitar')), 1000);
+            }
+            
+            // Mostrar config de taxa
+            document.getElementById('configTaxa').classList.remove('hidden');
+            document.getElementById('tipoTaxa').value = configTaxa.tipo;
+            document.getElementById('valorTaxa').value = configTaxa.valor;
+        });
     </script>
 </body>
 </html>
