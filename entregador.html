@@ -16,8 +16,7 @@
                     <p class="text-[10px] font-black text-gray-400 uppercase">Ola, Marcelo</p>
                     <h1 class="text-xl font-black text-blue-900">Painel</h1>
                 </div>
-                <button onclick="toggleOnline()" id="btnOnline" 
-                    class="px-4 py-2 rounded-full font-black text-xs uppercase shadow-lg transition-all bg-red-500 text-white">
+                <button onclick="toggleOnline()" id="btnOnline" class="px-4 py-2 rounded-full font-black text-xs uppercase shadow-lg transition-all bg-red-500 text-white">
                     ● Offline
                 </button>
             </div>
@@ -46,8 +45,7 @@
         <div id="entregas" class="space-y-4"></div>
 
         <!-- EMERGENCIA -->
-        <button onclick="emergencia()" 
-            class="fixed bottom-4 right-4 w-12 h-12 bg-red-600 rounded-full shadow-2xl flex items-center justify-center text-xl z-50 hover:scale-110 transition-transform">
+        <button onclick="emergencia()" class="fixed bottom-4 right-4 w-12 h-12 bg-red-600 rounded-full shadow-2xl flex items-center justify-center text-xl z-50 hover:scale-110 transition-transform">
             🚨
         </button>
     </div>
@@ -56,8 +54,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, setDoc, deleteDoc, updateDoc, Timestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
@@ -68,43 +65,59 @@
             appId: "1:442484186787:web:ac914827ebebda987f2916" 
         };
         
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        let app;
+        let db;
+        
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            console.log('Firebase inicializado');
+        } catch (e) {
+            console.error('Erro ao inicializar:', e);
+            alert('Erro ao conectar ao Firebase');
+        }
         
         let online = false;
-        let dbInicializado = false;
 
+        // INICIALIZAR
         async function iniciar() {
+            await carregarDados();
+            
+            // Atualizar a cada 5 segundos
+            setInterval(carregarDados, 5000);
+            
+            // Listeners em tempo real (para chamadas - mais critico)
             try {
-                await signInAnonymously(auth);
-                console.log('Autenticado');
-                dbInicializado = true;
-                iniciarListeners();
+                onSnapshot(doc(db, 'config', 'status'), (docSnap) => {
+                    const s = docSnap.data() || { online: false };
+                    online = s.online;
+                    const btn = document.getElementById('btnOnline');
+                    
+                    if (online) {
+                        btn.className = 'px-4 py-2 rounded-full font-black text-xs uppercase shadow-lg transition-all bg-green-600 text-white animate-pulse';
+                        btn.innerHTML = '● Online';
+                    } else {
+                        btn.className = 'px-4 py-2 rounded-full font-black text-xs uppercase shadow-lg transition-all bg-red-500 text-white';
+                        btn.innerHTML = '● Offline';
+                    }
+                }, (error) => {
+                    console.error('Erro status:', error);
+                });
             } catch (e) {
-                console.error('Erro:', e);
+                console.error('Erro ao configurar listener:', e);
             }
         }
 
-        function iniciarListeners() {
-            // STATUS
-            onSnapshot(doc(db, 'config', 'status'), (docSnap) => {
-                const s = docSnap.data() || { online: false };
-                online = s.online;
-                const btn = document.getElementById('btnOnline');
-                
-                if (online) {
-                    btn.className = 'px-4 py-2 rounded-full font-black text-xs uppercase shadow-lg transition-all bg-green-600 text-white animate-pulse';
-                    btn.innerHTML = '● Online';
-                } else {
-                    btn.className = 'px-4 py-2 rounded-full font-black text-xs uppercase shadow-lg transition-all bg-red-500 text-white';
-                    btn.innerHTML = '● Offline';
-                }
-            });
+        async function carregarDados() {
+            await carregarChamadas();
+            await carregarEntregas();
+        }
 
-            // CHAMADAS
-            onSnapshot(collection(db, 'chamadas'), (snapshot) => {
-                const div = document.getElementById('listaChamadas');
+        async function carregarChamadas() {
+            const div = document.getElementById('listaChamadas');
+            
+            try {
+                const snapshot = await getDocs(collection(db, 'chamadas'));
                 
                 if (!snapshot.empty && online) {
                     document.getElementById('somNotificacao').play().catch(() => {});
@@ -128,8 +141,7 @@
                                         <p class="font-black text-lg">🔔 ${c.loja}</p>
                                         <p class="text-xs opacity-90">${c.enderecoLoja}</p>
                                     </div>
-                                    <button onclick="aceitarChamada('${doc.id}')" 
-                                        class="bg-white text-orange-600 px-4 py-2 rounded-xl font-black text-xs uppercase">
+                                    <button onclick="aceitarChamada('${doc.id}')" class="bg-white text-orange-600 px-4 py-2 rounded-xl font-black text-xs uppercase">
                                         VOU!
                                     </button>
                                 </div>
@@ -143,8 +155,7 @@
                                         <p class="font-black text-sm">${c.loja}</p>
                                         <p class="text-xs text-gray-400">Aguardando</p>
                                     </div>
-                                    <button onclick="finalizarChamada('${doc.id}')" 
-                                        class="bg-green-600 text-white px-3 py-1 rounded-lg font-black text-xs">
+                                    <button onclick="finalizarChamada('${doc.id}')" class="bg-green-600 text-white px-3 py-1 rounded-lg font-black text-xs">
                                         ✅ Coletei
                                     </button>
                                 </div>
@@ -152,10 +163,14 @@
                         `;
                     }
                 });
-            });
+            } catch (error) {
+                console.error('Erro chamadas:', error);
+            }
+        }
 
-            // ENTREGAS
-            onSnapshot(collection(db, 'pedidos'), (snapshot) => {
+        async function carregarEntregas() {
+            try {
+                const snapshot = await getDocs(collection(db, 'pedidos'));
                 const porLoja = {};
                 let totalHoje = 0;
                 let pendentes = 0;
@@ -206,19 +221,16 @@
                                         
                                         <div class="flex gap-2 mt-2">
                                             ${p.status !== 'SaiuParaEntrega' ? `
-                                                <button onclick="saiuEntrega('${p.id}')" 
-                                                    class="flex-1 bg-orange-500 text-white py-2 rounded-lg font-black text-xs">
+                                                <button onclick="saiuEntrega('${p.id}')" class="flex-1 bg-orange-500 text-white py-2 rounded-lg font-black text-xs">
                                                     🛵 Sair
                                                 </button>
                                             ` : `
-                                                <button onclick="concluirEntrega('${p.id}', '${p.loja}', '${p.zap}')" 
-                                                    class="flex-1 bg-green-600 text-white py-2 rounded-lg font-black text-xs">
+                                                <button onclick="concluirEntrega('${p.id}', '${p.loja}', '${p.zap}')" class="flex-1 bg-green-600 text-white py-2 rounded-lg font-black text-xs">
                                                     ✅ Cheguei
                                                 </button>
                                             `}
                                             
-                                            <button onclick="verMapa('${encodeURIComponent(p.local)}')" 
-                                                class="bg-blue-100 text-blue-600 px-3 rounded-lg font-black text-sm">
+                                            <button onclick="verMapa('${encodeURIComponent(p.local)}')" class="bg-blue-100 text-blue-600 px-3 rounded-lg font-black text-sm">
                                                 📍
                                             </button>
                                         </div>
@@ -228,43 +240,37 @@
                         </div>
                     `;
                 }
-            });
+            } catch (error) {
+                console.error('Erro entregas:', error);
+            }
         }
 
         window.toggleOnline = async function() {
-            if (!dbInicializado) return;
-            
             try {
                 await setDoc(doc(db, 'config', 'status'), { 
                     online: !online, 
                     ocupado: false 
                 }, { merge: true });
             } catch (e) {
-                console.error('Erro:', e);
+                console.error('Erro ao mudar status:', e);
+                alert('Erro: ' + e.message);
             }
         };
 
         window.aceitarChamada = async function(id) {
             try {
-                await updateDoc(doc(db, 'chamadas', id), { 
-                    status: 'Visualizado' 
-                });
-                await setDoc(doc(db, 'config', 'status'), { 
-                    online: true, 
-                    ocupado: true 
-                }, { merge: true });
+                await updateDoc(doc(db, 'chamadas', id), { status: 'Visualizado' });
+                await setDoc(doc(db, 'config', 'status'), { online: true, ocupado: true }, { merge: true });
             } catch (e) {
                 console.error('Erro:', e);
+                alert('Erro: ' + e.message);
             }
         };
 
         window.finalizarChamada = async function(id) {
             try {
                 await deleteDoc(doc(db, 'chamadas', id));
-                await setDoc(doc(db, 'config', 'status'), { 
-                    online: true, 
-                    ocupado: false 
-                }, { merge: true });
+                await setDoc(doc(db, 'config', 'status'), { online: true, ocupado: false }, { merge: true });
             } catch (e) {
                 console.error('Erro:', e);
             }
@@ -272,11 +278,10 @@
 
         window.saiuEntrega = async function(id) {
             try {
-                await updateDoc(doc(db, 'pedidos', id), { 
-                    status: 'SaiuParaEntrega' 
-                });
+                await updateDoc(doc(db, 'pedidos', id), { status: 'SaiuParaEntrega' });
             } catch (e) {
                 console.error('Erro:', e);
+                alert('Erro: ' + e.message);
             }
         };
 
@@ -295,6 +300,7 @@
                 window.open(`https://wa.me/55${zap}?text=${encodeURIComponent(msg)}`, '_blank');
             } catch (e) {
                 console.error('Erro:', e);
+                alert('Erro: ' + e.message);
             }
         };
 
@@ -308,7 +314,6 @@
             navigator.geolocation?.getCurrentPosition((pos) => {
                 const link = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
                 const msg = `🚨 ALERTA DE EMERGENCIA\n\nMarcelo precisa de ajuda!\n📍 ${link}`;
-                
                 window.open(`https://wa.me/5514999999999?text=${encodeURIComponent(msg)}`, '_blank');
             }, () => {
                 alert('Nao foi possivel obter localizacao');
