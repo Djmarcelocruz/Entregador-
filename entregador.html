@@ -3,64 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marcelo - Painel</title>
+    <title>Marcelo - Entregas</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 p-4 font-sans min-h-screen">
     <div class="max-w-md mx-auto pb-24">
         
-        <!-- BOTAO ATIVAR SOM (OBRIGATORIO NO GITHUB PAGES) -->
-        <button id="btnAtivarSom" onclick="ativarSom()" class="w-full bg-purple-600 text-white p-3 rounded-xl font-black uppercase text-sm mb-4 shadow-lg animate-pulse">
-            🔊 CLIQUE AQUI PARA ATIVAR O SOM
-        </button>
-
-        <!-- HEADER -->
-        <div class="bg-white p-4 rounded-2xl shadow-lg mb-4 border-b-4 border-blue-600">
-            <div class="flex justify-between items-center">
-                <div>
-                    <p class="text-[10px] font-black text-gray-400 uppercase">Ola, Marcelo</p>
-                    <h1 class="text-xl font-black text-blue-900">Painel</h1>
-                </div>
-                <button onclick="toggleOnline()" id="btnOnline" class="px-4 py-2 rounded-full font-black text-xs uppercase shadow-lg transition-all bg-red-500 text-white">
-                    ● Offline
-                </button>
+        <!-- STATUS -->
+        <div class="bg-white p-4 rounded-2xl shadow-lg mb-4 flex justify-between items-center">
+            <div>
+                <p class="text-xs font-bold text-gray-400 uppercase">Status</p>
+                <p id="meuStatus" class="text-xl font-black text-red-600">● Offline</p>
             </div>
-            
-            <!-- STATS -->
-            <div class="flex justify-around mt-4 pt-4 border-t border-gray-100">
-                <div class="text-center">
-                    <p class="text-2xl font-black text-blue-600" id="totalHoje">0</p>
-                    <p class="text-[9px] font-bold text-gray-400 uppercase">Hoje</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-2xl font-black text-orange-600" id="emAndamento">0</p>
-                    <p class="text-[9px] font-bold text-gray-400 uppercase">Pendentes</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-2xl font-black text-green-600" id="concluidas">0</p>
-                    <p class="text-[9px] font-bold text-gray-400 uppercase">Feitas</p>
-                </div>
-            </div>
+            <button onclick="mudarStatus()" id="btnStatus" class="bg-red-500 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg">
+                Ficar Online
+            </button>
         </div>
 
         <!-- CHAMADAS -->
-        <div id="listaChamadas" class="mb-4 space-y-2"></div>
+        <div id="areaChamadas" class="mb-4"></div>
 
         <!-- ENTREGAS -->
-        <div id="entregas" class="space-y-4"></div>
+        <div id="areaEntregas" class="space-y-4"></div>
 
-        <!-- EMERGENCIA -->
-        <button onclick="emergencia()" class="fixed bottom-4 right-4 w-12 h-12 bg-red-600 rounded-full shadow-2xl flex items-center justify-center text-xl z-50 hover:scale-110 transition-transform">
-            🚨
+        <!-- RESUMO DO DIA (APARECE QUANDO TEM ENTREGAS) -->
+        <button id="btnResumo" onclick="gerarResumo()" class="hidden w-full bg-purple-600 text-white p-4 rounded-2xl font-black uppercase shadow-lg mt-4">
+            📊 Ver Resumo do Dia
         </button>
+
     </div>
 
-    <!-- SOM COM URL CONFIAVEL (BASE64 OU LOCAL) -->
-    <audio id="somNotificacao" preload="auto"></audio>
+    <audio id="som" preload="auto"></audio>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, setDoc, deleteDoc, updateDoc, Timestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
@@ -71,279 +48,205 @@
             appId: "1:442484186787:web:ac914827ebebda987f2916" 
         };
         
-        let app;
-        let db;
-        
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            console.log('Firebase inicializado');
-        } catch (e) {
-            console.error('Erro ao inicializar:', e);
-            alert('Erro ao conectar ao Firebase');
-        }
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
         
         let online = false;
         let somAtivado = false;
+        let entregasHoje = [];
 
-        // ATIVAR SOM (NECESSARIO NO GITHUB PAGES)
-        window.ativarSom = function() {
-            const audio = document.getElementById('somNotificacao');
-            
-            // Usar som embutido em Base64 (campainha simples)
-            audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVanu8LdnGgU1k9n1unEiBC13yO/eizEIHWq+8+OZURE';
-            
-            audio.play().then(() => {
+        // SOM NO PRIMEIRO CLIQUE
+        document.body.addEventListener('click', () => {
+            if (!somAtivado) {
+                document.getElementById('som').src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVanu8LdnGgU1k9n1unEiBC13yO/eizEIHWq+8+OZURE';
+                document.getElementById('som').play().catch(() => {});
                 somAtivado = true;
-                document.getElementById('btnAtivarSom').classList.add('hidden');
-                console.log('Som ativado');
-            }).catch(e => {
-                console.error('Erro ao ativar som:', e);
-            });
+            }
+        }, { once: true });
+
+        window.mudarStatus = async () => {
+            online = !online;
+            await setDoc(doc(db, 'config', 'status'), { online, ocupado: false }, { merge: true });
         };
 
-        // INICIALIZAR
-        async function iniciar() {
-            await carregarDados();
-            setInterval(carregarDados, 5000);
+        onSnapshot(doc(db, 'config', 'status'), (doc) => {
+            const s = doc.data() || { online: false };
+            online = s.online;
+            const statusEl = document.getElementById('meuStatus');
+            const btn = document.getElementById('btnStatus');
             
-            // Listener de status em tempo real
-            try {
-                onSnapshot(doc(db, 'config', 'status'), (docSnap) => {
-                    const s = docSnap.data() || { online: false };
-                    online = s.online;
-                    const btn = document.getElementById('btnOnline');
-                    
-                    if (online) {
-                        btn.className = 'px-4 py-2 rounded-full font-black text-xs uppercase shadow-lg transition-all bg-green-600 text-white animate-pulse';
-                        btn.innerHTML = '● Online';
-                    } else {
-                        btn.className = 'px-4 py-2 rounded-full font-black text-xs uppercase shadow-lg transition-all bg-red-500 text-white';
-                        btn.innerHTML = '● Offline';
-                    }
-                }, (error) => {
-                    console.error('Erro status:', error);
-                });
-            } catch (e) {
-                console.error('Erro ao configurar listener:', e);
+            if (online) {
+                statusEl.textContent = '● Online';
+                statusEl.className = 'text-xl font-black text-green-600';
+                btn.textContent = 'Ficar Offline';
+                btn.className = 'bg-green-600 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg';
+            } else {
+                statusEl.textContent = '● Offline';
+                statusEl.className = 'text-xl font-black text-red-600';
+                btn.textContent = 'Ficar Online';
+                btn.className = 'bg-red-500 text-white px-6 py-3 rounded-xl font-black text-sm uppercase shadow-lg';
             }
-        }
+        });
 
-        async function carregarDados() {
-            await carregarChamadas();
-            await carregarEntregas();
-        }
-
-        async function carregarChamadas() {
-            const div = document.getElementById('listaChamadas');
+        onSnapshot(collection(db, 'chamadas'), (snap) => {
+            const div = document.getElementById('areaChamadas');
             
-            try {
-                const snapshot = await getDocs(collection(db, 'chamadas'));
-                
-                // Tocar som se houver chamadas novas e som ativado
-                if (!snapshot.empty && online && somAtivado) {
-                    const audio = document.getElementById('somNotificacao');
-                    audio.play().catch(() => {});
-                }
-                
+            if (!online || snap.empty) {
                 div.innerHTML = '';
-                
-                if (snapshot.empty) {
-                    div.innerHTML = '<p class="text-center text-gray-400 text-xs py-2">Nenhuma chamada</p>';
-                    return;
-                }
-
-                snapshot.forEach((doc) => {
-                    const c = doc.data();
-                    
-                    if (c.status === 'Pendente') {
-                        div.innerHTML += `
-                            <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-2xl shadow-lg mb-2">
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <p class="font-black text-lg">🔔 ${c.loja}</p>
-                                        <p class="text-xs opacity-90">${c.enderecoLoja}</p>
-                                    </div>
-                                    <button onclick="aceitarChamada('${doc.id}')" class="bg-white text-orange-600 px-4 py-2 rounded-xl font-black text-xs uppercase">
-                                        VOU!
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    } else if (c.status === 'Visualizado') {
-                        div.innerHTML += `
-                            <div class="bg-slate-800 text-white p-3 rounded-xl border-l-4 border-green-500 mb-2">
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <p class="font-black text-sm">${c.loja}</p>
-                                        <p class="text-xs text-gray-400">Aguardando</p>
-                                    </div>
-                                    <button onclick="finalizarChamada('${doc.id}')" class="bg-green-600 text-white px-3 py-1 rounded-lg font-black text-xs">
-                                        ✅ Coletei
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    }
-                });
-            } catch (error) {
-                console.error('Erro chamadas:', error);
+                return;
             }
-        }
-
-        async function carregarEntregas() {
-            try {
-                const snapshot = await getDocs(collection(db, 'pedidos'));
-                const porLoja = {};
-                let totalHoje = 0;
-                let pendentes = 0;
-                let concluidas = 0;
-                
-                snapshot.forEach((doc) => {
-                    const p = doc.data();
-                    totalHoje++;
-                    
-                    if (p.status === 'Concluido') {
-                        concluidas++;
-                    } else {
-                        pendentes++;
-                        if (!porLoja[p.loja]) porLoja[p.loja] = [];
-                        porLoja[p.loja].push({ id: doc.id, ...p });
-                    }
-                });
-
-                document.getElementById('totalHoje').textContent = totalHoje;
-                document.getElementById('emAndamento').textContent = pendentes;
-                document.getElementById('concluidas').textContent = concluidas;
-
-                const div = document.getElementById('entregas');
-                div.innerHTML = '';
-                
-                if (Object.keys(porLoja).length === 0) {
-                    div.innerHTML = '<p class="text-center text-gray-400 text-sm py-8">Nenhuma entrega pendente 🎉</p>';
-                    return;
-                }
-                
-                for (let loja in porLoja) {
-                    const entregas = porLoja[loja];
-                    
+            
+            if (somAtivado) document.getElementById('som').play().catch(() => {});
+            
+            div.innerHTML = '<h2 class="font-black text-gray-800 uppercase mb-2">🔔 Chamadas</h2>';
+            
+            snap.forEach((d) => {
+                const c = d.data();
+                if (c.status === 'Pendente') {
                     div.innerHTML += `
-                        <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 mb-4">
-                            <div class="bg-blue-600 p-3 text-white">
-                                <h3 class="font-black text-sm uppercase">${loja}</h3>
-                                <p class="text-[10px] opacity-80">${entregas.length} entrega(s)</p>
+                        <div class="bg-orange-500 text-white p-4 rounded-2xl shadow-lg mb-2 flex justify-between items-center">
+                            <div>
+                                <p class="font-black text-lg">${c.loja}</p>
+                                <p class="text-xs">${c.enderecoLoja}</p>
                             </div>
-                            
-                            <div class="p-3 space-y-2">
-                                ${entregas.map((p) => `
-                                    <div class="p-3 bg-gray-50 rounded-xl border-l-4 ${p.status === 'SaiuParaEntrega' ? 'border-orange-500' : 'border-blue-500'}">
-                                        <p class="font-black text-sm text-gray-800">${p.local}</p>
-                                        ${p.referencia ? `<p class="text-xs text-gray-500">📍 ${p.referencia}</p>` : ''}
-                                        <p class="text-xs font-bold text-blue-600 mt-1">${p.pag}</p>
-                                        ${p.obs ? `<p class="text-[10px] text-orange-600 mt-1">${p.obs}</p>` : ''}
-                                        
-                                        <div class="flex gap-2 mt-2">
-                                            ${p.status !== 'SaiuParaEntrega' ? `
-                                                <button onclick="saiuEntrega('${p.id}')" class="flex-1 bg-orange-500 text-white py-2 rounded-lg font-black text-xs">
-                                                    🛵 Sair
-                                                </button>
-                                            ` : `
-                                                <button onclick="concluirEntrega('${p.id}', '${p.loja}', '${p.zap}')" class="flex-1 bg-green-600 text-white py-2 rounded-lg font-black text-xs">
-                                                    ✅ Cheguei
-                                                </button>
-                                            `}
-                                            
-                                            <button onclick="verMapa('${encodeURIComponent(p.local)}')" class="bg-blue-100 text-blue-600 px-3 rounded-lg font-black text-sm">
-                                                📍
-                                            </button>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
+                            <button onclick="aceitar('${d.id}')" class="bg-white text-orange-600 px-4 py-2 rounded-xl font-black">VOU!</button>
+                        </div>
+                    `;
+                } else {
+                    div.innerHTML += `
+                        <div class="bg-slate-800 text-white p-3 rounded-xl border-l-4 border-green-500 mb-2 flex justify-between items-center">
+                            <p class="font-black">${c.loja}</p>
+                            <button onclick="pronto('${d.id}')" class="bg-green-600 text-white px-3 py-1 rounded-lg font-black text-xs">✅ Pronto</button>
                         </div>
                     `;
                 }
-            } catch (error) {
-                console.error('Erro entregas:', error);
-            }
-        }
+            });
+        });
 
-        window.toggleOnline = async function() {
-            try {
-                await setDoc(doc(db, 'config', 'status'), { 
-                    online: !online, 
-                    ocupado: false 
-                }, { merge: true });
-            } catch (e) {
-                console.error('Erro ao mudar status:', e);
-                alert('Erro: ' + e.message);
-            }
+        window.aceitar = async (id) => {
+            await updateDoc(doc(db, 'chamadas', id), { status: 'Visualizado' });
+            await setDoc(doc(db, 'config', 'status'), { online: true, ocupado: true }, { merge: true });
         };
 
-        window.aceitarChamada = async function(id) {
-            try {
-                await updateDoc(doc(db, 'chamadas', id), { status: 'Visualizado' });
-                await setDoc(doc(db, 'config', 'status'), { online: true, ocupado: true }, { merge: true });
-            } catch (e) {
-                console.error('Erro:', e);
-                alert('Erro: ' + e.message);
-            }
+        window.pronto = async (id) => {
+            await deleteDoc(doc(db, 'chamadas', id));
+            await setDoc(doc(db, 'config', 'status'), { online: true, ocupado: false }, { merge: true });
         };
 
-        window.finalizarChamada = async function(id) {
-            try {
-                await deleteDoc(doc(db, 'chamadas', id));
-                await setDoc(doc(db, 'config', 'status'), { online: true, ocupado: false }, { merge: true });
-            } catch (e) {
-                console.error('Erro:', e);
+        onSnapshot(collection(db, 'pedidos'), (snap) => {
+            const porLoja = {};
+            entregasHoje = [];
+            
+            snap.forEach((d) => {
+                const p = d.data();
+                entregasHoje.push(p);
+                
+                if (p.status !== 'Concluido') {
+                    if (!porLoja[p.loja]) porLoja[p.loja] = [];
+                    porLoja[p.loja].push({ id: d.id, ...p });
+                }
+            });
+
+            const div = document.getElementById('areaEntregas');
+            const btnResumo = document.getElementById('btnResumo');
+            
+            // Mostrar botão de resumo se tem entregas hoje
+            const concluidasHoje = entregasHoje.filter(e => e.status === 'Concluido').length;
+            btnResumo.classList.toggle('hidden', concluidasHoje === 0);
+            btnResumo.innerHTML = `📊 Ver Resumo do Dia (${concluidasHoje} entregas)`;
+
+            if (Object.keys(porLoja).length === 0) {
+                div.innerHTML = '<p class="text-center text-gray-400 py-8">Nenhuma entrega pendente 🎉</p>';
+                return;
             }
+
+            div.innerHTML = '<h2 class="font-black text-gray-800 uppercase mb-2">📦 Entregas</h2>';
+            
+            for (let loja in porLoja) {
+                const entregas = porLoja[loja];
+                
+                div.innerHTML += `
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-4">
+                        <div class="bg-blue-600 p-3 text-white">
+                            <p class="font-black">${loja}</p>
+                            <p class="text-xs">${entregas.length} entrega(s)</p>
+                        </div>
+                        <div class="p-3 space-y-2">
+                            ${entregas.map(e => `
+                                <div class="p-3 bg-gray-50 rounded-xl border-l-4 ${e.status === 'SaiuParaEntrega' ? 'border-orange-500' : 'border-blue-500'}">
+                                    <p class="font-bold text-sm">${e.local}</p>
+                                    <p class="text-xs text-blue-600 font-bold">${e.pag}</p>
+                                    ${e.obs ? `<p class="text-xs text-orange-600 mt-1">⚠️ ${e.obs}</p>` : ''}
+                                    
+                                    <div class="flex gap-2 mt-2">
+                                        ${e.status !== 'SaiuParaEntrega' ? `
+                                            <button onclick="sair('${e.id}')" class="flex-1 bg-orange-500 text-white py-2 rounded-lg font-black text-sm">🛵 Sair</button>
+                                        ` : `
+                                            <button onclick="entregue('${e.id}', '${e.zap}')" class="flex-1 bg-green-600 text-white py-2 rounded-lg font-black text-sm">✅ Entregue</button>
+                                        `}
+                                        <button onclick="maps('${encodeURIComponent(e.local)}')" class="bg-blue-100 text-blue-600 px-3 rounded-lg font-black">🗺️</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        window.sair = async (id) => {
+            await updateDoc(doc(db, 'pedidos', id), { status: 'SaiuParaEntrega' });
         };
 
-        window.saiuEntrega = async function(id) {
-            try {
-                await updateDoc(doc(db, 'pedidos', id), { status: 'SaiuParaEntrega' });
-            } catch (e) {
-                console.error('Erro:', e);
-                alert('Erro: ' + e.message);
-            }
-        };
-
-        window.concluirEntrega = async function(id, loja, zap) {
+        window.entregue = async (id, zap) => {
             const nome = prompt('Quem recebeu?');
             if (!nome) return;
             
-            try {
-                await updateDoc(doc(db, 'pedidos', id), {
-                    status: 'Concluido',
-                    recebedor: nome,
-                    horaEntrega: Timestamp.now()
-                });
-                
-                const msg = `✅ Entrega Concluida\n\nEntregue para: ${nome}\n⏰ ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
-                window.open(`https://wa.me/55${zap}?text=${encodeURIComponent(msg)}`, '_blank');
-            } catch (e) {
-                console.error('Erro:', e);
-                alert('Erro: ' + e.message);
-            }
-        };
-
-        window.verMapa = function(endereco) {
-            window.open(`https://www.google.com/maps/dir/?api=1&destination=${endereco}`, '_blank');
-        };
-
-        window.emergencia = function() {
-            if (!confirm('🚨 CONFIRMA EMERGENCIA?')) return;
-            
-            navigator.geolocation?.getCurrentPosition((pos) => {
-                const link = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                const msg = `🚨 ALERTA DE EMERGENCIA\n\nMarcelo precisa de ajuda!\n📍 ${link}`;
-                window.open(`https://wa.me/5514999999999?text=${encodeURIComponent(msg)}`, '_blank');
-            }, () => {
-                alert('Nao foi possivel obter localizacao');
+            await updateDoc(doc(db, 'pedidos', id), {
+                status: 'Concluido',
+                recebedor: nome,
+                horaEntrega: Timestamp.now()
             });
+            
+            const msg = `✅ Entregue!\n\nPara: ${nome}\n⏰ ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
+            window.open(`https://wa.me/55${zap}?text=${encodeURIComponent(msg)}`, '_blank');
         };
 
-        iniciar();
+        window.maps = (end) => {
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${end}`, '_blank');
+        };
+
+        // GERAR RESUMO DO DIA
+        window.gerarResumo = () => {
+            const hoje = new Date().toLocaleDateString('pt-BR');
+            const concluidas = entregasHoje.filter(e => e.status === 'Concluido');
+            
+            // Agrupar por loja
+            const porLoja = {};
+            concluidas.forEach(e => {
+                if (!porLoja[e.loja]) porLoja[e.loja] = [];
+                porLoja[e.loja].push(e);
+            });
+            
+            let texto = `📊 *RESUMO DO DIA - ${hoje}*\n\n`;
+            texto += `*Total de entregas:* ${concluidas.length}\n\n`;
+            
+            for (let loja in porLoja) {
+                texto += `*${loja}:*\n`;
+                porLoja[loja].forEach((e, i) => {
+                    const hora = e.horaEntrega?.toDate?.() || new Date();
+                    texto += `${i+1}. ${e.local}\n`;
+                    texto += `   💰 ${e.pag}\n`;
+                    texto += `   👤 ${e.recebedor} (${hora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})})\n\n`;
+                });
+            }
+            
+            texto += `\n✅ Trabalho finalizado!`;
+            
+            // Enviar para WhatsApp do próprio Marcelo (ou salvar)
+            const meuZap = '14999999999'; // Colocar o número do Marcelo aqui
+            window.open(`https://wa.me/55${meuZap}?text=${encodeURIComponent(texto)}`, '_blank');
+        };
     </script>
 </body>
 </html>
