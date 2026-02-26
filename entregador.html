@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- PWA CONFIG -->
+    <!-- PWA -->
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTWFyY2VsbyBFbnRyZWdhcyIsInNob3J0X25hbWUiOiJNYXJjZWxvIiwic3RhcnRfdXJsIjoiLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmOGZhZmMiLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJvcmllbnRhdGlvbiI6InBvcnRyYWl0IiwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbCwlM0NzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTAwIDEwMCclM0UlM0NjaXJjbGUgY3g9JzUwJyBjeT0nNTAnIHI9JzQ1JyBmaWxsPSclMjMyNTYzZWInLyUzRSUzQ3RleHQgeD0nNTAnIHk9JzY1JyBmb250LXNpemU9JzUwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmaWxsPSd3aGl0ZSclM0UlNUN1M0Y2ODUlM0MlM0MvdGV4dCUzRSUzQy9zdmclM0UiLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XX0=">
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Marcelo">
     
     <title>Marcelo - Entregas</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -23,10 +22,18 @@
 <body class="bg-slate-100 p-4 font-sans min-h-screen">
     <div class="max-w-md mx-auto pb-24">
         
-        <!-- BOTAO INSTALAR -->
-        <button id="btnInstalar" onclick="instalarPWA()" class="hidden w-full bg-green-600 text-white p-3 rounded-xl font-black uppercase text-sm mb-4 shadow-lg">
-            📲 Instalar App (Notificações Offline)
-        </button>
+        <!-- BOTAO INSTALAR (MANUAL) -->
+        <div id="areaInstalar" class="hidden bg-green-100 p-4 rounded-2xl shadow-lg mb-4 border-2 border-green-500">
+            <p class="text-sm font-bold text-green-800 mb-2">📲 Para receber notificações mesmo com tela fechada:</p>
+            <ol class="text-xs text-green-700 mb-3 list-decimal pl-4">
+                <li>Toque no botão abaixo</li>
+                <li>Confirme "Adicionar à tela inicial"</li>
+                <li>Pronto! Use pelo ícone do app</li>
+            </ol>
+            <button onclick="instalarManual()" class="w-full bg-green-600 text-white p-3 rounded-xl font-black uppercase shadow-lg">
+                Instalar App Agora
+            </button>
+        </div>
 
         <!-- HEADER -->
         <div id="headerStatus" class="bg-white p-4 rounded-2xl shadow-lg mb-4 flex justify-between items-center">
@@ -69,35 +76,24 @@
     <!-- SOM -->
     <audio id="somChamada" preload="auto" loop></audio>
 
-    <!-- SERVICE WORKER INLINE -->
+    <!-- SERVICE WORKER -->
     <script>
-        // Criar Service Worker via Blob (não precisa arquivo separado)
+        // Criar SW via Blob
         const swCode = `
-            const CACHE_NAME = 'marcelo-v1';
-            
-            self.addEventListener('install', (e) => {
-                self.skipWaiting();
-            });
-            
-            self.addEventListener('activate', (e) => {
-                self.clients.claim();
-            });
-            
-            self.addEventListener('push', (e) => {
+            self.addEventListener('install', e => self.skipWaiting());
+            self.addEventListener('activate', e => self.clients.claim());
+            self.addEventListener('push', e => {
                 const data = e.data.json();
                 e.waitUntil(
                     self.registration.showNotification('🔔 NOVA CHAMADA!', {
                         body: data.body,
                         icon: 'https://cdn-icons-png.flaticon.com/512/2830/2830305.png',
-                        badge: 'https://cdn-icons-png.flaticon.com/512/2830/2830305.png',
                         vibrate: [500, 200, 500, 200, 500],
-                        requireInteraction: true,
-                        data: data
+                        requireInteraction: true
                     })
                 );
             });
-            
-            self.addEventListener('notificationclick', (e) => {
+            self.addEventListener('notificationclick', e => {
                 e.notification.close();
                 e.waitUntil(clients.openWindow('/'));
             });
@@ -108,37 +104,62 @@
         
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register(swUrl)
-                .then((reg) => {
-                    console.log('SW registrado');
-                    // Pedir permissão notificação
+                .then(() => {
+                    console.log('SW ok');
                     if ('Notification' in window && Notification.permission !== 'granted') {
                         Notification.requestPermission();
                     }
                 })
-                .catch((err) => console.log('Erro SW:', err));
+                .catch(err => console.log('SW erro:', err));
         }
         
-        // Botão instalar
-        let deferredPrompt;
+        // VERIFICAR SE JÁ ESTÁ INSTALADO
+        let deferredPrompt = null;
+        let podeInstalar = false;
+        
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            document.getElementById('btnInstalar').classList.remove('hidden');
+            podeInstalar = true;
+            document.getElementById('areaInstalar').classList.remove('hidden');
         });
         
-        window.instalarPWA = async () => {
+        // Se não aparecer o evento, mostrar botão manual mesmo assim
+        setTimeout(() => {
+            if (!podeInstalar && !window.matchMedia('(display-mode: standalone)').matches) {
+                document.getElementById('areaInstalar').classList.remove('hidden');
+            }
+        }, 3000);
+        
+        // FUNÇÃO INSTALAR (AUTOMÁTICA OU MANUAL)
+        window.instalarManual = async () => {
+            // Tentar método automático primeiro
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
-                    document.getElementById('btnInstalar').classList.add('hidden');
+                    document.getElementById('areaInstalar').classList.add('hidden');
+                    return;
                 }
-                deferredPrompt = null;
             }
+            
+            // Se não funcionar, mostrar instruções manuais
+            const ua = navigator.userAgent.toLowerCase();
+            let msg = '';
+            
+            if (ua.includes('chrome')) {
+                msg = 'Toque no menu ⋮ do Chrome e selecione "Adicionar à tela inicial"';
+            } else if (ua.includes('samsung')) {
+                msg = 'Toque no menu ⋮ e selecione "Adicionar página à" → Tela inicial';
+            } else {
+                msg = 'Toque no menu do navegador e procure "Adicionar à tela inicial"';
+            }
+            
+            alert('Para instalar:\n\n' + msg);
         };
     </script>
 
-    <!-- FIREBASE E LÓGICA -->
+    <!-- FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -251,12 +272,10 @@
                     
                     if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]);
                     
-                    // NOTIFICAÇÃO PUSH
                     if ('Notification' in window && Notification.permission === 'granted') {
                         new Notification('🔔 NOVA CHAMADA!', {
                             body: `${chamadoParaMim.loja} - ${chamadoParaMim.enderecoLoja}`,
                             icon: 'https://cdn-icons-png.flaticon.com/512/2830/2830305.png',
-                            badge: 'https://cdn-icons-png.flaticon.com/512/2830/2830305.png',
                             vibrate: [500, 200, 500],
                             requireInteraction: true,
                             tag: 'chamada'
