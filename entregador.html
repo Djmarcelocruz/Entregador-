@@ -9,6 +9,11 @@
 <body class="bg-slate-100 p-4 font-sans min-h-screen">
     <div class="max-w-md mx-auto pb-24">
         
+        <!-- BOTAO ATIVAR SOM (OBRIGATORIO NO GITHUB PAGES) -->
+        <button id="btnAtivarSom" onclick="ativarSom()" class="w-full bg-purple-600 text-white p-3 rounded-xl font-black uppercase text-sm mb-4 shadow-lg animate-pulse">
+            🔊 CLIQUE AQUI PARA ATIVAR O SOM
+        </button>
+
         <!-- HEADER -->
         <div class="bg-white p-4 rounded-2xl shadow-lg mb-4 border-b-4 border-blue-600">
             <div class="flex justify-between items-center">
@@ -50,7 +55,8 @@
         </button>
     </div>
 
-    <audio id="somNotificacao" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+    <!-- SOM COM URL CONFIAVEL (BASE64 OU LOCAL) -->
+    <audio id="somNotificacao" preload="auto"></audio>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -78,15 +84,30 @@
         }
         
         let online = false;
+        let somAtivado = false;
+
+        // ATIVAR SOM (NECESSARIO NO GITHUB PAGES)
+        window.ativarSom = function() {
+            const audio = document.getElementById('somNotificacao');
+            
+            // Usar som embutido em Base64 (campainha simples)
+            audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVanu8LdnGgU1k9n1unEiBC13yO/eizEIHWq+8+OZURE';
+            
+            audio.play().then(() => {
+                somAtivado = true;
+                document.getElementById('btnAtivarSom').classList.add('hidden');
+                console.log('Som ativado');
+            }).catch(e => {
+                console.error('Erro ao ativar som:', e);
+            });
+        };
 
         // INICIALIZAR
         async function iniciar() {
             await carregarDados();
-            
-            // Atualizar a cada 5 segundos
             setInterval(carregarDados, 5000);
             
-            // Listeners em tempo real (para chamadas - mais critico)
+            // Listener de status em tempo real
             try {
                 onSnapshot(doc(db, 'config', 'status'), (docSnap) => {
                     const s = docSnap.data() || { online: false };
@@ -119,8 +140,10 @@
             try {
                 const snapshot = await getDocs(collection(db, 'chamadas'));
                 
-                if (!snapshot.empty && online) {
-                    document.getElementById('somNotificacao').play().catch(() => {});
+                // Tocar som se houver chamadas novas e som ativado
+                if (!snapshot.empty && online && somAtivado) {
+                    const audio = document.getElementById('somNotificacao');
+                    audio.play().catch(() => {});
                 }
                 
                 div.innerHTML = '';
