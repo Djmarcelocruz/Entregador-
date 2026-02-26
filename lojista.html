@@ -9,9 +9,6 @@
 <body class="bg-gray-50 p-4 font-sans min-h-screen">
     <div class="max-w-md mx-auto pb-20">
         
-        <!-- DEBUG INFO -->
-        <div id="debugInfo" class="hidden bg-yellow-100 p-2 rounded text-xs mb-2"></div>
-
         <!-- TELA DE CADASTRO -->
         <div id="cadastro" class="hidden bg-white p-6 rounded-3xl shadow-xl">
             <div class="text-center mb-6">
@@ -21,9 +18,9 @@
             </div>
             
             <div class="space-y-4">
-                <input id="nLoja" placeholder="Nome da sua loja" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm">
-                <input id="zLoja" placeholder="WhatsApp (somente numeros)" type="tel" maxlength="11" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm">
-                <input id="eLoja" placeholder="Endereco completo da loja" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm">
+                <input id="nLoja" placeholder="Nome da sua loja" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm">
+                <input id="zLoja" placeholder="WhatsApp (somente numeros)" type="tel" maxlength="11" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm">
+                <input id="eLoja" placeholder="Endereco completo da loja" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm">
                 <button onclick="salvarLoja()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl font-black uppercase italic shadow-lg transform active:scale-95 transition-all">
                     Comecar a Usar
                 </button>
@@ -67,20 +64,20 @@
                 </div>
 
                 <div class="space-y-3">
-                    <input id="inputEnd" placeholder="Rua e numero" class="w-full p-4 bg-blue-50 rounded-xl font-bold text-sm border-2 border-transparent focus:border-blue-400 outline-none">
-                    <input id="inputRef" placeholder="Ponto de referencia (opcional)" class="w-full p-4 bg-gray-50 rounded-xl font-bold text-sm border-2 border-transparent focus:border-blue-400 outline-none">
+                    <input id="inputEnd" placeholder="Rua e numero" autocomplete="off" class="w-full p-4 bg-blue-50 rounded-xl font-bold text-sm border-2 border-transparent focus:border-blue-400 outline-none">
+                    <input id="inputRef" placeholder="Ponto de referencia (opcional)" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl font-bold text-sm border-2 border-transparent focus:border-blue-400 outline-none">
                     
                     <div class="grid grid-cols-2 gap-3">
-                        <select id="pagamento" class="p-4 bg-gray-50 rounded-xl font-bold text-xs uppercase italic border-2 border-transparent focus:border-blue-400 outline-none">
+                        <select id="pagamento" autocomplete="off" class="p-4 bg-gray-50 rounded-xl font-bold text-xs uppercase italic border-2 border-transparent focus:border-blue-400 outline-none">
                             <option value="JA PAGO">Já Pago</option>
                             <option value="DINHEIRO">Dinheiro</option>
                             <option value="PIX">PIX</option>
                             <option value="CARTAO">Cartão</option>
                         </select>
-                        <input id="trocoPara" type="number" placeholder="Troco para quanto?" class="hidden p-4 bg-gray-50 rounded-xl font-bold text-sm border-2 border-transparent focus:border-blue-400 outline-none">
+                        <input id="trocoPara" type="number" placeholder="Troco para quanto?" autocomplete="off" class="hidden p-4 bg-gray-50 rounded-xl font-bold text-sm border-2 border-transparent focus:border-blue-400 outline-none">
                     </div>
 
-                    <textarea id="obsEntrega" placeholder="Observacoes (ex: portao azul, cuidado com cachorro)" rows="2" class="w-full p-4 bg-yellow-50 rounded-xl font-bold text-sm border-2 border-transparent focus:border-yellow-400 outline-none resize-none"></textarea>
+                    <textarea id="obsEntrega" placeholder="Observacoes (ex: portao azul, cuidado com cachorro)" rows="2" autocomplete="off" class="w-full p-4 bg-yellow-50 rounded-xl font-bold text-sm border-2 border-transparent focus:border-yellow-400 outline-none resize-none"></textarea>
 
                     <button onclick="addLista()" class="w-full bg-slate-800 hover:bg-slate-900 text-white p-4 rounded-xl font-black uppercase italic shadow-lg transform active:scale-95 transition-all flex items-center justify-center gap-2">
                         <span class="text-xl">+</span>
@@ -145,6 +142,15 @@
 
         // INICIALIZAR
         function iniciar() {
+            // Verificar se dadosLoja tem todos os campos necessários
+            if (dadosLoja) {
+                if (!dadosLoja.endereco || !dadosLoja.nome || !dadosLoja.zap) {
+                    console.log('Dados incompletos, refazendo cadastro');
+                    localStorage.removeItem('marcelo_loja');
+                    dadosLoja = null;
+                }
+            }
+
             if (!dadosLoja) {
                 document.getElementById('cadastro').classList.remove('hidden');
             } else {
@@ -156,7 +162,7 @@
             document.getElementById('painel').classList.remove('hidden');
             document.getElementById('exibirNome').textContent = dadosLoja.nome;
             
-            // MONITORAR STATUS MARCELO - SIMPLES
+            // MONITORAR STATUS MARCELO
             try {
                 onSnapshot(doc(db, 'config', 'status'), (docSnap) => {
                     const s = docSnap.data() || { online: false, ocupado: false };
@@ -184,10 +190,8 @@
                 console.error('Erro ao configurar listener de status:', e);
             }
 
-            // CARREGAR ENTREGAS - USANDO getDocs (SEM REALTIME) PARA EVITAR ERROS
+            // CARREGAR ENTREGAS
             carregarEntregas();
-            
-            // Atualizar a cada 10 segundos
             setInterval(carregarEntregas, 10000);
         }
 
@@ -195,7 +199,6 @@
             const div = document.getElementById('minhasEntregas');
             
             try {
-                // Usar getDocs ao invés de onSnapshot para evitar problemas de permissão em tempo real
                 const snapshot = await getDocs(collection(db, 'pedidos'));
                 const entregas = [];
                 
@@ -206,7 +209,6 @@
                     }
                 });
 
-                // Ordenar por hora
                 entregas.sort((a, b) => {
                     const timeA = a.hora?.seconds || 0;
                     const timeB = b.hora?.seconds || 0;
@@ -248,11 +250,19 @@
             }
         }
 
-        // CHAMAR MARCELO
+        // CHAMAR MARCELO - COM VERIFICAÇÃO DE ENDEREÇO
         window.chamarMarcelo = async function() {
             const btn = document.getElementById('btnChamada');
             const txt = document.getElementById('txtChamada');
             const msg = document.getElementById('msgChamada');
+            
+            // VERIFICAR SE TEM ENDEREÇO
+            if (!dadosLoja.endereco) {
+                alert('Erro: Endereço da loja não encontrado. Por favor, refaça seu cadastro.');
+                localStorage.removeItem('marcelo_loja');
+                location.reload();
+                return;
+            }
             
             btn.disabled = true;
             txt.innerHTML = '<span>Chamando...</span>';
@@ -261,7 +271,7 @@
                 await addDoc(collection(db, 'chamadas'), {
                     loja: dadosLoja.nome,
                     zap: dadosLoja.zap,
-                    enderecoLoja: dadosLoja.endereco,
+                    enderecoLoja: dadosLoja.endereco || 'Endereço não informado', // FALLBACK
                     hora: Timestamp.now(),
                     status: 'Pendente'
                 });
