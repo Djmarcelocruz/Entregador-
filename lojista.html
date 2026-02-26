@@ -3,106 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Marcelo Entregas - Lojista</title>
+    <title>Marcelo Entregas</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 p-4 font-sans min-h-screen">
     <div class="max-w-md mx-auto pb-20">
         
-        <!-- TELA DE CADASTRO -->
+        <!-- CADASTRO -->
         <div id="cadastro" class="hidden bg-white p-6 rounded-3xl shadow-xl">
             <div class="text-center mb-6">
                 <div class="w-20 h-20 bg-blue-600 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-3xl">🏪</div>
-                <h2 class="text-2xl font-black text-gray-800 uppercase italic">Bem-vindo!</h2>
-                <p class="text-sm text-gray-500 mt-1">Cadastro gratuito</p>
+                <h2 class="text-2xl font-black text-gray-800">Bem-vindo!</h2>
             </div>
             
             <div class="space-y-4">
-                <input id="nLoja" placeholder="Nome da sua loja" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm">
-                <input id="zLoja" placeholder="WhatsApp (somente numeros)" type="tel" maxlength="11" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm">
-                <input id="eLoja" placeholder="Endereco completo da loja" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm">
-                <button onclick="salvarLoja()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl font-black uppercase italic shadow-lg transform active:scale-95 transition-all">
-                    Comecar a Usar
+                <input id="nLoja" placeholder="Nome da loja" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm">
+                <input id="zLoja" placeholder="WhatsApp (11 digitos)" type="tel" maxlength="11" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm">
+                <input id="eLoja" placeholder="Endereco completo" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none font-bold text-sm">
+                <button onclick="salvar()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-black uppercase shadow-lg">
+                    Comecar
                 </button>
             </div>
         </div>
 
-        <!-- PAINEL PRINCIPAL -->
+        <!-- PAINEL -->
         <div id="painel" class="hidden space-y-4">
             
             <!-- HEADER -->
-            <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-2xl shadow-lg text-white">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-[10px] opacity-80 uppercase italic">Sua Loja</p>
-                        <h1 id="exibirNome" class="text-lg font-black uppercase italic"></h1>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[10px] opacity-80 uppercase italic">Marcelo</p>
-                        <span id="stStatus" class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/20 text-[10px] font-black">
-                            <span class="w-2 h-2 rounded-full bg-gray-300"></span>
-                            Verificando...
-                        </span>
-                    </div>
+            <div class="bg-blue-600 p-4 rounded-2xl shadow-lg text-white flex justify-between items-center">
+                <div>
+                    <p class="text-xs opacity-80">Sua Loja</p>
+                    <h1 id="nomeLoja" class="text-lg font-black"></h1>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs opacity-80">Marcelo</p>
+                    <span id="statusMarcelo" class="text-xs font-bold bg-white/20 px-2 py-1 rounded">...</span>
                 </div>
             </div>
 
-            <!-- BOTAO CHAMAR -->
-            <button id="btnChamada" onclick="chamarMarcelo()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white p-5 rounded-2xl font-black shadow-xl uppercase italic transform active:scale-95 transition-all disabled:opacity-50">
-                <span id="txtChamada" class="flex items-center justify-center gap-2 text-lg">
-                    <span>🔔</span>
-                    <span>Chamar Marcelo Agora</span>
-                </span>
+            <!-- CHAMAR -->
+            <button id="btnChamar" onclick="chamar()" class="w-full bg-orange-500 text-white p-5 rounded-2xl font-black shadow-xl uppercase text-lg disabled:opacity-50">
+                🔔 Chamar Marcelo
             </button>
-            <p id="msgChamada" class="text-center text-sm font-bold hidden"></p>
 
-            <!-- FORMULARIO ENTREGA -->
+            <!-- NOVA ENTREGA -->
             <div class="bg-white p-5 rounded-2xl shadow-lg">
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="text-2xl">📦</span>
-                    <h2 class="font-black text-gray-800 uppercase italic">Nova Entrega</h2>
-                </div>
+                <h2 class="font-black text-gray-800 mb-3 flex items-center gap-2">
+                    <span>📦</span> Nova Entrega
+                </h2>
 
                 <div class="space-y-3">
-                    <input id="inputEnd" placeholder="Rua e numero" autocomplete="off" class="w-full p-4 bg-blue-50 rounded-xl font-bold text-sm border-2 border-transparent focus:border-blue-400 outline-none">
-                    <input id="inputRef" placeholder="Ponto de referencia (opcional)" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl font-bold text-sm border-2 border-transparent focus:border-blue-400 outline-none">
+                    <input id="end" placeholder="Rua e numero" autocomplete="off" class="w-full p-4 bg-blue-50 rounded-xl font-bold text-sm outline-none">
+                    <input id="ref" placeholder="Referencia (opcional)" autocomplete="off" class="w-full p-4 bg-gray-50 rounded-xl font-bold text-sm outline-none">
                     
                     <div class="grid grid-cols-2 gap-3">
-                        <select id="pagamento" autocomplete="off" class="p-4 bg-gray-50 rounded-xl font-bold text-xs uppercase italic border-2 border-transparent focus:border-blue-400 outline-none">
-                            <option value="JA PAGO">Já Pago</option>
+                        <select id="pag" class="p-4 bg-gray-50 rounded-xl font-bold text-xs outline-none">
+                            <option value="PAGO">Já Pago</option>
                             <option value="DINHEIRO">Dinheiro</option>
                             <option value="PIX">PIX</option>
                             <option value="CARTAO">Cartão</option>
                         </select>
-                        <input id="trocoPara" type="number" placeholder="Troco para quanto?" autocomplete="off" class="hidden p-4 bg-gray-50 rounded-xl font-bold text-sm border-2 border-transparent focus:border-blue-400 outline-none">
+                        <input id="troco" type="number" placeholder="Troco?" class="hidden p-4 bg-gray-50 rounded-xl font-bold text-sm outline-none">
                     </div>
 
-                    <textarea id="obsEntrega" placeholder="Observacoes (ex: portao azul, cuidado com cachorro)" rows="2" autocomplete="off" class="w-full p-4 bg-yellow-50 rounded-xl font-bold text-sm border-2 border-transparent focus:border-yellow-400 outline-none resize-none"></textarea>
-
-                    <button onclick="addLista()" class="w-full bg-slate-800 hover:bg-slate-900 text-white p-4 rounded-xl font-black uppercase italic shadow-lg transform active:scale-95 transition-all flex items-center justify-center gap-2">
-                        <span class="text-xl">+</span>
-                        <span>Adicionar à Lista</span>
+                    <button onclick="add()" class="w-full bg-slate-800 text-white p-4 rounded-xl font-black uppercase shadow-lg flex items-center justify-center gap-2">
+                        <span>+</span> Adicionar
                     </button>
                 </div>
 
-                <!-- LISTA RASCUNHO -->
-                <div id="listaRascunho" class="space-y-2 mt-4 max-h-64 overflow-y-auto"></div>
+                <div id="lista" class="space-y-2 mt-4"></div>
                 
-                <!-- BOTAO ENVIAR -->
-                <button id="btnEnviar" onclick="enviarTudo()" class="hidden w-full bg-green-600 hover:bg-green-700 text-white p-4 rounded-xl font-black shadow-xl uppercase italic mt-4 transform active:scale-95 transition-all">
-                    Enviar <span id="contadorEnvio">0</span> Entrega(s)
+                <button id="btnEnv" onclick="enviar()" class="hidden w-full bg-green-600 text-white p-4 rounded-xl font-black shadow-xl uppercase mt-4">
+                    Enviar <span id="qtd">0</span>
                 </button>
             </div>
 
-            <!-- STATUS ENTREGAS -->
+            <!-- MINHAS ENTREGAS -->
             <div class="bg-white p-4 rounded-2xl shadow-lg">
-                <h3 class="font-black text-gray-800 uppercase italic text-sm mb-3 flex items-center gap-2">
-                    <span>📋</span> Suas Entregas Hoje
-                </h3>
-                <div id="minhasEntregas" class="space-y-2 text-sm">
-                    <p class="text-center text-gray-400 text-xs py-4">Carregando...</p>
-                </div>
+                <h3 class="font-black text-gray-800 mb-3">📋 Entregas Hoje</h3>
+                <div id="minhas" class="space-y-2 text-sm"></div>
             </div>
+
         </div>
     </div>
 
@@ -119,313 +100,190 @@
             appId: "1:442484186787:web:ac914827ebebda987f2916" 
         };
         
-        let app;
-        let db;
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
         
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            console.log('Firebase inicializado com sucesso');
-        } catch (e) {
-            console.error('Erro ao inicializar Firebase:', e);
-            alert('Erro ao conectar ao Firebase. Verifique sua conexão.');
-        }
-        
-        let dadosLoja = JSON.parse(localStorage.getItem('marcelo_loja'));
+        let loja = JSON.parse(localStorage.getItem('marcelo_loja'));
         let rascunho = [];
 
-        // MOSTRAR/ESCONDER CAMPO TROCO
-        document.getElementById('pagamento')?.addEventListener('change', function() {
-            const mostrar = ['DINHEIRO', 'PIX'].includes(this.value);
-            document.getElementById('trocoPara').classList.toggle('hidden', !mostrar);
+        document.getElementById('pag').addEventListener('change', function() {
+            document.getElementById('troco').classList.toggle('hidden', !['DINHEIRO', 'PIX'].includes(this.value));
         });
 
-        // INICIALIZAR
-        function iniciar() {
-            // Verificar se dadosLoja tem todos os campos necessários
-            if (dadosLoja) {
-                if (!dadosLoja.endereco || !dadosLoja.nome || !dadosLoja.zap) {
-                    console.log('Dados incompletos, refazendo cadastro');
-                    localStorage.removeItem('marcelo_loja');
-                    dadosLoja = null;
-                }
-            }
-
-            if (!dadosLoja) {
+        function init() {
+            if (!loja || !loja.endereco) {
                 document.getElementById('cadastro').classList.remove('hidden');
             } else {
-                mostrarPainel();
+                mostrar();
             }
         }
 
-        function mostrarPainel() {
+        function mostrar() {
             document.getElementById('painel').classList.remove('hidden');
-            document.getElementById('exibirNome').textContent = dadosLoja.nome;
-            
-            // MONITORAR STATUS MARCELO
-            try {
-                onSnapshot(doc(db, 'config', 'status'), (docSnap) => {
-                    const s = docSnap.data() || { online: false, ocupado: false };
-                    const el = document.getElementById('stStatus');
-                    const btn = document.getElementById('btnChamada');
-                    
-                    if (s.online && !s.ocupado) {
-                        el.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-400"></span> Disponivel';
-                        el.className = 'inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-500 text-[10px] font-black text-white';
-                        btn.disabled = false;
-                    } else if (s.ocupado) {
-                        el.innerHTML = '<span class="w-2 h-2 rounded-full bg-orange-400"></span> Em Entrega';
-                        el.className = 'inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-500 text-[10px] font-black text-white';
-                        btn.disabled = true;
-                    } else {
-                        el.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-400"></span> Indisponivel';
-                        el.className = 'inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-500 text-[10px] font-black text-white';
-                        btn.disabled = true;
-                    }
-                }, (error) => {
-                    console.error('Erro ao ouvir status:', error);
-                    document.getElementById('stStatus').innerHTML = '<span class="w-2 h-2 rounded-full bg-red-400"></span> Erro';
-                });
-            } catch (e) {
-                console.error('Erro ao configurar listener de status:', e);
-            }
+            document.getElementById('nomeLoja').textContent = loja.nome;
 
-            // CARREGAR ENTREGAS
-            carregarEntregas();
-            setInterval(carregarEntregas, 10000);
-        }
-
-        async function carregarEntregas() {
-            const div = document.getElementById('minhasEntregas');
-            
-            try {
-                const snapshot = await getDocs(collection(db, 'pedidos'));
-                const entregas = [];
+            onSnapshot(doc(db, 'config', 'status'), (doc) => {
+                const s = doc.data() || { online: false, ocupado: false };
+                const el = document.getElementById('statusMarcelo');
+                const btn = document.getElementById('btnChamar');
                 
-                snapshot.forEach((doc) => {
-                    const p = doc.data();
-                    if (p.loja === dadosLoja.nome && p.status !== 'Concluido') {
-                        entregas.push({ id: doc.id, ...p });
-                    }
-                });
-
-                entregas.sort((a, b) => {
-                    const timeA = a.hora?.seconds || 0;
-                    const timeB = b.hora?.seconds || 0;
-                    return timeB - timeA;
-                });
-
-                div.innerHTML = '';
-                
-                if (entregas.length === 0) {
-                    div.innerHTML = '<p class="text-center text-gray-400 text-xs py-4">Nenhuma entrega ativa</p>';
-                    return;
+                if (s.online && !s.ocupado) {
+                    el.textContent = 'Disponível';
+                    el.className = 'text-xs font-bold bg-green-500 px-2 py-1 rounded text-white';
+                    btn.disabled = false;
+                } else if (s.ocupado) {
+                    el.textContent = 'Em entrega';
+                    el.className = 'text-xs font-bold bg-orange-500 px-2 py-1 rounded text-white';
+                    btn.disabled = true;
+                } else {
+                    el.textContent = 'Offline';
+                    el.className = 'text-xs font-bold bg-red-500 px-2 py-1 rounded text-white';
+                    btn.disabled = true;
                 }
+            });
 
-                entregas.forEach((p) => {
-                    const statusConfig = {
-                        'Ativo': { texto: '⏳ Aguardando', cor: 'border-blue-500 bg-blue-50' },
-                        'SaiuParaEntrega': { texto: '🛵 A caminho', cor: 'border-orange-500 bg-orange-50' },
-                        'Chegou': { texto: '✅ Entregue', cor: 'border-green-500 bg-green-50' }
-                    };
-                    
-                    const config = statusConfig[p.status] || statusConfig['Ativo'];
-                    
-                    div.innerHTML += `
-                        <div class="p-3 ${config.cor} rounded-xl border-l-4 mb-2">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                    <p class="font-bold text-gray-800 text-xs truncate">${p.local}</p>
-                                    <p class="text-[10px] text-gray-500">${p.pag}</p>
-                                </div>
-                                <span class="text-[10px] font-black">${config.texto}</span>
-                            </div>
-                            ${p.obs ? `<p class="text-[10px] text-gray-400 mt-1 italic">"${p.obs}"</p>` : ''}
-                        </div>
-                    `;
-                });
-            } catch (error) {
-                console.error('Erro ao carregar entregas:', error);
-                div.innerHTML = `<p class="text-center text-red-400 text-xs py-4">Erro: ${error.message}</p>`;
-            }
+            carregar();
+            setInterval(carregar, 10000);
         }
 
-        // CHAMAR MARCELO - COM VERIFICAÇÃO DE ENDEREÇO
-        window.chamarMarcelo = async function() {
-            const btn = document.getElementById('btnChamada');
-            const txt = document.getElementById('txtChamada');
-            const msg = document.getElementById('msgChamada');
+        async function carregar() {
+            const div = document.getElementById('minhas');
+            const snap = await getDocs(collection(db, 'pedidos'));
+            const entregas = [];
             
-            // VERIFICAR SE TEM ENDEREÇO
-            if (!dadosLoja.endereco) {
-                alert('Erro: Endereço da loja não encontrado. Por favor, refaça seu cadastro.');
-                localStorage.removeItem('marcelo_loja');
-                location.reload();
-                return;
-            }
+            snap.forEach(d => {
+                const p = d.data();
+                if (p.loja === loja.nome && p.status !== 'Concluido') entregas.push(p);
+            });
+
+            div.innerHTML = entregas.length === 0 ? '<p class="text-gray-400 text-xs">Nenhuma ativa</p>' : '';
             
+            entregas.forEach(p => {
+                const status = { 'Ativo': '⏳', 'SaiuParaEntrega': '🛵', 'Chegou': '✅' };
+                div.innerHTML += `
+                    <div class="p-3 bg-gray-50 rounded-xl border-l-4 border-blue-500">
+                        <div class="flex justify-between">
+                            <p class="font-bold text-xs truncate">${p.local}</p>
+                            <span>${status[p.status] || '⏳'}</span>
+                        </div>
+                        <p class="text-xs text-gray-500">${p.pag}</p>
+                    </div>
+                `;
+            });
+        }
+
+        window.chamar = async () => {
+            const btn = document.getElementById('btnChamar');
             btn.disabled = true;
-            txt.innerHTML = '<span>Chamando...</span>';
+            btn.textContent = 'Chamando...';
             
             try {
                 await addDoc(collection(db, 'chamadas'), {
-                    loja: dadosLoja.nome,
-                    zap: dadosLoja.zap,
-                    enderecoLoja: dadosLoja.endereco || 'Endereço não informado', // FALLBACK
+                    loja: loja.nome,
+                    zap: loja.zap,
+                    enderecoLoja: loja.endereco,
                     hora: Timestamp.now(),
                     status: 'Pendente'
                 });
                 
-                txt.innerHTML = '<span>✅ Marcelo foi avisado!</span>';
-                btn.classList.remove('from-orange-500', 'to-red-500');
-                btn.classList.add('bg-green-600');
-                msg.textContent = 'Aguarde, ele confirmara em breve.';
-                msg.className = 'text-center text-sm font-bold text-green-600 mt-2';
-                msg.classList.remove('hidden');
-                
+                btn.textContent = '✅ Chamado!';
                 setTimeout(() => {
                     btn.disabled = false;
-                    txt.innerHTML = '<span>🔔</span><span>Chamar Marcelo Agora</span>';
-                    btn.classList.add('from-orange-500', 'to-red-500');
-                    btn.classList.remove('bg-green-600');
-                    msg.classList.add('hidden');
+                    btn.textContent = '🔔 Chamar Marcelo';
                 }, 10000);
-                
             } catch (e) {
-                console.error('Erro ao chamar:', e);
-                alert('Erro ao chamar: ' + e.message);
+                alert('Erro: ' + e.message);
                 btn.disabled = false;
-                txt.innerHTML = '<span>🔔</span><span>Chamar Marcelo Agora</span>';
+                btn.textContent = '🔔 Chamar Marcelo';
             }
         };
 
-        // ADICIONAR À LISTA
-        window.addLista = function() {
-            const rua = document.getElementById('inputEnd').value.trim();
-            const ref = document.getElementById('inputRef').value.trim();
-            const pag = document.getElementById('pagamento').value;
-            const troco = document.getElementById('trocoPara').value;
-            const obs = document.getElementById('obsEntrega').value.trim();
+        window.add = () => {
+            const rua = document.getElementById('end').value.trim();
+            if (!rua) return alert('Informe o endereço');
             
-            if (!rua) {
-                alert('Informe o endereco');
-                return;
-            }
-            
-            let infoPag = pag;
-            if (troco && ['DINHEIRO', 'PIX'].includes(pag)) {
-                infoPag += ` (Troco: R$${parseFloat(troco).toFixed(2)})`;
-            }
+            let pag = document.getElementById('pag').value;
+            const troco = document.getElementById('troco').value;
+            if (troco) pag += ` (Troco: R$${troco})`;
             
             rascunho.push({
-                id: Date.now(),
                 local: rua,
-                referencia: ref,
-                pag: infoPag,
-                obs: obs
+                ref: document.getElementById('ref').value,
+                pag: pag,
+                obs: ''
             });
             
-            document.getElementById('inputEnd').value = '';
-            document.getElementById('inputRef').value = '';
-            document.getElementById('trocoPara').value = '';
-            document.getElementById('obsEntrega').value = '';
-            document.getElementById('inputEnd').focus();
-            
-            renderRascunho();
+            document.getElementById('end').value = '';
+            document.getElementById('ref').value = '';
+            document.getElementById('troco').value = '';
+            mostrarLista();
         };
 
-        function renderRascunho() {
-            const div = document.getElementById('listaRascunho');
+        function mostrarLista() {
+            const div = document.getElementById('lista');
             div.innerHTML = rascunho.map((item, i) => `
-                <div class="p-3 bg-blue-50 rounded-xl border-l-4 border-blue-600 flex justify-between items-start">
-                    <div class="flex-1 min-w-0">
-                        <p class="font-bold text-sm text-gray-800">${item.local}</p>
-                        ${item.referencia ? `<p class="text-xs text-gray-500">📍 ${item.referencia}</p>` : ''}
-                        <p class="text-xs font-bold text-blue-600 mt-1">${item.pag}</p>
-                        ${item.obs ? `<p class="text-[10px] text-gray-400 mt-1 italic">"${item.obs}"</p>` : ''}
+                <div class="p-3 bg-blue-50 rounded-xl border-l-4 border-blue-600 flex justify-between">
+                    <div>
+                        <p class="font-bold text-sm">${item.local}</p>
+                        <p class="text-xs text-blue-600">${item.pag}</p>
                     </div>
-                    <button onclick="removerItem(${i})" class="ml-2 text-red-500 font-black text-lg hover:bg-red-50 w-8 h-8 rounded-lg flex items-center justify-center">
-                        ×
-                    </button>
+                    <button onclick="remover(${i})" class="text-red-500 font-black">×</button>
                 </div>
             `).join('');
             
-            const btn = document.getElementById('btnEnviar');
-            const contador = document.getElementById('contadorEnvio');
-            
-            if (rascunho.length > 0) {
-                btn.classList.remove('hidden');
-                contador.textContent = rascunho.length;
-            } else {
-                btn.classList.add('hidden');
-            }
+            const btn = document.getElementById('btnEnv');
+            document.getElementById('qtd').textContent = rascunho.length;
+            rascunho.length > 0 ? btn.classList.remove('hidden') : btn.classList.add('hidden');
         }
 
-        window.removerItem = function(i) {
+        window.remover = (i) => {
             rascunho.splice(i, 1);
-            renderRascunho();
+            mostrarLista();
         };
 
-        // ENVIAR TUDO
-        window.enviarTudo = async function() {
-            const btn = document.getElementById('btnEnviar');
-            btn.innerHTML = 'Enviando...';
-            btn.disabled = true;
+        window.enviar = async () => {
+            const btn = document.getElementById('btnEnv');
+            btn.textContent = 'Enviando...';
             
             try {
                 for (const item of rascunho) {
                     await addDoc(collection(db, 'pedidos'), {
-                        loja: dadosLoja.nome,
-                        zap: dadosLoja.zap,
+                        loja: loja.nome,
+                        zap: loja.zap,
                         local: item.local,
-                        referencia: item.referencia,
+                        referencia: item.ref,
                         pag: item.pag,
-                        obs: item.obs,
                         status: 'Ativo',
                         hora: Timestamp.now()
                     });
                 }
                 
                 rascunho = [];
-                renderRascunho();
-                btn.innerHTML = '✅ Enviado com Sucesso!';
-                
+                mostrarLista();
+                btn.textContent = '✅ Enviado!';
                 setTimeout(() => {
                     btn.classList.add('hidden');
-                    btn.disabled = false;
-                    btn.innerHTML = 'Enviar <span id="contadorEnvio">0</span> Entrega(s)';
+                    btn.textContent = 'Enviar <span id="qtd">0</span>';
                 }, 2000);
-                
             } catch (e) {
-                console.error('Erro ao enviar:', e);
-                alert('Erro ao enviar: ' + e.message);
-                btn.disabled = false;
-                btn.innerHTML = 'Enviar <span id="contadorEnvio">' + rascunho.length + '</span> Entrega(s)';
+                alert('Erro: ' + e.message);
+                btn.textContent = 'Enviar <span id="qtd">' + rascunho.length + '</span>';
             }
         };
 
-        // SALVAR LOJA
-        window.salvarLoja = function() {
+        window.salvar = () => {
             const n = document.getElementById('nLoja').value.trim();
             const z = document.getElementById('zLoja').value.trim();
             const e = document.getElementById('eLoja').value.trim();
             
-            if (!n || !z || !e) {
-                alert('Preencha todos os campos');
-                return;
-            }
-            
-            if (z.length !== 11) {
-                alert('WhatsApp invalido. Use DDD + numero (11 digitos)');
-                return;
-            }
+            if (!n || !z || !e) return alert('Preencha tudo');
+            if (z.length !== 11) return alert('WhatsApp inválido');
             
             localStorage.setItem('marcelo_loja', JSON.stringify({ nome: n, zap: z, endereco: e }));
             location.reload();
         };
 
-        // INICIAR
-        iniciar();
+        init();
     </script>
 </body>
 </html>
