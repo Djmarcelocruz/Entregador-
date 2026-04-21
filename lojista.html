@@ -3,64 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chamar Marcelo - Entregas</title>
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="manifest" href="data:application/json;base64,ewogICJnameIjogIkNoYW1hciBNYXJjZWxvIiwKICAic2hvcnRfbmFtZSI6ICJNYXJjZWxvIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmOGZhZmMiLAogICJ0aGVtZV9jb2xvciI6ICIjMjU2M2ViIgp9">
-
+    <title>Loja - Chamar Marcelo</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .pulse-online { animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
-    </style>
 </head>
-<body class="bg-slate-50 font-sans min-h-screen flex flex-col">
+<body class="bg-slate-50 font-sans min-h-screen p-4">
 
     <div id="setupLoja" class="hidden fixed inset-0 bg-white z-50 p-6 flex flex-col justify-center">
-        <h1 class="text-2xl font-black mb-2 text-blue-600">Configurar Loja</h1>
-        <p class="text-slate-500 mb-6 text-sm">Informe os dados da sua loja para começar.</p>
-        <input id="inputNomeLoja" type="text" placeholder="Nome da Loja" class="w-full p-4 bg-slate-100 rounded-2xl mb-3 font-bold outline-none border-2 border-transparent focus:border-blue-500">
-        <input id="inputEndLoja" type="text" placeholder="Endereço da Loja" class="w-full p-4 bg-slate-100 rounded-2xl mb-6 font-bold outline-none border-2 border-transparent focus:border-blue-500">
-        <button onclick="salvarConfigLoja()" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-black shadow-lg">SALVAR E ENTRAR</button>
+        <h1 class="text-2xl font-black mb-4 text-blue-600">Dados da Loja</h1>
+        <input id="nLoja" placeholder="Nome da Loja" class="w-full p-4 bg-slate-100 rounded-2xl mb-3 font-bold">
+        <input id="zLoja" placeholder="Seu WhatsApp (Ex: 1499...)" class="w-full p-4 bg-slate-100 rounded-2xl mb-3 font-bold">
+        <input id="eLoja" placeholder="Endereço Completo" class="w-full p-4 bg-slate-100 rounded-2xl mb-6 font-bold">
+        <button onclick="salvarConfig()" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-black">ENTRAR</button>
     </div>
 
-    <div class="max-w-md mx-auto w-full p-4 flex-1 flex flex-col">
-        
-        <div id="cardStatus" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-6 text-center transition-all">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Status do Entregador</p>
-            <div class="flex items-center justify-center gap-3">
-                <span id="dotStatus" class="w-4 h-4 rounded-full bg-slate-300"></span>
-                <span id="textStatus" class="text-2xl font-black text-slate-800 italic uppercase">Carregando...</span>
-            </div>
-            <p id="msgStatus" class="text-xs text-slate-500 mt-2 font-medium"></p>
+    <div class="max-w-md mx-auto">
+        <div id="cardStatus" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-6 text-center">
+            <div id="dotStatus" class="w-3 h-3 rounded-full mx-auto mb-2 bg-slate-300"></div>
+            <span id="textStatus" class="text-xl font-black">CARREGANDO...</span>
         </div>
 
-        <div id="cardFila" class="hidden bg-blue-50 rounded-3xl p-6 border-2 border-blue-100 mb-6 animate-slide-up">
-            <div class="text-center">
-                <p class="text-blue-600 font-black text-lg mb-1">Você está na fila!</p>
-                <div class="flex items-center justify-center gap-2">
-                    <span class="text-4xl">🕒</span>
-                    <span id="posicaoFila" class="text-5xl font-black text-blue-700">--</span>
+        <div id="areaAcao" class="flex flex-col items-center justify-center py-10">
+            <button id="btnChamar" onclick="chamar()" class="w-48 h-48 rounded-full bg-blue-600 text-white font-black text-2xl shadow-2xl border-8 border-white active:scale-95 disabled:opacity-30 transition-all">CHAMAR</button>
+            <div id="controlesAtivos" class="hidden mt-6 w-full space-y-3">
+                <div class="bg-blue-100 p-4 rounded-2xl text-center">
+                    <p class="text-blue-800 font-black text-lg" id="msgFila">Você está na fila!</p>
+                    <p class="text-blue-600 text-3xl font-black" id="posFila">--</p>
                 </div>
-                <p class="text-blue-500 text-xs mt-2 font-bold uppercase tracking-tighter">Aguarde, Marcelo já foi notificado.</p>
+                <button onclick="editarEnd()" class="w-full text-blue-600 font-bold underline">Corrigir Endereço</button>
+                <button onclick="cancelar()" class="w-full text-red-500 text-xs font-bold">CANCELAR CHAMADO</button>
             </div>
+            <a href="https://wa.me/5514996919053" class="mt-10 flex items-center gap-2 text-emerald-600 font-bold">
+                <span>💬 Falar com Marcelo</span>
+            </a>
         </div>
-
-        <div class="flex-1 flex flex-col justify-center items-center">
-            <button id="btnChamar" onclick="chamarMarcelo()" disabled 
-                class="w-48 h-48 rounded-full bg-slate-200 text-slate-400 font-black text-xl shadow-xl flex flex-col items-center justify-center gap-2 border-8 border-white transition-all active:scale-95 disabled:opacity-50">
-                <span class="text-4xl">🔔</span>
-                CHAMAR
-            </button>
-            <p id="hintBotao" class="text-slate-400 text-xs mt-6 font-bold uppercase">Marcelo está Offline</p>
-        </div>
-
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, collection, addDoc, query, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, collection, addDoc, query, orderBy, Timestamp, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
@@ -68,104 +48,57 @@
             projectId: "meuappentregas", 
             appId: "1:442484186787:web:ac914827ebebda987f2916" 
         };
-        
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let lojaLocal = JSON.parse(localStorage.getItem('marcelo_loja_config'));
+        let config = JSON.parse(localStorage.getItem('marcelo_loja_config'));
+        let meuChamadoId = null;
 
-        // Verificar Cadastro
-        if(!lojaLocal) {
-            document.getElementById('setupLoja').classList.remove('hidden');
-        }
+        if(!config) document.getElementById('setupLoja').classList.remove('hidden');
 
-        window.salvarConfigLoja = () => {
-            const nome = document.getElementById('inputNomeLoja').value;
-            const end = document.getElementById('inputEndLoja').value;
-            if(nome && end) {
-                localStorage.setItem('marcelo_loja_config', JSON.stringify({nome, end}));
+        window.salvarConfig = () => {
+            const nome = document.getElementById('nLoja').value;
+            const zap = document.getElementById('zLoja').value;
+            const end = document.getElementById('eLoja').value;
+            if(nome && zap && end) {
+                localStorage.setItem('marcelo_loja_config', JSON.stringify({nome, zap, end}));
                 location.reload();
             }
         };
 
-        // Escutar Status do Marcelo
-        onSnapshot(doc(db, 'config', 'status'), (snap) => {
-            const s = snap.data();
-            const btn = document.getElementById('btnChamar');
-            const dot = document.getElementById('dotStatus');
-            const text = document.getElementById('textStatus');
-            const msg = document.getElementById('msgStatus');
-            const hint = document.getElementById('hintBotao');
-
-            text.textContent = s.label;
-            
-            if(s.label === 'DISPONÍVEL') {
-                dot.className = "w-4 h-4 rounded-full bg-green-500 pulse-online";
-                text.className = "text-2xl font-black text-green-600";
-                msg.textContent = "Pronto para te atender agora!";
-                btn.disabled = false;
-                btn.className = "w-48 h-48 rounded-full bg-green-500 text-white font-black text-xl shadow-2xl flex flex-col items-center justify-center gap-2 border-8 border-white transition-all active:scale-95";
-                hint.textContent = "Toque para solicitar";
-            } else if(s.label === 'EM ROTA') {
-                dot.className = "w-4 h-4 rounded-full bg-orange-500";
-                text.className = "text-2xl font-black text-orange-500";
-                msg.textContent = "Marcelo está na rua, mas você pode entrar na fila.";
-                btn.disabled = false;
-                btn.className = "w-48 h-48 rounded-full bg-orange-500 text-white font-black text-xl shadow-2xl flex flex-col items-center justify-center gap-2 border-8 border-white transition-all active:scale-95";
-                hint.textContent = "Entrar na Fila de Espera";
-            } else {
-                dot.className = "w-4 h-4 rounded-full bg-red-500";
-                text.className = "text-2xl font-black text-red-500";
-                msg.textContent = "No momento não estamos aceitando chamados.";
-                btn.disabled = true;
-                btn.className = "w-48 h-48 rounded-full bg-slate-200 text-slate-400 font-black text-xl shadow-none flex flex-col items-center justify-center gap-2 border-8 border-slate-100 cursor-not-allowed";
-                hint.textContent = "Marcelo está Offline";
-            }
+        onSnapshot(doc(db, 'config', 'status'), (s) => {
+            const data = s.data();
+            document.getElementById('textStatus').textContent = data.label;
+            document.getElementById('btnChamar').disabled = data.label === 'OFFLINE';
+            document.getElementById('dotStatus').className = `w-3 h-3 rounded-full mx-auto mb-2 ${data.label==='DISPONÍVEL'?'bg-green-500':'bg-orange-500'}`;
         });
 
-        // Escutar Fila
-        const qFila = query(collection(db, 'chamadas'), orderBy('hora', 'asc'));
-        onSnapshot(qFila, (snap) => {
-            const cardFila = document.getElementById('cardFila');
-            const posText = document.getElementById('posicaoFila');
-            const btn = document.getElementById('btnChamar');
-            let minhaPosicao = 0;
-
-            let i = 1;
-            snap.forEach(doc => {
-                if(doc.data().loja === lojaLocal?.nome) {
-                    minhaPosicao = i;
-                }
+        onSnapshot(query(collection(db, 'chamadas'), orderBy('hora', 'asc')), (snap) => {
+            let pos = 0; let i = 1; meuChamadoId = null;
+            snap.forEach(d => {
+                if(d.data().loja === config?.nome) { pos = i; meuChamadoId = d.id; var status = d.data().status; }
                 i++;
             });
 
-            if(minhaPosicao > 0) {
-                cardFila.classList.remove('hidden');
-                posText.textContent = minhaPosicao + "º";
-                btn.classList.add('opacity-30');
-                btn.disabled = true;
+            const area = document.getElementById('controlesAtivos');
+            const btn = document.getElementById('btnChamar');
+            if(pos > 0) {
+                area.classList.remove('hidden');
+                btn.classList.add('hidden');
+                document.getElementById('posFila').textContent = status === 'Atendendo' ? '🚀' : pos + 'º';
+                document.getElementById('msgFila').textContent = status === 'Atendendo' ? 'Marcelo em Atendimento!' : 'Você está na fila!';
             } else {
-                cardFila.classList.add('hidden');
+                area.classList.add('hidden');
+                btn.classList.remove('hidden');
             }
         });
 
-        window.chamarMarcelo = async () => {
-            if(!lojaLocal) return;
-            const btn = document.getElementById('btnChamar');
-            btn.disabled = true;
-            
-            try {
-                await addDoc(collection(db, 'chamadas'), {
-                    loja: lojaLocal.nome,
-                    enderecoLoja: lojaLocal.end,
-                    hora: Timestamp.now()
-                });
-            } catch (e) {
-                alert("Erro ao chamar: " + e.message);
-                btn.disabled = false;
-            }
+        window.chamar = () => addDoc(collection(db, 'chamadas'), { loja: config.nome, zap: config.zap, enderecoLoja: config.end, hora: Timestamp.now(), status: 'Pendente' });
+        window.cancelar = () => confirm("Deseja cancelar o chamado?") && deleteDoc(doc(db, 'chamadas', meuChamadoId));
+        window.editarEnd = () => {
+            const novo = prompt("Novo endereço:", config.end);
+            if(novo) updateDoc(doc(db, 'chamadas', meuChamadoId), { enderecoLoja: novo });
         };
-
     </script>
 </body>
 </html>
