@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Painel Marcelo - Gestão</title>
+    <title>Painel Marcelo - Logística</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-white font-sans min-h-screen pb-10">
@@ -13,31 +13,29 @@
     </audio>
 
     <div class="max-w-md mx-auto p-4">
-        <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-6 mb-6 shadow-xl text-center">
-            <p class="text-blue-100 text-[10px] font-bold uppercase tracking-widest">Total de Entregas Hoje</p>
+        <div class="bg-blue-600 rounded-3xl p-6 mb-6 shadow-xl text-center border-b-4 border-blue-800">
+            <p class="text-blue-200 text-[10px] font-bold uppercase tracking-widest">Total Geral do Dia</p>
             <h1 id="totalGeralDia" class="text-6xl font-black">0</h1>
         </div>
 
         <div class="bg-slate-800 rounded-3xl p-4 mb-6 border border-slate-700">
-            <div id="labelStatus" class="text-center text-xl font-black mb-4 text-slate-500">OFFLINE</div>
-            <div class="grid grid-cols-3 gap-2 mb-4">
+            <div id="labelStatus" class="text-center text-xl font-black mb-3">CARREGANDO...</div>
+            <div class="grid grid-cols-3 gap-2">
                 <button onclick="updateStatus('disponivel')" class="p-2 bg-green-600 rounded-xl font-bold text-[10px]">🟢 LIVRE</button>
                 <button onclick="updateStatus('ocupado')" class="p-2 bg-orange-600 rounded-xl font-bold text-[10px]">🟡 EM ROTA</button>
                 <button onclick="updateStatus('offline')" class="p-2 bg-red-600 rounded-xl font-bold text-[10px]">🔴 SAIR</button>
             </div>
-            <div class="flex gap-2 border-t border-slate-700 pt-4">
-                <input id="meuZap" type="tel" placeholder="Seu WhatsApp" class="flex-1 bg-slate-900 border border-slate-600 rounded-xl p-2 text-xs font-bold outline-none">
-                <button onclick="salvarMeuZap()" class="bg-slate-700 px-4 py-2 rounded-xl text-[10px] font-bold uppercase">Salvar</button>
-            </div>
         </div>
 
-        <h2 class="text-lg font-black mb-4">🏪 Lojas em Atendimento</h2>
+        <h2 class="text-lg font-black mb-4 flex items-center gap-2">
+            <span>📋 Gerenciamento de Lojas</span>
+        </h2>
         <div id="listaFila" class="space-y-4"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, deleteDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, deleteDoc, updateDoc, getDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
@@ -49,17 +47,6 @@
         const db = getFirestore(app);
         const som = document.getElementById('alarme');
 
-        async function init() {
-            const s = await getDoc(doc(db, 'config', 'status'));
-            if(s.exists()) document.getElementById('meuZap').value = s.data().meuWhatsApp || "";
-        }
-
-        window.salvarMeuZap = () => {
-            const zap = document.getElementById('meuZap').value.replace(/\D/g,'');
-            setDoc(doc(db, 'config', 'status'), { meuWhatsApp: zap }, { merge: true });
-            alert("WhatsApp Atualizado!");
-        };
-
         window.updateStatus = (s) => {
             let label = s === 'disponivel' ? 'DISPONÍVEL' : s === 'ocupado' ? 'EM ROTA' : 'OFFLINE';
             setDoc(doc(db, 'config', 'status'), { label, online: s!=='offline' }, { merge: true });
@@ -69,36 +56,47 @@
             const data = s.data() || { label: 'OFFLINE' };
             const el = document.getElementById('labelStatus');
             el.textContent = data.label;
-            el.className = `text-center text-xl font-black mb-4 ${data.label === 'DISPONÍVEL' ? 'text-green-500' : data.label === 'EM ROTA' ? 'text-orange-500' : 'text-red-500'}`;
+            el.className = `text-center text-xl font-black mb-3 ${data.label === 'DISPONÍVEL' ? 'text-green-500' : data.label === 'EM ROTA' ? 'text-orange-500' : 'text-red-500'}`;
         });
 
         onSnapshot(query(collection(db, 'chamadas'), orderBy('hora', 'asc')), (snap) => {
             const container = document.getElementById('listaFila');
             container.innerHTML = '';
             let totalGeral = 0;
-            let temPendente = false;
+            let temAlerta = false;
 
             snap.forEach(d => {
                 const item = d.data();
-                const contagem = item.contagem || 0;
-                totalGeral += contagem;
-                if(contagem === 0) temPendente = true;
+                totalGeral += (item.contagem || 0);
+                if(item.alertaColeta === true) temAlerta = true;
 
                 const div = document.createElement('div');
-                div.className = "bg-white p-5 rounded-3xl shadow-lg text-slate-900 border-b-4 border-blue-600";
+                // Se houver alerta de coleta, o card pisca ou fica com borda amarela
+                div.className = `bg-white p-5 rounded-3xl shadow-lg text-slate-900 border-l-[12px] ${item.alertaColeta ? 'border-orange-500 ring-4 ring-orange-500/20' : 'border-blue-600'}`;
+                
                 div.innerHTML = `
-                    <div class="flex justify-between items-center">
+                    <div class="flex justify-between items-start">
                         <div class="flex-1">
-                            <h3 class="text-xl font-black leading-tight">${item.loja}</h3>
-                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">${item.enderecoLoja}</p>
-                            <div class="mt-2 flex items-baseline gap-1">
-                                <span class="text-4xl font-black text-blue-700">${contagem}</span>
-                                <span class="text-xs font-bold text-slate-400 uppercase">corridas</span>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-xl font-extrabold tracking-tight">${item.loja}</h3>
+                                ${item.alertaColeta ? '<span class="bg-orange-500 text-white text-[9px] px-2 py-1 rounded-full animate-bounce">NOVA COLETA!</span>' : ''}
+                            </div>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-3">${item.enderecoLoja}</p>
+                            
+                            <div class="flex items-center gap-4">
+                                <button onclick="ajustar('${d.id}', -1, ${item.contagem || 0})" class="w-10 h-10 bg-slate-100 rounded-xl text-slate-400 font-black text-xl">-</button>
+                                <div class="text-center">
+                                    <span class="text-4xl font-black text-blue-600 block leading-none">${item.contagem || 0}</span>
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase">entregas</span>
+                                </div>
+                                <button onclick="ajustar('${d.id}', 1, ${item.contagem || 0})" class="w-14 h-14 bg-green-500 text-white rounded-2xl shadow-lg shadow-green-100 font-black text-3xl">+</button>
                             </div>
                         </div>
-                        <div class="flex flex-col gap-2">
-                            <button onclick="addEntrega('${d.id}', ${contagem})" class="bg-green-500 text-white w-16 h-16 rounded-2xl shadow-lg shadow-green-200 flex items-center justify-center text-3xl font-black active:scale-90 transition-all">+</button>
-                            <button onclick="fecharLoja('${d.id}', '${item.loja}', ${contagem})" class="text-[9px] font-black text-red-500 uppercase mt-2">Encerrar</button>
+                        <div class="flex flex-col items-end gap-4">
+                            <button onclick="visto('${d.id}')" class="${item.alertaColeta ? 'bg-orange-500' : 'bg-slate-200'} text-white p-3 rounded-2xl transition-colors">
+                                ✅
+                            </button>
+                            <button onclick="fecharLoja('${d.id}', '${item.loja}', ${item.contagem || 0})" class="text-[10px] font-bold text-red-400 border-b border-red-100">FINALIZAR DIA</button>
                         </div>
                     </div>
                 `;
@@ -106,12 +104,19 @@
             });
 
             document.getElementById('totalGeralDia').textContent = totalGeral;
-            if(temPendente) { som.play().catch(()=>{}); } else { som.pause(); som.currentTime = 0; }
+            if(temAlerta) { som.play().catch(()=>{}); } else { som.pause(); som.currentTime = 0; }
         });
 
-        window.addEntrega = (id, atual) => updateDoc(doc(db, 'chamadas', id), { contagem: atual + 1 });
-        window.fecharLoja = (id, nome, total) => confirm(`Fechar expediente da ${nome} com ${total} entregas?`) && deleteDoc(doc(db, 'chamadas', id));
-        init();
+        window.ajustar = (id, valor, atual) => {
+            const novo = atual + valor;
+            updateDoc(doc(db, 'chamadas', id), { contagem: novo < 0 ? 0 : novo, alertaColeta: false });
+        };
+
+        window.visto = (id) => updateDoc(doc(db, 'chamadas', id), { alertaColeta: false });
+
+        window.fecharLoja = (id, nome, total) => {
+            if(confirm(`Fechar dia da ${nome} com ${total} entregas?`)) deleteDoc(doc(db, 'chamadas', id));
+        };
     </script>
 </body>
 </html>
