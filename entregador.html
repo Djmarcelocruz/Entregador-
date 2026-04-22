@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Painel Marcelo - Logística</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Painel Marcelo - Gestão</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-white font-sans min-h-screen pb-10">
@@ -14,30 +13,26 @@
     </audio>
 
     <div class="max-w-md mx-auto p-4">
-        <div class="bg-slate-800 rounded-3xl p-4 mb-4 border border-slate-700">
-            <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Meu WhatsApp (Ex: 14996919053)</p>
-            <div class="flex gap-2">
-                <input id="meuZap" type="tel" class="flex-1 bg-slate-900 border border-slate-600 rounded-xl p-2 text-sm font-bold outline-none focus:border-blue-500">
-                <button onclick="salvarMeuZap()" class="bg-blue-600 px-4 py-2 rounded-xl text-xs font-bold uppercase">Salvar</button>
+        <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-6 mb-6 shadow-xl text-center">
+            <p class="text-blue-100 text-[10px] font-bold uppercase tracking-widest">Total de Entregas Hoje</p>
+            <h1 id="totalGeralDia" class="text-6xl font-black">0</h1>
+        </div>
+
+        <div class="bg-slate-800 rounded-3xl p-4 mb-6 border border-slate-700">
+            <div id="labelStatus" class="text-center text-xl font-black mb-4 text-slate-500">OFFLINE</div>
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <button onclick="updateStatus('disponivel')" class="p-2 bg-green-600 rounded-xl font-bold text-[10px]">🟢 LIVRE</button>
+                <button onclick="updateStatus('ocupado')" class="p-2 bg-orange-600 rounded-xl font-bold text-[10px]">🟡 EM ROTA</button>
+                <button onclick="updateStatus('offline')" class="p-2 bg-red-600 rounded-xl font-bold text-[10px]">🔴 SAIR</button>
+            </div>
+            <div class="flex gap-2 border-t border-slate-700 pt-4">
+                <input id="meuZap" type="tel" placeholder="Seu WhatsApp" class="flex-1 bg-slate-900 border border-slate-600 rounded-xl p-2 text-xs font-bold outline-none">
+                <button onclick="salvarMeuZap()" class="bg-slate-700 px-4 py-2 rounded-xl text-[10px] font-bold uppercase">Salvar</button>
             </div>
         </div>
 
-        <div class="bg-slate-800 rounded-3xl p-6 shadow-2xl border border-slate-700 mb-6">
-            <div id="statusVisual" class="text-center mb-6">
-                <span id="labelStatus" class="text-3xl font-black block">CARREGANDO...</span>
-            </div>
-            <div class="grid grid-cols-3 gap-2">
-                <button onclick="updateStatus('disponivel')" class="p-3 bg-green-600 rounded-2xl font-bold text-[10px]">🟢 LIVRE</button>
-                <button onclick="updateStatus('ocupado')" class="p-3 bg-orange-600 rounded-2xl font-bold text-[10px]">🟡 EM ROTA</button>
-                <button onclick="updateStatus('offline')" class="p-3 bg-red-600 rounded-2xl font-bold text-[10px]">🔴 SAIR</button>
-            </div>
-        </div>
-
-        <h2 class="text-lg font-black mb-4 flex justify-between items-center">
-            <span>📋 Fila de Espera</span>
-            <span id="badgeFila" class="text-xs bg-slate-700 px-2 py-1 rounded-full">0</span>
-        </h2>
-        <div id="listaFila" class="space-y-3 text-slate-900"></div>
+        <h2 class="text-lg font-black mb-4">🏪 Lojas em Atendimento</h2>
+        <div id="listaFila" class="space-y-4"></div>
     </div>
 
     <script type="module">
@@ -54,15 +49,15 @@
         const db = getFirestore(app);
         const som = document.getElementById('alarme');
 
-        // Configurações do Marcelo
         async function init() {
             const s = await getDoc(doc(db, 'config', 'status'));
             if(s.exists()) document.getElementById('meuZap').value = s.data().meuWhatsApp || "";
         }
+
         window.salvarMeuZap = () => {
             const zap = document.getElementById('meuZap').value.replace(/\D/g,'');
             setDoc(doc(db, 'config', 'status'), { meuWhatsApp: zap }, { merge: true });
-            alert("WhatsApp salvo!");
+            alert("WhatsApp Atualizado!");
         };
 
         window.updateStatus = (s) => {
@@ -70,60 +65,52 @@
             setDoc(doc(db, 'config', 'status'), { label, online: s!=='offline' }, { merge: true });
         };
 
-        // Escutar Status e Fila
         onSnapshot(doc(db, 'config', 'status'), (s) => {
             const data = s.data() || { label: 'OFFLINE' };
             const el = document.getElementById('labelStatus');
             el.textContent = data.label;
-            el.className = `text-3xl font-black block ${data.label === 'DISPONÍVEL' ? 'text-green-500' : data.label === 'EM ROTA' ? 'text-orange-500' : 'text-red-500'}`;
+            el.className = `text-center text-xl font-black mb-4 ${data.label === 'DISPONÍVEL' ? 'text-green-500' : data.label === 'EM ROTA' ? 'text-orange-500' : 'text-red-500'}`;
         });
 
         onSnapshot(query(collection(db, 'chamadas'), orderBy('hora', 'asc')), (snap) => {
             const container = document.getElementById('listaFila');
-            document.getElementById('badgeFila').textContent = snap.size;
             container.innerHTML = '';
-            
+            let totalGeral = 0;
             let temPendente = false;
-            let i = 1;
 
             snap.forEach(d => {
                 const item = d.data();
-                if(item.status === 'Pendente') temPendente = true;
+                const contagem = item.contagem || 0;
+                totalGeral += contagem;
+                if(contagem === 0) temPendente = true;
 
                 const div = document.createElement('div');
-                div.className = `bg-white p-4 rounded-2xl border-l-8 ${item.status === 'Atendendo' ? 'border-blue-500 shadow-lg' : 'border-slate-300'}`;
+                div.className = "bg-white p-5 rounded-3xl shadow-lg text-slate-900 border-b-4 border-blue-600";
                 div.innerHTML = `
-                    <div class="flex justify-between items-start">
+                    <div class="flex justify-between items-center">
                         <div class="flex-1">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase">${item.status === 'Atendendo' ? '🚀 Em Atendimento' : i + 'º na fila'}</span>
-                            <h3 class="text-lg font-black leading-tight">${item.loja}</h3>
-                            <p class="text-[11px] text-slate-500">${item.enderecoLoja}</p>
+                            <h3 class="text-xl font-black leading-tight">${item.loja}</h3>
+                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">${item.enderecoLoja}</p>
+                            <div class="mt-2 flex items-baseline gap-1">
+                                <span class="text-4xl font-black text-blue-700">${contagem}</span>
+                                <span class="text-xs font-bold text-slate-400 uppercase">corridas</span>
+                            </div>
                         </div>
-                        <div class="flex flex-col gap-2 ml-2">
-                            ${item.status !== 'Atendendo' ? 
-                                `<button onclick="atender('${d.id}')" class="bg-blue-600 text-white px-3 py-2 rounded-xl font-bold text-[10px]">ATENDER</button>` :
-                                `<button onclick="concluir('${d.id}')" class="bg-green-600 text-white px-3 py-2 rounded-xl font-bold text-[10px]">CONCLUIR</button>`
-                            }
-                            <a href="https://wa.me/55${item.zap}" class="bg-emerald-100 text-emerald-700 p-2 rounded-xl text-center text-[10px] font-bold">LOJA</a>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="addEntrega('${d.id}', ${contagem})" class="bg-green-500 text-white w-16 h-16 rounded-2xl shadow-lg shadow-green-200 flex items-center justify-center text-3xl font-black active:scale-90 transition-all">+</button>
+                            <button onclick="fecharLoja('${d.id}', '${item.loja}', ${contagem})" class="text-[9px] font-black text-red-500 uppercase mt-2">Encerrar</button>
                         </div>
                     </div>
                 `;
                 container.appendChild(div);
-                i++;
             });
 
-            // Gerenciar Alarme
-            if(temPendente) {
-                som.play().catch(() => {});
-                if ("vibrate" in navigator) navigator.vibrate([500, 300, 500]);
-            } else {
-                som.pause();
-                som.currentTime = 0;
-            }
+            document.getElementById('totalGeralDia').textContent = totalGeral;
+            if(temPendente) { som.play().catch(()=>{}); } else { som.pause(); som.currentTime = 0; }
         });
 
-        window.atender = (id) => updateDoc(doc(db, 'chamadas', id), { status: 'Atendendo' });
-        window.concluir = (id) => confirm("Finalizar entrega?") && deleteDoc(doc(db, 'chamadas', id));
+        window.addEntrega = (id, atual) => updateDoc(doc(db, 'chamadas', id), { contagem: atual + 1 });
+        window.fecharLoja = (id, nome, total) => confirm(`Fechar expediente da ${nome} com ${total} entregas?`) && deleteDoc(doc(db, 'chamadas', id));
         init();
     </script>
 </body>
