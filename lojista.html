@@ -3,51 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chamar Marcelo</title>
+    <title>Entregas Marcelo</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 font-sans min-h-screen">
 
-    <div id="setupLoja" class="hidden fixed inset-0 bg-white z-50 p-6 flex flex-col justify-center">
-        <h1 class="text-2xl font-black mb-4 text-blue-600">Configurar Loja</h1>
-        <div class="space-y-3">
-            <input id="nLoja" placeholder="Nome da Loja" class="w-full p-4 bg-slate-100 rounded-2xl font-bold outline-none">
-            <input id="zLoja" placeholder="WhatsApp (1499...)" class="w-full p-4 bg-slate-100 rounded-2xl font-bold outline-none" type="tel">
-            <input id="eLoja" placeholder="Endereço" class="w-full p-4 bg-slate-100 rounded-2xl font-bold outline-none">
-            <button onclick="salvarConfig()" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-black">SALVAR</button>
-        </div>
+    <div id="setupLoja" class="hidden fixed inset-0 bg-white z-50 p-8 flex flex-col justify-center">
+        <h1 class="text-3xl font-black mb-6 text-blue-600">Dados da Loja</h1>
+        <input id="nLoja" placeholder="Nome da Loja" class="w-full p-4 mb-3 bg-slate-100 rounded-2xl font-bold outline-none">
+        <input id="zLoja" placeholder="Seu WhatsApp" class="w-full p-4 mb-3 bg-slate-100 rounded-2xl font-bold outline-none" type="tel">
+        <input id="eLoja" placeholder="Endereço Completo" class="w-full p-4 mb-6 bg-slate-100 rounded-2xl font-bold outline-none">
+        <button onclick="salvarConfig()" class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black shadow-lg">SALVAR E COMEÇAR</button>
     </div>
 
-    <div class="max-w-md mx-auto p-4 h-screen flex flex-col">
-        <div class="flex justify-between items-center mb-6">
-            <span class="text-slate-400 text-[10px] font-bold uppercase italic">Marcelo Entregas</span>
-            <button onclick="abrirSetup()" class="text-[10px] font-bold text-slate-400">⚙️ EDITAR</button>
+    <div class="max-w-md mx-auto p-4 flex flex-col min-h-screen">
+        <div class="flex justify-between items-center mb-8">
+            <div class="flex items-center gap-2">
+                <div id="dotStatus" class="w-3 h-3 rounded-full bg-slate-300"></div>
+                <span id="textStatus" class="font-black italic text-slate-700 tracking-tighter">CONECTANDO...</span>
+            </div>
+            <button onclick="abrirSetup()" class="text-[10px] font-bold text-slate-300 uppercase">⚙️ Perfil</button>
         </div>
 
-        <div id="cardStatus" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-6 text-center">
-            <div id="dotStatus" class="w-2 h-2 rounded-full mx-auto mb-1 bg-slate-300"></div>
-            <span id="textStatus" class="text-lg font-black italic">CONECTANDO...</span>
-        </div>
-
-        <div class="flex-1 flex flex-col items-center justify-center">
-            <button id="btnChamar" onclick="chamar()" class="w-52 h-52 rounded-full bg-blue-600 text-white font-black text-2xl shadow-2xl border-[10px] border-white active:scale-95 disabled:opacity-30">CHAMAR MARCELO</button>
+        <div class="flex-1 flex flex-col items-center justify-center text-center">
             
-            <div id="controlesAtivos" class="hidden w-full text-center">
-                <div class="bg-white p-8 rounded-[40px] shadow-xl border border-blue-50">
-                    <p class="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Entregas Realizadas Hoje</p>
-                    <h1 id="posFila" class="text-8xl font-black text-blue-600 my-2">0</h1>
-                    <p class="text-slate-400 text-xs font-medium italic">Aguardando novo chamado...</p>
-                    <button onclick="chamar()" class="mt-6 bg-blue-100 text-blue-700 px-6 py-3 rounded-2xl font-black text-sm active:scale-95">CHAMAR NOVAMENTE</button>
+            <div id="telaInicial" class="hidden">
+                <button onclick="chamar(true)" class="w-64 h-64 rounded-[60px] bg-blue-600 text-white shadow-[0_20px_50px_rgba(37,99,235,0.3)] flex flex-col items-center justify-center active:scale-95 transition-all border-[12px] border-white">
+                    <span class="text-6xl mb-2">🏍️</span>
+                    <span class="text-xl font-black uppercase tracking-tighter">Chamar Marcelo</span>
+                </button>
+                <p class="mt-8 text-slate-400 font-medium px-10 text-sm">Toque para abrir seu expediente de entregas de hoje.</p>
+            </div>
+
+            <div id="telaExpediente" class="hidden w-full">
+                <div class="bg-white rounded-[50px] p-10 shadow-2xl border border-slate-100 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
+                    <p class="text-slate-400 font-bold text-xs uppercase tracking-widest mb-4">Entregas Realizadas Hoje</p>
+                    <h1 id="contagemLoja" class="text-9xl font-black text-slate-900 leading-none my-4">0</h1>
+                    
+                    <button id="btnNovaColeta" onclick="chamar(false)" class="mt-10 w-full bg-orange-500 text-white p-6 rounded-3xl font-black text-lg shadow-lg shadow-orange-100 active:scale-95 transition-all">
+                        🚀 PEDIR NOVA COLETA
+                    </button>
+                    <p id="msgAviso" class="mt-4 text-orange-500 font-bold text-[10px] uppercase hidden animate-pulse font-black">Aguarde... Marcelo foi avisado!</p>
                 </div>
             </div>
 
-            <a id="linkZapMarcelo" href="#" class="mt-12 text-emerald-600 font-bold bg-white px-8 py-3 rounded-2xl shadow-sm border border-emerald-50">💬 Falar com Marcelo</a>
         </div>
+
+        <a id="linkZapMarcelo" href="#" class="mb-10 w-full text-center p-4 rounded-2xl bg-slate-100 text-slate-500 font-bold text-sm">Falar no WhatsApp</a>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, collection, addDoc, query, orderBy, Timestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, collection, addDoc, query, orderBy, Timestamp, setDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
@@ -72,41 +80,47 @@
         };
         window.abrirSetup = () => document.getElementById('setupLoja').classList.remove('hidden');
 
+        // Escutar Status do Marcelo
         onSnapshot(doc(db, 'config', 'status'), (s) => {
             const data = s.data() || { label: 'OFFLINE', meuWhatsApp: '' };
             document.getElementById('textStatus').textContent = data.label;
-            document.getElementById('btnChamar').disabled = data.label === 'OFFLINE';
-            document.getElementById('dotStatus').className = `w-2 h-2 rounded-full mx-auto mb-1 ${data.label==='DISPONÍVEL'?'bg-green-500':'bg-orange-500'}`;
+            document.getElementById('dotStatus').className = `w-3 h-3 rounded-full ${data.label==='DISPONÍVEL'?'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]':'bg-orange-500'}`;
             document.getElementById('linkZapMarcelo').href = `https://wa.me/55${data.meuWhatsApp}`;
         });
 
-        onSnapshot(query(collection(db, 'chamadas'), orderBy('hora', 'asc')), (snap) => {
-            let dadosMinhaLoja = null;
-            let idDoc = null;
-            snap.forEach(d => { if(d.data().loja === config?.nome) { dadosMinhaLoja = d.data(); idDoc = d.id; } });
+        // Escutar Dados da Loja
+        let idAtual = null;
+        onSnapshot(query(collection(db, 'chamadas')), (snap) => {
+            let dados = null;
+            snap.forEach(d => { if(d.data().loja === config?.nome) { dados = d.data(); idAtual = d.id; } });
 
-            const areaAtiva = document.getElementById('controlesAtivos');
-            const btnChamar = document.getElementById('btnChamar');
-
-            if(dadosMinhaLoja) {
-                areaAtiva.classList.remove('hidden');
-                btnChamar.classList.add('hidden');
-                document.getElementById('posFila').textContent = dadosMinhaLoja.contagem || 0;
+            if(dados) {
+                document.getElementById('telaInicial').classList.add('hidden');
+                document.getElementById('telaExpediente').classList.remove('hidden');
+                document.getElementById('contagemLoja').textContent = dados.contagem || 0;
+                if(dados.alertaColeta) {
+                    document.getElementById('msgAviso').classList.remove('hidden');
+                    document.getElementById('btnNovaColeta').disabled = true;
+                    document.getElementById('btnNovaColeta').opacity = "0.5";
+                } else {
+                    document.getElementById('msgAviso').classList.add('hidden');
+                    document.getElementById('btnNovaColeta').disabled = false;
+                }
             } else {
-                areaAtiva.classList.add('hidden');
-                btnChamar.classList.remove('hidden');
+                document.getElementById('telaInicial').classList.remove('hidden');
+                document.getElementById('telaExpediente').classList.add('hidden');
             }
         });
 
-        window.chamar = async () => {
-            // Se já existir a loja na lista, o botão "Chamar Novamente" apenas avisa o Marcelo (reseta o som)
-            // Mas no nosso código simplificado, o chamado inicial já mantém a loja aberta.
-            let existe = false;
-            // (Lógica simplificada: Se não está na tela, cria. Se está, o botão Chamar Novamente pode ser usado para dar um "ping")
-            await addDoc(collection(db, 'chamadas'), { 
-                loja: config.nome, zap: config.zap, enderecoLoja: config.end, 
-                hora: Timestamp.now(), contagem: 0 
-            });
+        window.chamar = async (isPrimeiro) => {
+            if(isPrimeiro) {
+                await addDoc(collection(db, 'chamadas'), { 
+                    loja: config.nome, zap: config.zap, enderecoLoja: config.end, 
+                    hora: Timestamp.now(), contagem: 0, alertaColeta: true 
+                });
+            } else {
+                if(idAtual) updateDoc(doc(db, 'chamadas', idAtual), { alertaColeta: true });
+            }
         };
     </script>
 </body>
