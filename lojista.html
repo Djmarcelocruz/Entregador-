@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Entregas Marcelo</title>
+    <title>Chamar Marcelo Entregas</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 font-sans min-h-screen">
 
     <div id="setupLoja" class="hidden fixed inset-0 bg-white z-50 p-8 flex flex-col justify-center">
-        <h1 class="text-3xl font-black mb-6 text-blue-600">Dados da Loja</h1>
+        <h1 class="text-3xl font-black mb-6 text-blue-600">Configurar Loja</h1>
         <input id="nLoja" placeholder="Nome da Loja" class="w-full p-4 mb-3 bg-slate-100 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500">
-        <input id="zLoja" placeholder="WhatsApp (14...)" class="w-full p-4 mb-3 bg-slate-100 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500" type="tel">
-        <input id="eLoja" placeholder="Endereço" class="w-full p-4 mb-6 bg-slate-100 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500">
-        <button onclick="salvarConfig()" class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black shadow-lg">SALVAR E COMEÇAR</button>
+        <input id="zLoja" placeholder="WhatsApp (DDD + Número)" class="w-full p-4 mb-3 bg-slate-100 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500" type="tel">
+        <input id="eLoja" placeholder="Endereço Completo" class="w-full p-4 mb-6 bg-slate-100 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500">
+        <button onclick="salvarConfig()" class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black shadow-lg active:scale-95 transition-all">SALVAR E COMEÇAR</button>
     </div>
 
     <div class="max-w-md mx-auto p-4 flex flex-col min-h-screen">
@@ -22,33 +22,35 @@
                 <div id="dotStatus" class="w-3 h-3 rounded-full bg-slate-300"></div>
                 <span id="textStatus" class="font-black italic text-slate-700 tracking-tighter uppercase text-sm">CONECTANDO...</span>
             </div>
-            <button onclick="abrirSetup()" class="text-[10px] font-bold text-slate-400">⚙️ PERFIL</button>
+            <button onclick="abrirSetup()" class="text-[10px] font-bold text-slate-300 uppercase tracking-widest">⚙️ Perfil</button>
         </div>
 
         <div class="flex-1 flex flex-col items-center justify-center text-center">
             
             <div id="telaInicial" class="hidden">
                 <button id="btnChamar" onclick="chamar(true)" class="w-64 h-64 rounded-[60px] bg-blue-600 text-white shadow-2xl flex flex-col items-center justify-center active:scale-95 transition-all border-[12px] border-white disabled:opacity-50">
-                    <span class="text-6xl mb-2">🏍️</span>
-                    <span class="text-xl font-black uppercase tracking-tighter">Chamar Marcelo</span>
+                    <span class="text-7xl mb-2">🏍️</span>
+                    <span class="text-xl font-black uppercase">Chamar Marcelo</span>
                 </button>
             </div>
 
             <div id="telaExpediente" class="hidden w-full">
-                <div class="bg-white rounded-[50px] p-10 shadow-2xl border border-slate-100">
-                    <p class="text-slate-400 font-bold text-[10px] uppercase tracking-widest mb-4">Corridas Realizadas</p>
+                <div class="bg-white rounded-[50px] p-10 shadow-2xl border border-slate-100 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
+                    <p class="text-slate-400 font-bold text-[10px] uppercase tracking-widest mb-4">Entregas Realizadas Hoje</p>
                     <h1 id="contagemLoja" class="text-9xl font-black text-slate-900 leading-none my-4">0</h1>
                     
                     <button id="btnNovaColeta" onclick="chamar(false)" class="mt-10 w-full bg-orange-500 text-white p-6 rounded-3xl font-black text-lg shadow-lg active:scale-95 transition-all disabled:opacity-50">
                         🚀 PEDIR NOVA COLETA
                     </button>
-                    <p id="msgAviso" class="mt-4 text-orange-500 font-bold text-[10px] uppercase hidden animate-pulse font-black italic">Aguarde, Marcelo foi avisado!</p>
+                    
+                    <p id="msgAviso" class="mt-5 font-black text-[10px] uppercase hidden"></p>
                 </div>
             </div>
 
         </div>
 
-        <a id="linkZapMarcelo" href="#" class="mb-10 w-full text-center p-4 rounded-2xl bg-white border border-slate-100 text-slate-400 font-bold text-xs uppercase">Falar no WhatsApp</a>
+        <a id="linkZapMarcelo" href="#" class="mb-10 w-full text-center p-4 rounded-2xl bg-white border border-slate-200 text-slate-400 font-bold text-[10px] uppercase tracking-widest">Suporte / WhatsApp</a>
     </div>
 
     <script type="module">
@@ -81,7 +83,7 @@
         onSnapshot(doc(db, 'config', 'status'), (s) => {
             const data = s.data() || { label: 'OFFLINE', meuWhatsApp: '' };
             document.getElementById('textStatus').textContent = data.label;
-            document.getElementById('dotStatus').className = `w-3 h-3 rounded-full ${data.label==='DISPONÍVEL'?'bg-green-500':'bg-orange-500'}`;
+            document.getElementById('dotStatus').className = `w-3 h-3 rounded-full ${data.label==='DISPONÍVEL'?'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]':'bg-orange-500'}`;
             document.getElementById('linkZapMarcelo').href = `https://wa.me/55${data.meuWhatsApp}`;
         });
 
@@ -92,22 +94,33 @@
             let dados = null;
             snap.forEach(d => { if(d.data().loja === config?.nome) { dados = d.data(); idAtual = d.id; } });
 
+            const telaI = document.getElementById('telaInicial');
+            const telaE = document.getElementById('telaExpediente');
+            const msgAviso = document.getElementById('msgAviso');
+            const btnNova = document.getElementById('btnNovaColeta');
+
             if(dados) {
-                document.getElementById('telaInicial').classList.add('hidden');
-                document.getElementById('telaExpediente').classList.remove('hidden');
+                telaI.classList.add('hidden');
+                telaE.classList.remove('hidden');
                 document.getElementById('contagemLoja').textContent = dados.contagem || 0;
                 
-                const btnNova = document.getElementById('btnNovaColeta');
                 if(dados.alertaColeta) {
-                    document.getElementById('msgAviso').classList.remove('hidden');
+                    msgAviso.innerHTML = "🔔 Enviando chamado...";
+                    msgAviso.className = "mt-5 text-orange-500 font-black text-[10px] uppercase animate-pulse";
+                    msgAviso.classList.remove('hidden');
                     btnNova.disabled = true;
+                } else if(dados.visualizado) {
+                    msgAviso.innerHTML = "✅ Marcelo visualizou e está ciente!";
+                    msgAviso.className = "mt-5 text-green-600 font-black text-[10px] uppercase italic";
+                    msgAviso.classList.remove('hidden');
+                    btnNova.disabled = false;
                 } else {
-                    document.getElementById('msgAviso').classList.add('hidden');
+                    msgAviso.classList.add('hidden');
                     btnNova.disabled = false;
                 }
             } else {
-                document.getElementById('telaInicial').classList.remove('hidden');
-                document.getElementById('telaExpediente').classList.add('hidden');
+                telaI.classList.remove('hidden');
+                telaE.classList.add('hidden');
             }
             bloqueioClique = false;
         });
@@ -115,18 +128,17 @@
         window.chamar = async (isPrimeiro) => {
             if(bloqueioClique) return;
             bloqueioClique = true;
-            
             try {
                 if(isPrimeiro) {
                     await addDoc(collection(db, 'chamadas'), { 
                         loja: config.nome, zap: config.zap, enderecoLoja: config.end, 
-                        hora: Timestamp.now(), contagem: 0, alertaColeta: true 
+                        hora: Timestamp.now(), contagem: 0, alertaColeta: true, visualizado: false 
                     });
                 } else if(idAtual) {
-                    await updateDoc(doc(db, 'chamadas', idAtual), { alertaColeta: true });
+                    await updateDoc(doc(db, 'chamadas', idAtual), { alertaColeta: true, visualizado: false });
                 }
             } catch (e) {
-                alert("Erro ao enviar. Verifique a internet.");
+                alert("Erro de conexão. Tente novamente.");
                 bloqueioClique = false;
             }
         };
