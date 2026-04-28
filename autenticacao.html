@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Autenticação - Marcelo Entregas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white font-sans min-h-screen">
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-8 shadow-2xl">
+                <div class="text-center mb-8">
+                    <div class="text-5xl mb-4">🔐</div>
+                    <h1 class="text-3xl font-black">Login</h1>
+                    <p class="text-slate-400 text-sm mt-2">Marcelo Entregas</p>
+                </div>
+
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Email</label>
+                        <input type="email" id="loginEmail" placeholder="seu@email.com" class="w-full p-4 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Senha</label>
+                        <input type="password" id="loginSenha" placeholder="••••••••" class="w-full p-4 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <button onclick="fazerLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl font-black transition-all mb-4">
+                    ENTRAR
+                </button>
+
+                <div class="text-center">
+                    <p class="text-slate-400 text-sm mb-2">Não tem conta?</p>
+                    <button onclick="mostrarCadastro()" class="text-blue-400 hover:text-blue-300 font-bold text-sm">
+                        Criar nova conta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cadastro Screen -->
+    <div id="cadastroScreen" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-8 shadow-2xl">
+                <div class="text-center mb-8">
+                    <div class="text-5xl mb-4">✨</div>
+                    <h1 class="text-3xl font-black">Criar Conta</h1>
+                    <p class="text-slate-400 text-sm mt-2">Marcelo Entregas</p>
+                </div>
+
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Nome Completo</label>
+                        <input type="text" id="cadastroNome" placeholder="Seu nome" class="w-full p-4 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Email</label>
+                        <input type="email" id="cadastroEmail" placeholder="seu@email.com" class="w-full p-4 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Tipo de Conta</label>
+                        <select id="cadastroTipo" class="w-full p-4 bg-slate-700 border border-slate-600 rounded-xl text-white focus:border-blue-500 focus:outline-none">
+                            <option value="motoboy">🏍️ Motoboy</option>
+                            <option value="restaurante">🏪 Restaurante</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Telefone/WhatsApp</label>
+                        <input type="tel" id="cadastroTelefone" placeholder="(11) 99999-9999" class="w-full p-4 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Senha</label>
+                        <input type="password" id="cadastroSenha" placeholder="••••••••" class="w-full p-4 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Confirmar Senha</label>
+                        <input type="password" id="cadastroSenhaConfirm" placeholder="••••••••" class="w-full p-4 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <button onclick="fazerCadastro()" class="w-full bg-green-600 hover:bg-green-700 text-white p-4 rounded-xl font-black transition-all mb-4">
+                    CRIAR CONTA
+                </button>
+
+                <div class="text-center">
+                    <button onclick="mostrarLogin()" class="text-blue-400 hover:text-blue-300 font-bold text-sm">
+                        Já tem conta? Faça login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div id="dashboardScreen" class="hidden min-h-screen pb-10">
+        <div class="max-w-4xl mx-auto p-4">
+            <header class="flex justify-between items-center mb-8 pt-6">
+                <div>
+                    <h1 class="text-4xl font-black">👤 Minha Conta</h1>
+                    <p id="nomeUsuario" class="text-slate-400 text-sm mt-1">Carregando...</p>
+                </div>
+                <button onclick="fazerLogout()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-bold transition-all">
+                    SAIR
+                </button>
+            </header>
+
+            <!-- Informações da Conta -->
+            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+                <h2 class="text-2xl font-black mb-6">ℹ️ Informações Pessoais</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Nome</label>
+                        <input type="text" id="perfilNome" readonly class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Email</label>
+                        <input type="email" id="perfilEmail" readonly class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Tipo de Conta</label>
+                        <input type="text" id="perfilTipo" readonly class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Telefone</label>
+                        <input type="tel" id="perfilTelefone" readonly class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Segurança -->
+            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+                <h2 class="text-2xl font-black mb-6">🔒 Segurança</h2>
+                <button onclick="mostrarMudarSenha()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-black transition-all mb-4">
+                    🔑 MUDAR SENHA
+                </button>
+                <button onclick="ativarAutenticacao2FA()" class="w-full bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-xl font-black transition-all">
+                    🔐 ATIVAR 2FA
+                </button>
+            </div>
+
+            <!-- Sessões Ativas -->
+            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6">
+                <h2 class="text-2xl font-black mb-6">📱 Sessões Ativas</h2>
+                <div class="bg-slate-700 p-4 rounded-xl">
+                    <p class="font-bold">Este navegador</p>
+                    <p class="text-sm text-slate-400">Ativo agora</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
+            authDomain: "meuappentregas.firebaseapp.com", 
+            projectId: "meuappentregas", 
+            appId: "1:442484186787:web:ac914827ebebda987f2916" 
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let usuarioLogado = null;
+
+        window.mostrarCadastro = () => {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('cadastroScreen').classList.remove('hidden');
+        };
+
+        window.mostrarLogin = () => {
+            document.getElementById('cadastroScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+        };
+
+        window.fazerCadastro = async () => {
+            const nome = document.getElementById('cadastroNome').value;
+            const email = document.getElementById('cadastroEmail').value;
+            const tipo = document.getElementById('cadastroTipo').value;
+            const telefone = document.getElementById('cadastroTelefone').value;
+            const senha = document.getElementById('cadastroSenha').value;
+            const senhaConfirm = document.getElementById('cadastroSenhaConfirm').value;
+
+            if(!nome || !email || !telefone || !senha) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+
+            if(senha !== senhaConfirm) {
+                alert('As senhas não conferem!');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, 'usuarios'), {
+                    nome,
+                    email,
+                    tipo,
+                    telefone,
+                    senha: btoa(senha), // Codificar (não é seguro em produção!)
+                    dataCriacao: new Date()
+                });
+
+                alert('Conta criada com sucesso! Faça login.');
+                mostrarLogin();
+            } catch(e) {
+                alert('Erro: ' + e.message);
+            }
+        };
+
+        window.fazerLogin = async () => {
+            const email = document.getElementById('loginEmail').value;
+            const senha = document.getElementById('loginSenha').value;
+
+            if(!email || !senha) {
+                alert('Preencha email e senha!');
+                return;
+            }
+
+            try {
+                const q = query(collection(db, 'usuarios'), where('email', '==', email));
+                const snap = await getDocs(q);
+
+                if(snap.empty) {
+                    alert('Usuário não encontrado!');
+                    return;
+                }
+
+                const usuario = snap.docs[0].data();
+                if(btoa(senha) !== usuario.senha) {
+                    alert('Senha incorreta!');
+                    return;
+                }
+
+                usuarioLogado = usuario;
+                localStorage.setItem('usuario_logado', JSON.stringify(usuario));
+
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('dashboardScreen').classList.remove('hidden');
+
+                document.getElementById('nomeUsuario').textContent = usuario.nome;
+                document.getElementById('perfilNome').value = usuario.nome;
+                document.getElementById('perfilEmail').value = usuario.email;
+                document.getElementById('perfilTipo').value = usuario.tipo === 'motoboy' ? '🏍️ Motoboy' : '🏪 Restaurante';
+                document.getElementById('perfilTelefone').value = usuario.telefone;
+            } catch(e) {
+                alert('Erro: ' + e.message);
+            }
+        };
+
+        window.fazerLogout = () => {
+            localStorage.removeItem('usuario_logado');
+            document.getElementById('dashboardScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginSenha').value = '';
+        };
+
+        window.mostrarMudarSenha = () => {
+            alert('Funcionalidade de mudar senha em desenvolvimento');
+        };
+
+        window.ativarAutenticacao2FA = () => {
+            alert('Autenticação 2FA em desenvolvimento');
+        };
+
+        // Verificar se já está logado
+        const usuarioSalvo = localStorage.getItem('usuario_logado');
+        if(usuarioSalvo) {
+            const usuario = JSON.parse(usuarioSalvo);
+            usuarioLogado = usuario;
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('dashboardScreen').classList.remove('hidden');
+            document.getElementById('nomeUsuario').textContent = usuario.nome;
+            document.getElementById('perfilNome').value = usuario.nome;
+            document.getElementById('perfilEmail').value = usuario.email;
+            document.getElementById('perfilTipo').value = usuario.tipo === 'motoboy' ? '🏍️ Motoboy' : '🏪 Restaurante';
+            document.getElementById('perfilTelefone').value = usuario.telefone;
+        }
+    </script>
+</body>
+</html>

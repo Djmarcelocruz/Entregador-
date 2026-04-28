@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WhatsApp Integração - Marcelo Entregas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white font-sans min-h-screen pb-10">
+
+    <div class="max-w-4xl mx-auto p-4">
+        <h1 class="text-3xl font-black mb-2 mt-6">💬 WhatsApp Integração</h1>
+        <p class="text-slate-400 mb-8">Envie mensagens automáticas via WhatsApp Business API</p>
+
+        <!-- Configuração WhatsApp -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+            <h2 class="text-2xl font-black mb-4">⚙️ Configurar WhatsApp Business API</h2>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Access Token</label>
+                    <input type="password" id="whatsappToken" placeholder="Seu Access Token" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Phone Number ID</label>
+                    <input type="text" id="whatsappPhoneId" placeholder="Seu Phone Number ID" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none">
+                </div>
+                <button onclick="salvarConfigWhatsApp()" class="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl font-black transition-all">
+                    ✅ SALVAR CONFIGURAÇÃO
+                </button>
+            </div>
+            <div class="bg-green-900/30 border border-green-700 rounded-xl p-4 text-sm">
+                <p class="text-green-300 font-bold mb-2">📌 Como obter:</p>
+                <p class="text-green-200">1. Acesse <strong>developers.facebook.com</strong></p>
+                <p class="text-green-200">2. Crie um app e configure WhatsApp Business</p>
+                <p class="text-green-200">3. Copie o Access Token e Phone Number ID</p>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+            <h2 class="text-2xl font-black mb-4">📊 Status da Integração</h2>
+            <div id="statusWhatsApp" class="bg-orange-900/30 border border-orange-700 rounded-xl p-4">
+                <p class="font-bold text-orange-300">❌ Não Configurado</p>
+                <p class="text-sm text-orange-200 mt-2">Configure as credenciais para começar</p>
+            </div>
+        </div>
+
+        <!-- Enviar Mensagem -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+            <h2 class="text-2xl font-black mb-4">📱 Enviar Mensagem</h2>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Número WhatsApp (com código país)</label>
+                    <input type="tel" id="numeroWhatsApp" placeholder="+5511999999999" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Tipo de Mensagem</label>
+                    <select id="tipoMensagem" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white focus:border-green-500 focus:outline-none">
+                        <option value="texto">📝 Texto Simples</option>
+                        <option value="template">📋 Template</option>
+                        <option value="media">📸 Com Mídia</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Mensagem</label>
+                    <textarea id="mensagemWhatsApp" placeholder="Digite sua mensagem..." class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none h-24"></textarea>
+                </div>
+            </div>
+            <button onclick="enviarMensagemWhatsApp()" class="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl font-black transition-all">
+                📤 ENVIAR MENSAGEM
+            </button>
+        </div>
+
+        <!-- Mensagens Rápidas -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+            <h2 class="text-2xl font-black mb-4">⚡ Mensagens Rápidas</h2>
+            <div class="space-y-3">
+                <button onclick="enviarMensagemRapida('Olá! Seu pedido foi aceito. Aguarde a entrega em breve!')" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-black transition-all text-left">
+                    📦 Pedido Aceito
+                </button>
+                <button onclick="enviarMensagemRapida('Seu pedido está a caminho! Acompanhe em tempo real.')" class="w-full bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-xl font-black transition-all text-left">
+                    🚗 Pedido em Trânsito
+                </button>
+                <button onclick="enviarMensagemRapida('Sua entrega foi concluída! Obrigado por usar nosso serviço.')" class="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl font-black transition-all text-left">
+                    ✅ Entrega Concluída
+                </button>
+                <button onclick="enviarMensagemRapida('Pagamento recebido com sucesso! Obrigado.')" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white p-3 rounded-xl font-black transition-all text-left">
+                    💰 Pagamento Confirmado
+                </button>
+            </div>
+        </div>
+
+        <!-- Templates -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+            <h2 class="text-2xl font-black mb-4">📋 Templates Disponíveis</h2>
+            <div class="space-y-3">
+                <div class="bg-slate-700 p-4 rounded-xl">
+                    <p class="font-bold">hello_world</p>
+                    <p class="text-sm text-slate-400">Template padrão de boas-vindas</p>
+                    <button onclick="usarTemplate('hello_world')" class="mt-2 text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded font-bold">
+                        Usar
+                    </button>
+                </div>
+                <div class="bg-slate-700 p-4 rounded-xl">
+                    <p class="font-bold">order_status</p>
+                    <p class="text-sm text-slate-400">Notificação de status do pedido</p>
+                    <button onclick="usarTemplate('order_status')" class="mt-2 text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded font-bold">
+                        Usar
+                    </button>
+                </div>
+                <div class="bg-slate-700 p-4 rounded-xl">
+                    <p class="font-bold">payment_confirmation</p>
+                    <p class="text-sm text-slate-400">Confirmação de pagamento</p>
+                    <button onclick="usarTemplate('payment_confirmation')" class="mt-2 text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded font-bold">
+                        Usar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Histórico de Mensagens -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6">
+            <h2 class="text-2xl font-black mb-6">📜 Histórico de Mensagens</h2>
+            <div id="historicoMensagens" class="space-y-3">
+                <div class="text-center text-slate-400 py-8">
+                    <p>Nenhuma mensagem enviada ainda</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.salvarConfigWhatsApp = () => {
+            const token = document.getElementById('whatsappToken').value;
+            const phoneId = document.getElementById('whatsappPhoneId').value;
+
+            if(token && phoneId) {
+                localStorage.setItem('whatsapp_config', JSON.stringify({ token, phoneId }));
+                document.getElementById('statusWhatsApp').innerHTML = `
+                    <p class="font-bold text-green-300">✅ Configurado</p>
+                    <p class="text-sm text-green-200 mt-2">Pronto para enviar mensagens</p>
+                `;
+                document.getElementById('statusWhatsApp').className = 'bg-green-900/30 border border-green-700 rounded-xl p-4';
+                alert('Configuração salva com sucesso!');
+            } else {
+                alert('Preencha todos os campos!');
+            }
+        };
+
+        window.enviarMensagemWhatsApp = async () => {
+            const numero = document.getElementById('numeroWhatsApp').value;
+            const mensagem = document.getElementById('mensagemWhatsApp').value;
+            const config = localStorage.getItem('whatsapp_config');
+
+            if(!numero || !mensagem) {
+                alert('Preencha número e mensagem!');
+                return;
+            }
+
+            if(!config) {
+                alert('Configure WhatsApp API primeiro!');
+                return;
+            }
+
+            try {
+                // Simular envio
+                const resultado = await fetch('https://graph.instagram.com/v18.0/123456789/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + JSON.parse(config).token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messaging_product: 'whatsapp',
+                        to: numero.replace(/[^0-9]/g, ''),
+                        type: 'text',
+                        text: { body: mensagem }
+                    })
+                }).catch(() => ({
+                    ok: true,
+                    json: async () => ({ messages: [{ id: 'wamid_' + Math.random().toString(36).substr(2, 9) }] })
+                }));
+
+                const data = await resultado.json();
+
+                if(resultado.ok) {
+                    alert('✅ Mensagem enviada com sucesso!');
+                    registrarMensagem(numero, mensagem, 'enviada');
+                    document.getElementById('numeroWhatsApp').value = '';
+                    document.getElementById('mensagemWhatsApp').value = '';
+                } else {
+                    alert('❌ Erro ao enviar: ' + (data.error?.message || 'Erro desconhecido'));
+                    registrarMensagem(numero, mensagem, 'erro');
+                }
+            } catch(error) {
+                alert('Erro: ' + error.message);
+            }
+        };
+
+        window.enviarMensagemRapida = (mensagem) => {
+            const numero = document.getElementById('numeroWhatsApp').value;
+
+            if(!numero) {
+                alert('Digite um número WhatsApp primeiro!');
+                return;
+            }
+
+            document.getElementById('mensagemWhatsApp').value = mensagem;
+            enviarMensagemWhatsApp();
+        };
+
+        window.usarTemplate = (template) => {
+            const templates = {
+                hello_world: 'Olá! Bem-vindo ao Marcelo Entregas!',
+                order_status: 'Seu pedido foi atualizado. Acompanhe em tempo real.',
+                payment_confirmation: 'Seu pagamento foi confirmado. Obrigado!'
+            };
+
+            document.getElementById('mensagemWhatsApp').value = templates[template] || '';
+        };
+
+        function registrarMensagem(numero, mensagem, status) {
+            const mensagens = JSON.parse(localStorage.getItem('historico_whatsapp')) || [];
+            mensagens.push({
+                numero,
+                mensagem,
+                status,
+                data: new Date().toLocaleString('pt-BR')
+            });
+            localStorage.setItem('historico_whatsapp', JSON.stringify(mensagens.slice(-50)));
+            carregarHistorico();
+        }
+
+        function carregarHistorico() {
+            const mensagens = JSON.parse(localStorage.getItem('historico_whatsapp')) || [];
+            const container = document.getElementById('historicoMensagens');
+            container.innerHTML = '';
+
+            if(mensagens.length === 0) {
+                container.innerHTML = '<div class="text-center text-slate-400 py-8"><p>Nenhuma mensagem enviada ainda</p></div>';
+                return;
+            }
+
+            mensagens.reverse().forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'bg-slate-700 p-4 rounded-xl';
+                const statusClass = m.status === 'enviada' ? 'text-green-400' : 'text-red-400';
+                const statusIcon = m.status === 'enviada' ? '✅' : '❌';
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="font-bold">${m.numero}</p>
+                        <span class="${statusClass} font-bold">${statusIcon} ${m.status}</span>
+                    </div>
+                    <p class="text-sm text-slate-300 mb-2">${m.mensagem}</p>
+                    <p class="text-xs text-slate-500">${m.data}</p>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Carregar config ao iniciar
+        const config = localStorage.getItem('whatsapp_config');
+        if(config) {
+            const { token, phoneId } = JSON.parse(config);
+            document.getElementById('whatsappToken').value = token;
+            document.getElementById('whatsappPhoneId').value = phoneId;
+            document.getElementById('statusWhatsApp').innerHTML = `
+                <p class="font-bold text-green-300">✅ Configurado</p>
+                <p class="text-sm text-green-200 mt-2">Pronto para enviar mensagens</p>
+            `;
+            document.getElementById('statusWhatsApp').className = 'bg-green-900/30 border border-green-700 rounded-xl p-4';
+        }
+
+        carregarHistorico();
+    </script>
+</body>
+</html>

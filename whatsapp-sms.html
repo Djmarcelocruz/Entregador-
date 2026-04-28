@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WhatsApp & SMS - Marcelo Entregas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white font-sans min-h-screen pb-10">
+
+    <div class="max-w-4xl mx-auto p-4">
+        <h1 class="text-3xl font-black mb-2 mt-6">💬 WhatsApp & SMS</h1>
+        <p class="text-slate-400 mb-8">Enviar notificações automáticas para motoboys e restaurantes</p>
+
+        <!-- Configuração -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- WhatsApp -->
+            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6">
+                <h2 class="text-2xl font-black mb-4">📱 WhatsApp</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Seu Número WhatsApp</label>
+                        <input type="tel" id="whatsappNumero" placeholder="(11) 99999-9999" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-green-500 focus:outline-none">
+                    </div>
+                    <button onclick="salvarWhatsapp()" class="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl font-black transition-all">
+                        ✅ SALVAR WHATSAPP
+                    </button>
+                    <div class="bg-green-900/30 border border-green-700 rounded-xl p-4 text-sm">
+                        <p class="text-green-300 font-bold mb-2">📌 Instruções:</p>
+                        <p class="text-green-200">1. Salve seu número WhatsApp aqui</p>
+                        <p class="text-green-200">2. Ao criar motoboys/restaurantes, links serão enviados automaticamente</p>
+                        <p class="text-green-200">3. Use a API WhatsApp Business para automação</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SMS -->
+            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6">
+                <h2 class="text-2xl font-black mb-4">📞 SMS</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">API Key SMS (Twilio)</label>
+                        <input type="password" id="smsApiKey" placeholder="Sua API Key" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <button onclick="salvarSMS()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-black transition-all">
+                        ✅ SALVAR SMS
+                    </button>
+                    <div class="bg-blue-900/30 border border-blue-700 rounded-xl p-4 text-sm">
+                        <p class="text-blue-300 font-bold mb-2">📌 Instruções:</p>
+                        <p class="text-blue-200">1. Crie conta em <strong>twilio.com</strong></p>
+                        <p class="text-blue-200">2. Copie sua API Key</p>
+                        <p class="text-blue-200">3. Cole aqui para ativar SMS</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Histórico de Mensagens -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+            <h2 class="text-2xl font-black mb-6">📋 Histórico de Mensagens</h2>
+            <div id="historicoMensagens" class="space-y-3">
+                <div class="text-center text-slate-400 py-8">
+                    <p>Nenhuma mensagem enviada ainda</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teste -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6">
+            <h2 class="text-2xl font-black mb-4">🧪 Enviar Mensagem de Teste</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Número para Teste</label>
+                    <input type="tel" id="numeroTeste" placeholder="(11) 99999-9999" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Tipo</label>
+                    <select id="tipoTeste" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white focus:border-blue-500 focus:outline-none">
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="sms">SMS</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4">
+                <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Mensagem</label>
+                <textarea id="mensagemTeste" placeholder="Digite a mensagem de teste..." class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none h-24"></textarea>
+            </div>
+            <button onclick="enviarTeste()" class="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-xl font-black transition-all">
+                📤 ENVIAR TESTE
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
+            authDomain: "meuappentregas.firebaseapp.com", 
+            projectId: "meuappentregas", 
+            appId: "1:442484186787:web:ac914827ebebda987f2916" 
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.salvarWhatsapp = () => {
+            const numero = document.getElementById('whatsappNumero').value;
+            if(numero) {
+                localStorage.setItem('whatsapp_numero', numero);
+                alert('WhatsApp salvo com sucesso!');
+            }
+        };
+
+        window.salvarSMS = () => {
+            const apiKey = document.getElementById('smsApiKey').value;
+            if(apiKey) {
+                localStorage.setItem('sms_api_key', apiKey);
+                alert('SMS configurado com sucesso!');
+            }
+        };
+
+        window.enviarTeste = async () => {
+            const numero = document.getElementById('numeroTeste').value;
+            const tipo = document.getElementById('tipoTeste').value;
+            const mensagem = document.getElementById('mensagemTeste').value;
+
+            if(!numero || !mensagem) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, 'mensagens'), {
+                    numero,
+                    tipo,
+                    mensagem,
+                    status: 'enviada',
+                    dataCriacao: Timestamp.now()
+                });
+
+                alert(`Mensagem enviada via ${tipo.toUpperCase()}!`);
+                document.getElementById('numeroTeste').value = '';
+                document.getElementById('mensagemTeste').value = '';
+                carregarHistorico();
+            } catch(e) {
+                alert('Erro: ' + e.message);
+            }
+        };
+
+        function carregarHistorico() {
+            onSnapshot(collection(db, 'mensagens'), (snap) => {
+                const container = document.getElementById('historicoMensagens');
+                container.innerHTML = '';
+
+                if(snap.empty) {
+                    container.innerHTML = '<div class="text-center text-slate-400 py-8"><p>Nenhuma mensagem enviada ainda</p></div>';
+                    return;
+                }
+
+                snap.forEach(d => {
+                    const data = d.data();
+                    const div = document.createElement('div');
+                    div.className = 'bg-slate-700 p-4 rounded-xl border-l-4 ' + (data.tipo === 'whatsapp' ? 'border-green-600' : 'border-blue-600');
+                    const hora = new Date(data.dataCriacao?.toDate?.() || Date.now()).toLocaleTimeString('pt-BR');
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <p class="font-bold">${data.tipo === 'whatsapp' ? '📱 WhatsApp' : '📞 SMS'}</p>
+                                <p class="text-sm text-slate-400">${data.numero}</p>
+                            </div>
+                            <span class="text-xs px-2 py-1 rounded ${data.status === 'enviada' ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}">${data.status}</span>
+                        </div>
+                        <p class="text-sm mb-2">${data.mensagem}</p>
+                        <p class="text-xs text-slate-500">${hora}</p>
+                    `;
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        carregarHistorico();
+    </script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Múltiplos Motoboys - Marcelo Entregas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white font-sans min-h-screen pb-10">
+
+    <div class="max-w-6xl mx-auto p-4">
+        <h1 class="text-3xl font-black mb-2 mt-6">🏍️ Múltiplos Motoboys</h1>
+        <p class="text-slate-400 mb-8">Gerenciar vários entregadores simultaneamente</p>
+
+        <!-- Resumo -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6">
+                <p class="text-blue-100 text-sm font-bold uppercase mb-2">Total de Motoboys</p>
+                <p id="totalMotoboys" class="text-4xl font-black">0</p>
+            </div>
+            <div class="bg-gradient-to-br from-green-600 to-green-700 rounded-2xl p-6">
+                <p class="text-green-100 text-sm font-bold uppercase mb-2">Online Agora</p>
+                <p id="motoboyOnline" class="text-4xl font-black">0</p>
+            </div>
+            <div class="bg-gradient-to-br from-orange-600 to-orange-700 rounded-2xl p-6">
+                <p class="text-orange-100 text-sm font-bold uppercase mb-2">Em Rota</p>
+                <p id="motoboyEmRota" class="text-4xl font-black">0</p>
+            </div>
+            <div class="bg-gradient-to-br from-red-600 to-red-700 rounded-2xl p-6">
+                <p class="text-red-100 text-sm font-bold uppercase mb-2">Offline</p>
+                <p id="motoboyOffline" class="text-4xl font-black">0</p>
+            </div>
+        </div>
+
+        <!-- Mapa de Motoboys -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+            <h2 class="text-2xl font-black mb-6">📍 Localização dos Motoboys</h2>
+            <div id="mapaMotoboys" class="bg-slate-900 rounded-2xl h-96 flex items-center justify-center border border-slate-700">
+                <p class="text-slate-400">Mapa será exibido aqui (integração com Google Maps)</p>
+            </div>
+        </div>
+
+        <!-- Lista de Motoboys -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+            <h2 class="text-2xl font-black mb-6">📋 Motoboys Ativos</h2>
+            <div id="listaMotoboys" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="text-center text-slate-400 py-8 col-span-full">
+                    <p>Carregando motoboys...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Atribuir Entrega -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6">
+            <h2 class="text-2xl font-black mb-4">📦 Atribuir Entrega</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Motoboy</label>
+                    <select id="motoboyAtribuir" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white focus:border-blue-500 focus:outline-none">
+                        <option value="">Selecione um motoboy</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Restaurante</label>
+                    <select id="restauranteAtribuir" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white focus:border-blue-500 focus:outline-none">
+                        <option value="">Selecione um restaurante</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4">
+                <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Descrição da Entrega</label>
+                <textarea id="descricaoEntrega" placeholder="Ex: 2 pizzas grandes, 1 refrigerante..." class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none h-20"></textarea>
+            </div>
+            <button onclick="atribuirEntrega()" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-black transition-all">
+                ✅ ATRIBUIR ENTREGA
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
+            authDomain: "meuappentregas.firebaseapp.com", 
+            projectId: "meuappentregas", 
+            appId: "1:442484186787:web:ac914827ebebda987f2916" 
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Carregar motoboys
+        onSnapshot(collection(db, 'motoboys'), (snap) => {
+            const container = document.getElementById('listaMotoboys');
+            const select = document.getElementById('motoboyAtribuir');
+            container.innerHTML = '';
+            select.innerHTML = '<option value="">Selecione um motoboy</option>';
+
+            let total = 0;
+            let online = 0;
+            let emRota = 0;
+            let offline = 0;
+
+            snap.forEach(d => {
+                const data = d.data();
+                total++;
+
+                const status = data.status || 'offline';
+                if(status === 'disponivel') online++;
+                else if(status === 'ocupado') emRota++;
+                else offline++;
+
+                const div = document.createElement('div');
+                div.className = `bg-slate-700 rounded-2xl p-4 border-l-4 ${status === 'disponivel' ? 'border-green-600' : status === 'ocupado' ? 'border-orange-600' : 'border-red-600'}`;
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-black">${data.nome}</h3>
+                        <span class="text-xs px-2 py-1 rounded font-bold ${status === 'disponivel' ? 'bg-green-900 text-green-300' : status === 'ocupado' ? 'bg-orange-900 text-orange-300' : 'bg-red-900 text-red-300'}">
+                            ${status === 'disponivel' ? '🟢 Disponível' : status === 'ocupado' ? '🟡 Em Rota' : '🔴 Offline'}
+                        </span>
+                    </div>
+                    <p class="text-sm text-slate-400 mb-2">📧 ${data.email}</p>
+                    <p class="text-sm text-slate-400">📱 ${data.whatsapp}</p>
+                    <p class="text-sm text-slate-300 mt-2 font-bold">Entregas hoje: <span class="text-green-400">${data.entregasHoje || 0}</span></p>
+                `;
+                container.appendChild(div);
+
+                const option = document.createElement('option');
+                option.value = data.nome;
+                option.textContent = `${data.nome} (${status === 'disponivel' ? 'Disponível' : status === 'ocupado' ? 'Em Rota' : 'Offline'})`;
+                select.appendChild(option);
+            });
+
+            document.getElementById('totalMotoboys').textContent = total;
+            document.getElementById('motoboyOnline').textContent = online;
+            document.getElementById('motoboyEmRota').textContent = emRota;
+            document.getElementById('motoboyOffline').textContent = offline;
+        });
+
+        // Carregar restaurantes
+        onSnapshot(collection(db, 'restaurantes'), (snap) => {
+            const select = document.getElementById('restauranteAtribuir');
+            select.innerHTML = '<option value="">Selecione um restaurante</option>';
+
+            snap.forEach(d => {
+                const data = d.data();
+                const option = document.createElement('option');
+                option.value = data.nome;
+                option.textContent = data.nome;
+                select.appendChild(option);
+            });
+        });
+
+        window.atribuirEntrega = async () => {
+            const motoboy = document.getElementById('motoboyAtribuir').value;
+            const restaurante = document.getElementById('restauranteAtribuir').value;
+            const descricao = document.getElementById('descricaoEntrega').value;
+
+            if(!motoboy || !restaurante || !descricao) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, 'entregas_atribuidas'), {
+                    motoboy,
+                    restaurante,
+                    descricao,
+                    status: 'atribuida',
+                    dataAtribuicao: Timestamp.now()
+                });
+
+                alert('Entrega atribuída com sucesso!');
+                document.getElementById('motoboyAtribuir').value = '';
+                document.getElementById('restauranteAtribuir').value = '';
+                document.getElementById('descricaoEntrega').value = '';
+            } catch(e) {
+                alert('Erro: ' + e.message);
+            }
+        };
+    </script>
+</body>
+</html>

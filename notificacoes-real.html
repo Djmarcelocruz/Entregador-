@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Notificações Push - Marcelo Entregas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white font-sans min-h-screen pb-10">
+
+    <div class="max-w-4xl mx-auto p-4">
+        <h1 class="text-3xl font-black mb-2 mt-6">🔔 Notificações Push em Tempo Real</h1>
+        <p class="text-slate-400 mb-8">Receba alertas instantâneos no seu navegador</p>
+
+        <!-- Status de Notificações -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+            <h2 class="text-2xl font-black mb-4">📱 Status das Notificações</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-700 p-4 rounded-xl">
+                    <p class="text-xs text-slate-400 uppercase font-bold">Status</p>
+                    <p id="statusNotif" class="text-2xl font-black text-orange-400 mt-2">❌ Desativado</p>
+                </div>
+                <div class="bg-slate-700 p-4 rounded-xl">
+                    <p class="text-xs text-slate-400 uppercase font-bold">Permissão</p>
+                    <p id="permissaoNotif" class="text-2xl font-black text-slate-400 mt-2">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ativar Notificações -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+            <h2 class="text-2xl font-black mb-4">⚙️ Ativar Notificações</h2>
+            <button onclick="ativarNotificacoes()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl font-black transition-all mb-4">
+                ✅ ATIVAR NOTIFICAÇÕES
+            </button>
+            <div class="bg-blue-900/30 border border-blue-700 rounded-xl p-4 text-sm">
+                <p class="text-blue-300 font-bold mb-2">📌 Como funciona:</p>
+                <p class="text-blue-200">1. Clique em "ATIVAR NOTIFICAÇÕES"</p>
+                <p class="text-blue-200">2. Autorize o navegador a enviar notificações</p>
+                <p class="text-blue-200">3. Você receberá alertas em tempo real</p>
+            </div>
+        </div>
+
+        <!-- Tipos de Notificações -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+            <h2 class="text-2xl font-black mb-4">📢 Tipos de Notificações</h2>
+            <div class="space-y-3">
+                <label class="flex items-center gap-3 p-3 bg-slate-700 rounded-xl hover:bg-slate-600 cursor-pointer">
+                    <input type="checkbox" id="notifNovoPedido" checked class="w-5 h-5">
+                    <div>
+                        <p class="font-bold">📦 Novo Pedido</p>
+                        <p class="text-sm text-slate-400">Alerta quando há novo chamado</p>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-3 bg-slate-700 rounded-xl hover:bg-slate-600 cursor-pointer">
+                    <input type="checkbox" id="notifEntregaCompleta" checked class="w-5 h-5">
+                    <div>
+                        <p class="font-bold">✅ Entrega Completa</p>
+                        <p class="text-sm text-slate-400">Alerta quando entrega é finalizada</p>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-3 bg-slate-700 rounded-xl hover:bg-slate-600 cursor-pointer">
+                    <input type="checkbox" id="notifPagamento" checked class="w-5 h-5">
+                    <div>
+                        <p class="font-bold">💰 Pagamento Recebido</p>
+                        <p class="text-sm text-slate-400">Alerta quando pagamento é processado</p>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-3 bg-slate-700 rounded-xl hover:bg-slate-600 cursor-pointer">
+                    <input type="checkbox" id="notifMensagem" checked class="w-5 h-5">
+                    <div>
+                        <p class="font-bold">💬 Mensagens</p>
+                        <p class="text-sm text-slate-400">Alerta para novas mensagens</p>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-3 bg-slate-700 rounded-xl hover:bg-slate-600 cursor-pointer">
+                    <input type="checkbox" id="notifAviso" checked class="w-5 h-5">
+                    <div>
+                        <p class="font-bold">⚠️ Avisos Importantes</p>
+                        <p class="text-sm text-slate-400">Alertas de sistema e manutenção</p>
+                    </div>
+                </label>
+            </div>
+            <button onclick="salvarPreferencias()" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl font-black transition-all">
+                ✅ SALVAR PREFERÊNCIAS
+            </button>
+        </div>
+
+        <!-- Enviar Notificação de Teste -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+            <h2 class="text-2xl font-black mb-4">🧪 Enviar Notificação de Teste</h2>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Tipo de Notificação</label>
+                    <select id="tipoNotificacao" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white focus:border-blue-500 focus:outline-none">
+                        <option value="pedido">📦 Novo Pedido</option>
+                        <option value="entrega">✅ Entrega Completa</option>
+                        <option value="pagamento">💰 Pagamento Recebido</option>
+                        <option value="mensagem">💬 Nova Mensagem</option>
+                        <option value="aviso">⚠️ Aviso Importante</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Título</label>
+                    <input type="text" id="tituloTeste" placeholder="Ex: Novo Pedido!" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Mensagem</label>
+                    <textarea id="mensagemTeste" placeholder="Digite a mensagem..." class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none h-20"></textarea>
+                </div>
+            </div>
+            <button onclick="enviarNotificacaoTeste()" class="w-full bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-xl font-black transition-all">
+                📤 ENVIAR TESTE
+            </button>
+        </div>
+
+        <!-- Notificações Rápidas -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+            <h2 class="text-2xl font-black mb-4">⚡ Notificações Rápidas</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button onclick="enviarNotificacaoRapida('pedido', '📦 Novo Pedido!', 'Você recebeu um novo chamado de entrega')" class="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl font-black transition-all">
+                    📦 NOVO PEDIDO
+                </button>
+                <button onclick="enviarNotificacaoRapida('entrega', '✅ Entrega Completa!', 'Sua entrega foi finalizada com sucesso')" class="bg-green-600 hover:bg-green-700 text-white p-4 rounded-xl font-black transition-all">
+                    ✅ ENTREGA OK
+                </button>
+                <button onclick="enviarNotificacaoRapida('pagamento', '💰 Pagamento Recebido!', 'Você recebeu R$ 27,50')" class="bg-yellow-600 hover:bg-yellow-700 text-white p-4 rounded-xl font-black transition-all">
+                    💰 PAGAMENTO
+                </button>
+                <button onclick="enviarNotificacaoRapida('mensagem', '💬 Nova Mensagem!', 'Você tem uma nova mensagem')" class="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-xl font-black transition-all">
+                    💬 MENSAGEM
+                </button>
+            </div>
+        </div>
+
+        <!-- Histórico de Notificações -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6">
+            <h2 class="text-2xl font-black mb-6">📋 Histórico de Notificações</h2>
+            <div id="historicoNotificacoes" class="space-y-3">
+                <div class="text-center text-slate-400 py-8">
+                    <p>Nenhuma notificação enviada ainda</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Verificar suporte a notificações
+        function verificarSuporteNotificacoes() {
+            if('Notification' in window) {
+                const status = Notification.permission;
+                const el = document.getElementById('statusNotif');
+                const perm = document.getElementById('permissaoNotif');
+
+                if(status === 'granted') {
+                    el.textContent = '✅ Ativado';
+                    el.className = 'text-2xl font-black text-green-400 mt-2';
+                    perm.textContent = '✅ Autorizado';
+                    perm.className = 'text-2xl font-black text-green-400 mt-2';
+                } else if(status === 'denied') {
+                    el.textContent = '❌ Bloqueado';
+                    el.className = 'text-2xl font-black text-red-400 mt-2';
+                    perm.textContent = '❌ Bloqueado';
+                    perm.className = 'text-2xl font-black text-red-400 mt-2';
+                } else {
+                    el.textContent = '❌ Desativado';
+                    el.className = 'text-2xl font-black text-orange-400 mt-2';
+                    perm.textContent = '⏳ Pendente';
+                    perm.className = 'text-2xl font-black text-orange-400 mt-2';
+                }
+            }
+        }
+
+        window.ativarNotificacoes = () => {
+            if('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    verificarSuporteNotificacoes();
+                    if(permission === 'granted') {
+                        alert('Notificações ativadas com sucesso!');
+                        enviarNotificacaoRapida('aviso', '🎉 Notificações Ativadas!', 'Você receberá alertas em tempo real');
+                    }
+                });
+            } else {
+                alert('Seu navegador não suporta notificações push');
+            }
+        };
+
+        window.enviarNotificacaoTeste = () => {
+            const titulo = document.getElementById('tituloTeste').value;
+            const mensagem = document.getElementById('mensagemTeste').value;
+
+            if(!titulo || !mensagem) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+
+            if(Notification.permission === 'granted') {
+                new Notification(titulo, {
+                    body: mensagem,
+                    icon: '🔔',
+                    badge: '🔔',
+                    tag: 'teste-' + Date.now()
+                });
+
+                registrarNotificacao(titulo, mensagem);
+                document.getElementById('tituloTeste').value = '';
+                document.getElementById('mensagemTeste').value = '';
+            } else {
+                alert('Ative as notificações primeiro!');
+            }
+        };
+
+        window.enviarNotificacaoRapida = (tipo, titulo, mensagem) => {
+            if(Notification.permission === 'granted') {
+                new Notification(titulo, {
+                    body: mensagem,
+                    icon: '🔔',
+                    badge: '🔔',
+                    tag: tipo + '-' + Date.now()
+                });
+
+                registrarNotificacao(titulo, mensagem);
+            } else {
+                alert('Ative as notificações primeiro!');
+            }
+        };
+
+        window.salvarPreferencias = () => {
+            const prefs = {
+                novoPedido: document.getElementById('notifNovoPedido').checked,
+                entregaCompleta: document.getElementById('notifEntregaCompleta').checked,
+                pagamento: document.getElementById('notifPagamento').checked,
+                mensagem: document.getElementById('notifMensagem').checked,
+                aviso: document.getElementById('notifAviso').checked
+            };
+            localStorage.setItem('preferencias_notificacoes', JSON.stringify(prefs));
+            alert('Preferências salvas!');
+        };
+
+        function registrarNotificacao(titulo, mensagem) {
+            const notificacoes = JSON.parse(localStorage.getItem('historico_notificacoes')) || [];
+            notificacoes.push({
+                titulo,
+                mensagem,
+                data: new Date().toLocaleString('pt-BR')
+            });
+            localStorage.setItem('historico_notificacoes', JSON.stringify(notificacoes.slice(-50)));
+            carregarHistorico();
+        }
+
+        function carregarHistorico() {
+            const notificacoes = JSON.parse(localStorage.getItem('historico_notificacoes')) || [];
+            const container = document.getElementById('historicoNotificacoes');
+            container.innerHTML = '';
+
+            if(notificacoes.length === 0) {
+                container.innerHTML = '<div class="text-center text-slate-400 py-8"><p>Nenhuma notificação enviada ainda</p></div>';
+                return;
+            }
+
+            notificacoes.reverse().forEach(n => {
+                const div = document.createElement('div');
+                div.className = 'bg-slate-700 p-4 rounded-xl';
+                div.innerHTML = `
+                    <p class="font-bold">${n.titulo}</p>
+                    <p class="text-sm text-slate-300 mb-2">${n.mensagem}</p>
+                    <p class="text-xs text-slate-500">${n.data}</p>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Carregar preferências salvas
+        const prefs = JSON.parse(localStorage.getItem('preferencias_notificacoes')) || {};
+        if(prefs.novoPedido !== undefined) document.getElementById('notifNovoPedido').checked = prefs.novoPedido;
+        if(prefs.entregaCompleta !== undefined) document.getElementById('notifEntregaCompleta').checked = prefs.entregaCompleta;
+        if(prefs.pagamento !== undefined) document.getElementById('notifPagamento').checked = prefs.pagamento;
+        if(prefs.mensagem !== undefined) document.getElementById('notifMensagem').checked = prefs.mensagem;
+        if(prefs.aviso !== undefined) document.getElementById('notifAviso').checked = prefs.aviso;
+
+        verificarSuporteNotificacoes();
+        carregarHistorico();
+    </script>
+</body>
+</html>

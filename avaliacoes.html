@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Avaliações - Marcelo Entregas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white font-sans min-h-screen pb-10">
+
+    <div class="max-w-4xl mx-auto p-4">
+        <h1 class="text-3xl font-black mb-2 mt-6">⭐ Avaliações</h1>
+        <p class="text-slate-400 mb-8">Sistema de rating para motoboys e restaurantes</p>
+
+        <!-- Resumo de Ratings -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Motoboys -->
+            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6">
+                <h2 class="text-2xl font-black mb-6">🏍️ Avaliação de Motoboys</h2>
+                <div id="ratingMotoboys" class="space-y-4">
+                    <div class="text-center text-slate-400 py-8">
+                        <p>Carregando avaliações...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Restaurantes -->
+            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6">
+                <h2 class="text-2xl font-black mb-6">🏪 Avaliação de Restaurantes</h2>
+                <div id="ratingRestaurantes" class="space-y-4">
+                    <div class="text-center text-slate-400 py-8">
+                        <p>Carregando avaliações...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dar Avaliação -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+            <h2 class="text-2xl font-black mb-4">➕ Dar Avaliação</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Tipo</label>
+                    <select id="tipoAvaliacao" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white focus:border-blue-500 focus:outline-none">
+                        <option value="motoboy">Motoboy</option>
+                        <option value="restaurante">Restaurante</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Nome</label>
+                    <input type="text" id="nomeAvaliacao" placeholder="Nome do motoboy ou restaurante" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="text-xs font-bold uppercase text-slate-400 block mb-3">Classificação</label>
+                <div class="flex gap-2">
+                    <button onclick="selecionarEstrela(1)" class="text-4xl hover:scale-110 transition-all" id="estrela1">⭐</button>
+                    <button onclick="selecionarEstrela(2)" class="text-4xl hover:scale-110 transition-all" id="estrela2">⭐</button>
+                    <button onclick="selecionarEstrela(3)" class="text-4xl hover:scale-110 transition-all" id="estrela3">⭐</button>
+                    <button onclick="selecionarEstrela(4)" class="text-4xl hover:scale-110 transition-all" id="estrela4">⭐</button>
+                    <button onclick="selecionarEstrela(5)" class="text-4xl hover:scale-110 transition-all" id="estrela5">⭐</button>
+                </div>
+                <p id="textEstrelas" class="text-sm text-slate-400 mt-2">Selecione uma classificação</p>
+            </div>
+
+            <div class="mb-4">
+                <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Comentário</label>
+                <textarea id="comentarioAvaliacao" placeholder="Deixe um comentário..." class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none h-20"></textarea>
+            </div>
+
+            <button onclick="enviarAvaliacao()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-black transition-all">
+                ✅ ENVIAR AVALIAÇÃO
+            </button>
+        </div>
+
+        <!-- Histórico de Avaliações -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6">
+            <h2 class="text-2xl font-black mb-6">📋 Histórico de Avaliações</h2>
+            <div id="historicoAvaliacoes" class="space-y-4">
+                <div class="text-center text-slate-400 py-8">
+                    <p>Nenhuma avaliação ainda</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
+            authDomain: "meuappentregas.firebaseapp.com", 
+            projectId: "meuappentregas", 
+            appId: "1:442484186787:web:ac914827ebebda987f2916" 
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let estrelasSelecionadas = 0;
+
+        window.selecionarEstrela = (numero) => {
+            estrelasSelecionadas = numero;
+            for(let i = 1; i <= 5; i++) {
+                const el = document.getElementById(`estrela${i}`);
+                if(i <= numero) {
+                    el.textContent = '⭐';
+                    el.classList.add('text-yellow-400');
+                } else {
+                    el.textContent = '☆';
+                    el.classList.remove('text-yellow-400');
+                }
+            }
+            const textos = ['', 'Muito Ruim', 'Ruim', 'Normal', 'Bom', 'Excelente'];
+            document.getElementById('textEstrelas').textContent = textos[numero];
+        };
+
+        window.enviarAvaliacao = async () => {
+            const tipo = document.getElementById('tipoAvaliacao').value;
+            const nome = document.getElementById('nomeAvaliacao').value;
+            const comentario = document.getElementById('comentarioAvaliacao').value;
+
+            if(!nome || estrelasSelecionadas === 0) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, 'avaliacoes'), {
+                    tipo,
+                    nome,
+                    estrelas: estrelasSelecionadas,
+                    comentario,
+                    dataCriacao: Timestamp.now()
+                });
+
+                alert('Avaliação enviada com sucesso!');
+                document.getElementById('nomeAvaliacao').value = '';
+                document.getElementById('comentarioAvaliacao').value = '';
+                estrelasSelecionadas = 0;
+                for(let i = 1; i <= 5; i++) {
+                    document.getElementById(`estrela${i}`).textContent = '☆';
+                    document.getElementById(`estrela${i}`).classList.remove('text-yellow-400');
+                }
+                document.getElementById('textEstrelas').textContent = 'Selecione uma classificação';
+                carregarAvaliacoes();
+            } catch(e) {
+                alert('Erro: ' + e.message);
+            }
+        };
+
+        function carregarAvaliacoes() {
+            onSnapshot(collection(db, 'avaliacoes'), (snap) => {
+                const historicoDiv = document.getElementById('historicoAvaliacoes');
+                const motoboyDiv = document.getElementById('ratingMotoboys');
+                const restauranteDiv = document.getElementById('ratingRestaurantes');
+
+                historicoDiv.innerHTML = '';
+                motoboyDiv.innerHTML = '';
+                restauranteDiv.innerHTML = '';
+
+                const avaliacoesMotoboy = {};
+                const avaliacoesRestaurante = {};
+
+                snap.forEach(d => {
+                    const data = d.data();
+                    const div = document.createElement('div');
+                    div.className = 'bg-slate-700 p-4 rounded-xl';
+                    const data_str = new Date(data.dataCriacao?.toDate?.() || Date.now()).toLocaleDateString('pt-BR');
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-bold">${data.nome}</h4>
+                                <p class="text-xs text-slate-400">${data.tipo === 'motoboy' ? '🏍️ Motoboy' : '🏪 Restaurante'} • ${data_str}</p>
+                            </div>
+                            <span class="text-lg">${'⭐'.repeat(data.estrelas)}</span>
+                        </div>
+                        <p class="text-sm text-slate-300">${data.comentario}</p>
+                    `;
+                    historicoDiv.appendChild(div);
+
+                    // Calcular média
+                    if(data.tipo === 'motoboy') {
+                        if(!avaliacoesMotoboy[data.nome]) {
+                            avaliacoesMotoboy[data.nome] = { total: 0, count: 0 };
+                        }
+                        avaliacoesMotoboy[data.nome].total += data.estrelas;
+                        avaliacoesMotoboy[data.nome].count++;
+                    } else {
+                        if(!avaliacoesRestaurante[data.nome]) {
+                            avaliacoesRestaurante[data.nome] = { total: 0, count: 0 };
+                        }
+                        avaliacoesRestaurante[data.nome].total += data.estrelas;
+                        avaliacoesRestaurante[data.nome].count++;
+                    }
+                });
+
+                // Mostrar médias de motoboys
+                Object.entries(avaliacoesMotoboy).forEach(([nome, dados]) => {
+                    const media = (dados.total / dados.count).toFixed(1);
+                    const div = document.createElement('div');
+                    div.className = 'bg-slate-700 p-4 rounded-xl';
+                    div.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-bold">${nome}</h4>
+                            <div class="text-right">
+                                <p class="text-2xl font-black text-yellow-400">${media}</p>
+                                <p class="text-xs text-slate-400">${dados.count} avaliações</p>
+                            </div>
+                        </div>
+                    `;
+                    motoboyDiv.appendChild(div);
+                });
+
+                // Mostrar médias de restaurantes
+                Object.entries(avaliacoesRestaurante).forEach(([nome, dados]) => {
+                    const media = (dados.total / dados.count).toFixed(1);
+                    const div = document.createElement('div');
+                    div.className = 'bg-slate-700 p-4 rounded-xl';
+                    div.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-bold">${nome}</h4>
+                            <div class="text-right">
+                                <p class="text-2xl font-black text-yellow-400">${media}</p>
+                                <p class="text-xs text-slate-400">${dados.count} avaliações</p>
+                            </div>
+                        </div>
+                    `;
+                    restauranteDiv.appendChild(div);
+                });
+
+                if(Object.keys(avaliacoesMotoboy).length === 0) {
+                    motoboyDiv.innerHTML = '<div class="text-center text-slate-400 py-4"><p>Sem avaliações</p></div>';
+                }
+                if(Object.keys(avaliacoesRestaurante).length === 0) {
+                    restauranteDiv.innerHTML = '<div class="text-center text-slate-400 py-4"><p>Sem avaliações</p></div>';
+                }
+            });
+        }
+
+        carregarAvaliacoes();
+    </script>
+</body>
+</html>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin - Marcelo Entregas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white font-sans min-h-screen pb-10">
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-8 shadow-2xl">
+                <div class="text-center mb-8">
+                    <div class="text-5xl mb-4">🔐</div>
+                    <h1 class="text-3xl font-black">Admin Panel</h1>
+                    <p class="text-slate-400 text-sm mt-2">Marcelo Entregas</p>
+                </div>
+
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Email</label>
+                        <input type="email" id="loginEmail" placeholder="admin@marceloentregas.com" class="w-full p-4 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Senha</label>
+                        <input type="password" id="loginSenha" placeholder="••••••••" class="w-full p-4 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <button onclick="fazerLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl font-black transition-all mb-4">
+                    ENTRAR
+                </button>
+
+                <div class="bg-blue-900/30 border border-blue-700 rounded-xl p-4 text-center text-sm">
+                    <p class="text-blue-300 font-bold mb-2">Credenciais de Teste:</p>
+                    <p class="text-blue-200">Email: <code class="bg-slate-900 px-2 py-1 rounded">admin@marceloentregas.com</code></p>
+                    <p class="text-blue-200">Senha: <code class="bg-slate-900 px-2 py-1 rounded">admin123456</code></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminScreen" class="hidden">
+        <div class="max-w-6xl mx-auto p-4">
+            <!-- Header -->
+            <header class="flex justify-between items-center mb-8 pt-6">
+                <div>
+                    <h1 class="text-4xl font-black">🔐 Painel Administrativo</h1>
+                    <p class="text-slate-400 text-sm mt-1">Gerenciar motoboys e restaurantes</p>
+                </div>
+                <button onclick="fazerLogout()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-bold transition-all">
+                    SAIR
+                </button>
+            </header>
+
+            <!-- Tabs -->
+            <div class="flex gap-4 mb-8 border-b border-slate-700 pb-4">
+                <button onclick="mudarAba('motoboys')" id="tabMotoboys" class="px-6 py-3 font-black border-b-4 border-blue-600 text-white">
+                    🏍️ MOTOBOYS
+                </button>
+                <button onclick="mudarAba('restaurantes')" id="tabRestaurantes" class="px-6 py-3 font-black border-b-4 border-transparent text-slate-400 hover:text-white">
+                    🏪 RESTAURANTES
+                </button>
+            </div>
+
+            <!-- Aba Motoboys -->
+            <div id="abaMotoboys" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Formulário -->
+                <div class="lg:col-span-1">
+                    <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 sticky top-4">
+                        <h2 class="text-2xl font-black mb-6">➕ Adicionar Motoboy</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Nome</label>
+                                <input type="text" id="motoboyNome" placeholder="Ex: Marcelo Silva" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Email</label>
+                                <input type="email" id="motoboyEmail" placeholder="marcelo@email.com" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold uppercase text-slate-400 block mb-2">WhatsApp</label>
+                                <input type="tel" id="motoboyWhatsapp" placeholder="(11) 99999-9999" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                            </div>
+                            <button onclick="adicionarMotoboy()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-black transition-all">
+                                ✅ ADICIONAR MOTOBOY
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista -->
+                <div class="lg:col-span-2">
+                    <h2 class="text-2xl font-black mb-6">📋 Motoboys Cadastrados</h2>
+                    <div id="listaMotoboys" class="space-y-4">
+                        <div class="text-center text-slate-400 py-8">
+                            <p>Carregando...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba Restaurantes -->
+            <div id="abaRestaurantes" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Formulário -->
+                <div class="lg:col-span-1">
+                    <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 sticky top-4">
+                        <h2 class="text-2xl font-black mb-6">➕ Adicionar Restaurante</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Nome</label>
+                                <input type="text" id="restauranteNome" placeholder="Ex: Pizza Italiana" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Email</label>
+                                <input type="email" id="restauranteEmail" placeholder="contato@pizza.com" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold uppercase text-slate-400 block mb-2">Endereço</label>
+                                <input type="text" id="restauranteEndereco" placeholder="Rua X, 123" class="w-full p-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                            </div>
+                            <button onclick="adicionarRestaurante()" class="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl font-black transition-all">
+                                ✅ ADICIONAR RESTAURANTE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista -->
+                <div class="lg:col-span-2">
+                    <h2 class="text-2xl font-black mb-6">📋 Restaurantes Cadastrados</h2>
+                    <div id="listaRestaurantes" class="space-y-4">
+                        <div class="text-center text-slate-400 py-8">
+                            <p>Carregando...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
+            authDomain: "meuappentregas.firebaseapp.com", 
+            projectId: "meuappentregas", 
+            appId: "1:442484186787:web:ac914827ebebda987f2916" 
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Verificar login
+        window.fazerLogin = () => {
+            const email = document.getElementById('loginEmail').value;
+            const senha = document.getElementById('loginSenha').value;
+
+            if(email === 'admin@marceloentregas.com' && senha === 'admin123456') {
+                localStorage.setItem('admin_logado', 'true');
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('adminScreen').classList.remove('hidden');
+                carregarMotoboys();
+                carregarRestaurantes();
+            } else {
+                alert('Email ou senha incorretos!');
+            }
+        };
+
+        window.fazerLogout = () => {
+            localStorage.removeItem('admin_logado');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('adminScreen').classList.add('hidden');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginSenha').value = '';
+        };
+
+        window.mudarAba = (aba) => {
+            if(aba === 'motoboys') {
+                document.getElementById('abaMotoboys').classList.remove('hidden');
+                document.getElementById('abaRestaurantes').classList.add('hidden');
+                document.getElementById('tabMotoboys').classList.add('border-blue-600', 'text-white');
+                document.getElementById('tabMotoboys').classList.remove('border-transparent', 'text-slate-400');
+                document.getElementById('tabRestaurantes').classList.remove('border-blue-600', 'text-white');
+                document.getElementById('tabRestaurantes').classList.add('border-transparent', 'text-slate-400');
+            } else {
+                document.getElementById('abaMotoboys').classList.add('hidden');
+                document.getElementById('abaRestaurantes').classList.remove('hidden');
+                document.getElementById('tabRestaurantes').classList.add('border-blue-600', 'text-white');
+                document.getElementById('tabRestaurantes').classList.remove('border-transparent', 'text-slate-400');
+                document.getElementById('tabMotoboys').classList.remove('border-blue-600', 'text-white');
+                document.getElementById('tabMotoboys').classList.add('border-transparent', 'text-slate-400');
+            }
+        };
+
+        window.adicionarMotoboy = async () => {
+            const nome = document.getElementById('motoboyNome').value.trim();
+            const email = document.getElementById('motoboyEmail').value.trim();
+            const whatsapp = document.getElementById('motoboyWhatsapp').value.trim();
+
+            if(!nome || !email || !whatsapp) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, 'motoboys'), {
+                    nome,
+                    email,
+                    whatsapp,
+                    link: `${window.location.origin}?motoboy=${Math.random().toString(36).substring(2, 15)}`,
+                    dataCadastro: Timestamp.now()
+                });
+                document.getElementById('motoboyNome').value = '';
+                document.getElementById('motoboyEmail').value = '';
+                document.getElementById('motoboyWhatsapp').value = '';
+                alert('Motoboy adicionado com sucesso!');
+            } catch(e) {
+                alert('Erro: ' + e.message);
+            }
+        };
+
+        window.adicionarRestaurante = async () => {
+            const nome = document.getElementById('restauranteNome').value.trim();
+            const email = document.getElementById('restauranteEmail').value.trim();
+            const endereco = document.getElementById('restauranteEndereco').value.trim();
+
+            if(!nome || !email || !endereco) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, 'restaurantes'), {
+                    nome,
+                    email,
+                    endereco,
+                    link: `${window.location.origin}?restaurante=${Math.random().toString(36).substring(2, 15)}`,
+                    dataCadastro: Timestamp.now()
+                });
+                document.getElementById('restauranteNome').value = '';
+                document.getElementById('restauranteEmail').value = '';
+                document.getElementById('restauranteEndereco').value = '';
+                alert('Restaurante adicionado com sucesso!');
+            } catch(e) {
+                alert('Erro: ' + e.message);
+            }
+        };
+
+        function carregarMotoboys() {
+            onSnapshot(collection(db, 'motoboys'), (snap) => {
+                const container = document.getElementById('listaMotoboys');
+                container.innerHTML = '';
+
+                if(snap.empty) {
+                    container.innerHTML = '<div class="text-center text-slate-400 py-8"><p>Nenhum motoboy cadastrado</p></div>';
+                    return;
+                }
+
+                snap.forEach(d => {
+                    const data = d.data();
+                    const div = document.createElement('div');
+                    div.className = 'bg-slate-800 border border-slate-700 rounded-2xl p-6 hover:border-blue-600 transition-all';
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-xl font-black">${data.nome}</h3>
+                                <p class="text-sm text-slate-400">${data.email}</p>
+                            </div>
+                            <button onclick="deletarMotoboy('${d.id}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm font-bold">
+                                🗑️ Deletar
+                            </button>
+                        </div>
+                        <p class="text-sm text-slate-400 mb-4">📱 ${data.whatsapp}</p>
+                        <div class="bg-slate-900 p-3 rounded-xl mb-4">
+                            <p class="text-xs text-slate-400 mb-2">Link de Acesso:</p>
+                            <input type="text" value="${data.link}" readonly class="w-full bg-slate-800 text-blue-400 text-xs p-2 rounded border border-slate-700 font-mono">
+                        </div>
+                        <button onclick="copiarLink('${data.link}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded font-bold text-sm">
+                            📋 Copiar Link
+                        </button>
+                    `;
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        function carregarRestaurantes() {
+            onSnapshot(collection(db, 'restaurantes'), (snap) => {
+                const container = document.getElementById('listaRestaurantes');
+                container.innerHTML = '';
+
+                if(snap.empty) {
+                    container.innerHTML = '<div class="text-center text-slate-400 py-8"><p>Nenhum restaurante cadastrado</p></div>';
+                    return;
+                }
+
+                snap.forEach(d => {
+                    const data = d.data();
+                    const div = document.createElement('div');
+                    div.className = 'bg-slate-800 border border-slate-700 rounded-2xl p-6 hover:border-green-600 transition-all';
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-xl font-black">${data.nome}</h3>
+                                <p class="text-sm text-slate-400">${data.email}</p>
+                            </div>
+                            <button onclick="deletarRestaurante('${d.id}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm font-bold">
+                                🗑️ Deletar
+                            </button>
+                        </div>
+                        <p class="text-sm text-slate-400 mb-4">📍 ${data.endereco}</p>
+                        <div class="bg-slate-900 p-3 rounded-xl mb-4">
+                            <p class="text-xs text-slate-400 mb-2">Link de Acesso:</p>
+                            <input type="text" value="${data.link}" readonly class="w-full bg-slate-800 text-green-400 text-xs p-2 rounded border border-slate-700 font-mono">
+                        </div>
+                        <button onclick="copiarLink('${data.link}')" class="w-full bg-green-600 hover:bg-green-700 text-white p-2 rounded font-bold text-sm">
+                            📋 Copiar Link
+                        </button>
+                    `;
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        window.deletarMotoboy = async (id) => {
+            if(confirm('Tem certeza que deseja deletar este motoboy?')) {
+                await deleteDoc(doc(db, 'motoboys', id));
+            }
+        };
+
+        window.deletarRestaurante = async (id) => {
+            if(confirm('Tem certeza que deseja deletar este restaurante?')) {
+                await deleteDoc(doc(db, 'restaurantes', id));
+            }
+        };
+
+        window.copiarLink = (link) => {
+            navigator.clipboard.writeText(link).then(() => {
+                alert('Link copiado para a área de transferência!');
+            });
+        };
+
+        // Verificar se já está logado
+        if(localStorage.getItem('admin_logado') === 'true') {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('adminScreen').classList.remove('hidden');
+            carregarMotoboys();
+            carregarRestaurantes();
+        }
+    </script>
+</body>
+</html>

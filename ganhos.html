@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Meus Ganhos - Marcelo Entregas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white font-sans min-h-screen pb-10">
+
+    <div class="max-w-4xl mx-auto p-4">
+        <h1 class="text-3xl font-black mb-2 mt-6">💰 Meus Ganhos</h1>
+        <p class="text-slate-400 mb-8">Acompanhe seus ganhos e desempenho</p>
+
+        <!-- Resumo de Ganhos -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-gradient-to-br from-green-600 to-green-700 rounded-2xl p-6">
+                <p class="text-green-100 text-sm font-bold uppercase mb-2">Ganho Hoje</p>
+                <p id="ganhoHoje" class="text-3xl font-black">R$ 0,00</p>
+            </div>
+            <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6">
+                <p class="text-blue-100 text-sm font-bold uppercase mb-2">Ganho Esta Semana</p>
+                <p id="ganhoSemana" class="text-3xl font-black">R$ 0,00</p>
+            </div>
+            <div class="bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl p-6">
+                <p class="text-purple-100 text-sm font-bold uppercase mb-2">Ganho Este Mês</p>
+                <p id="ganhoMes" class="text-3xl font-black">R$ 0,00</p>
+            </div>
+            <div class="bg-gradient-to-br from-orange-600 to-orange-700 rounded-2xl p-6">
+                <p class="text-orange-100 text-sm font-bold uppercase mb-2">Ganho Total</p>
+                <p id="ganhoTotal" class="text-3xl font-black">R$ 0,00</p>
+            </div>
+        </div>
+
+        <!-- Gráfico de Ganhos -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-8">
+            <h2 class="text-2xl font-black mb-6">📈 Ganhos por Dia</h2>
+            <canvas id="graficoGanhos"></canvas>
+        </div>
+
+        <!-- Detalhes de Entregas -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+                <p class="text-slate-400 text-sm font-bold uppercase mb-2">Entregas Hoje</p>
+                <p id="entregasHoje" class="text-4xl font-black text-green-400">0</p>
+            </div>
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+                <p class="text-slate-400 text-sm font-bold uppercase mb-2">Entregas Esta Semana</p>
+                <p id="entregasSemana" class="text-4xl font-black text-blue-400">0</p>
+            </div>
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+                <p class="text-slate-400 text-sm font-bold uppercase mb-2">Entregas Este Mês</p>
+                <p id="entregasMes" class="text-4xl font-black text-purple-400">0</p>
+            </div>
+        </div>
+
+        <!-- Histórico de Ganhos -->
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6">
+            <h2 class="text-2xl font-black mb-6">📋 Histórico de Ganhos</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-700">
+                            <th class="text-left p-3 font-bold text-slate-300">Data</th>
+                            <th class="text-left p-3 font-bold text-slate-300">Entregas</th>
+                            <th class="text-left p-3 font-bold text-slate-300">Valor Unitário</th>
+                            <th class="text-left p-3 font-bold text-slate-300">Total</th>
+                            <th class="text-left p-3 font-bold text-slate-300">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaGanhos">
+                        <tr>
+                            <td colspan="5" class="text-center p-4 text-slate-400">Carregando...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBjP9dxFEp09DpZl5JkVMD05uaKoQTNDpE", 
+            authDomain: "meuappentregas.firebaseapp.com", 
+            projectId: "meuappentregas", 
+            appId: "1:442484186787:web:ac914827ebebda987f2916" 
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let grafico = null;
+
+        function carregarGanhos() {
+            onSnapshot(collection(db, 'chamadas'), (snap) => {
+                const hoje = new Date();
+                const dataHoje = hoje.toDateString();
+                const dataUltimaSemana = new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000).toDateString();
+                const mesAtual = hoje.getMonth();
+
+                let ganhoHoje = 0;
+                let ganhoSemana = 0;
+                let ganhoMes = 0;
+                let ganhoTotal = 0;
+
+                let entregasHoje = 0;
+                let entregasSemana = 0;
+                let entregasMes = 0;
+
+                const config = JSON.parse(localStorage.getItem('config_pagamento')) || {
+                    valorEntrega: 5,
+                    comissao: 10,
+                    bonusDiario: 50
+                };
+
+                const ganhosPorDia = {};
+
+                snap.forEach(d => {
+                    const data = d.data();
+                    const entregas = data.contagem || 0;
+                    const valor = entregas * config.valorEntrega;
+
+                    if(data.hora) {
+                        const dataEntrega = new Date(data.hora.toDate?.() || Date.now());
+                        const dataStr = dataEntrega.toDateString();
+                        const dataBR = dataEntrega.toLocaleDateString('pt-BR');
+
+                        ganhosPorDia[dataBR] = (ganhosPorDia[dataBR] || 0) + valor;
+
+                        if(dataStr === dataHoje) {
+                            ganhoHoje += valor;
+                            entregasHoje += entregas;
+                        }
+                        if(dataEntrega >= new Date(dataUltimaSemana)) {
+                            ganhoSemana += valor;
+                            entregasSemana += entregas;
+                        }
+                        if(dataEntrega.getMonth() === mesAtual) {
+                            ganhoMes += valor;
+                            entregasMes += entregas;
+                        }
+
+                        ganhoTotal += valor;
+                    }
+                });
+
+                document.getElementById('ganhoHoje').textContent = `R$ ${ganhoHoje.toFixed(2)}`;
+                document.getElementById('ganhoSemana').textContent = `R$ ${ganhoSemana.toFixed(2)}`;
+                document.getElementById('ganhoMes').textContent = `R$ ${ganhoMes.toFixed(2)}`;
+                document.getElementById('ganhoTotal').textContent = `R$ ${ganhoTotal.toFixed(2)}`;
+
+                document.getElementById('entregasHoje').textContent = entregasHoje;
+                document.getElementById('entregasSemana').textContent = entregasSemana;
+                document.getElementById('entregasMes').textContent = entregasMes;
+
+                // Atualizar gráfico
+                const labels = Object.keys(ganhosPorDia).slice(-7);
+                const dados = labels.map(d => ganhosPorDia[d]);
+
+                if(grafico) {
+                    grafico.data.labels = labels;
+                    grafico.data.datasets[0].data = dados;
+                    grafico.update();
+                } else {
+                    const ctx = document.getElementById('graficoGanhos').getContext('2d');
+                    grafico = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Ganho (R$)',
+                                data: dados,
+                                backgroundColor: '#10b981',
+                                borderColor: '#059669',
+                                borderWidth: 2,
+                                borderRadius: 5
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    labels: { color: '#cbd5e1' }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    ticks: { color: '#cbd5e1' },
+                                    grid: { color: '#334155' }
+                                },
+                                x: {
+                                    ticks: { color: '#cbd5e1' },
+                                    grid: { color: '#334155' }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Atualizar tabela
+                const tbody = document.getElementById('tabelaGanhos');
+                tbody.innerHTML = '';
+                Object.entries(ganhosPorDia).forEach(([data, valor]) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b border-slate-700 hover:bg-slate-700/50';
+                    tr.innerHTML = `
+                        <td class="p-3">${data}</td>
+                        <td class="p-3">-</td>
+                        <td class="p-3">R$ ${config.valorEntrega.toFixed(2)}</td>
+                        <td class="p-3 font-bold text-green-400">R$ ${valor.toFixed(2)}</td>
+                        <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold bg-green-900 text-green-300">Pago</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+
+        carregarGanhos();
+    </script>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Marcelo Entregas - Sistema Completo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white font-sans min-h-screen pb-10">
+
+    <div class="max-w-4xl mx-auto p-4">
+        <!-- Header -->
+        <header class="text-center mb-12 pt-10">
+            <h1 class="text-5xl font-black mb-3">🏍️ Marcelo Entregas</h1>
+            <p class="text-xl text-slate-300">Sistema Completo de Gestão de Entregas</p>
+            <p class="text-sm text-slate-400 mt-2">Em tempo real com Firebase</p>
+        </header>
+
+        <!-- Grid de Páginas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            
+            <!-- Painel Marcelo -->
+            <a href="painel-marcelo.html" class="card-hover">
+                <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl p-8 shadow-xl border border-blue-500/30 h-full">
+                    <div class="text-5xl mb-4">🏍️</div>
+                    <h2 class="text-2xl font-black mb-2">Painel Marcelo</h2>
+                    <p class="text-blue-100 text-sm mb-6">Motoboy - Gerenciar entregas e status</p>
+                    <ul class="space-y-2 text-sm text-blue-100">
+                        <li>✅ Visualizar chamados</li>
+                        <li>✅ Atualizar status</li>
+                        <li>✅ Contar entregas</li>
+                        <li>✅ Notificações com som</li>
+                    </ul>
+                    <div class="mt-6 inline-block bg-white text-blue-600 px-4 py-2 rounded-xl font-bold text-sm">
+                        Acessar →
+                    </div>
+                </div>
+            </a>
+
+            <!-- Painel Loja -->
+            <a href="painel-loja.html" class="card-hover">
+                <div class="bg-gradient-to-br from-green-600 to-green-700 rounded-3xl p-8 shadow-xl border border-green-500/30 h-full">
+                    <div class="text-5xl mb-4">🏪</div>
+                    <h2 class="text-2xl font-black mb-2">Painel Loja</h2>
+                    <p class="text-green-100 text-sm mb-6">Loja - Chamar e acompanhar Marcelo</p>
+                    <ul class="space-y-2 text-sm text-green-100">
+                        <li>✅ Chamar Marcelo</li>
+                        <li>✅ Ver status em tempo real</li>
+                        <li>✅ Acompanhar entregas</li>
+                        <li>✅ Receber confirmação</li>
+                    </ul>
+                    <div class="mt-6 inline-block bg-white text-green-600 px-4 py-2 rounded-xl font-bold text-sm">
+                        Acessar →
+                    </div>
+                </div>
+            </a>
+
+            <!-- Rastreamento -->
+            <a href="rastreamento.html" class="card-hover">
+                <div class="bg-gradient-to-br from-purple-600 to-purple-700 rounded-3xl p-8 shadow-xl border border-purple-500/30 h-full">
+                    <div class="text-5xl mb-4">📍</div>
+                    <h2 class="text-2xl font-black mb-2">Rastreamento</h2>
+                    <p class="text-purple-100 text-sm mb-6">Gerente - Acompanhar em tempo real</p>
+                    <ul class="space-y-2 text-sm text-purple-100">
+                        <li>✅ Mapa interativo</li>
+                        <li>✅ Localização GPS</li>
+                        <li>✅ Histórico de rotas</li>
+                        <li>✅ Tempo estimado</li>
+                    </ul>
+                    <div class="mt-6 inline-block bg-white text-purple-600 px-4 py-2 rounded-xl font-bold text-sm">
+                        Acessar →
+                    </div>
+                </div>
+            </a>
+
+            <!-- Relatórios -->
+            <a href="relatorios.html" class="card-hover">
+                <div class="bg-gradient-to-br from-orange-600 to-orange-700 rounded-3xl p-8 shadow-xl border border-orange-500/30 h-full">
+                    <div class="text-5xl mb-4">📊</div>
+                    <h2 class="text-2xl font-black mb-2">Relatórios</h2>
+                    <p class="text-orange-100 text-sm mb-6">Admin - Análise de desempenho</p>
+                    <ul class="space-y-2 text-sm text-orange-100">
+                        <li>✅ Filtrar por data</li>
+                        <li>✅ Exportar PDF</li>
+                        <li>✅ Exportar CSV</li>
+                        <li>✅ Gráficos</li>
+                    </ul>
+                    <div class="mt-6 inline-block bg-white text-orange-600 px-4 py-2 rounded-xl font-bold text-sm">
+                        Acessar →
+                    </div>
+                </div>
+            </a>
+
+            <!-- Histórico -->
+            <a href="historico.html" class="card-hover">
+                <div class="bg-gradient-to-br from-red-600 to-red-700 rounded-3xl p-8 shadow-xl border border-red-500/30 h-full">
+                    <div class="text-5xl mb-4">📜</div>
+                    <h2 class="text-2xl font-black mb-2">Histórico</h2>
+                    <p class="text-red-100 text-sm mb-6">Consulta - Todas as entregas</p>
+                    <ul class="space-y-2 text-sm text-red-100">
+                        <li>✅ Listar entregas</li>
+                        <li>✅ Filtrar por loja</li>
+                        <li>✅ Filtrar por data</li>
+                        <li>✅ Estatísticas</li>
+                    </ul>
+                    <div class="mt-6 inline-block bg-white text-red-600 px-4 py-2 rounded-xl font-bold text-sm">
+                        Acessar →
+                    </div>
+                </div>
+            </a>
+
+            <!-- Admin -->
+            <a href="admin.html" class="card-hover">
+                <div class="bg-gradient-to-br from-red-600 to-red-700 rounded-3xl p-8 shadow-xl border border-red-500/30 h-full">
+                    <div class="text-5xl mb-4">🔐</div>
+                    <h2 class="text-2xl font-black mb-2">Painel Admin</h2>
+                    <p class="text-red-100 text-sm mb-6">Gerenciar motoboys e restaurantes</p>
+                    <ul class="space-y-2 text-sm text-red-100">
+                        <li>✅ Criar motoboys</li>
+                        <li>✅ Criar restaurantes</li>
+                        <li>✅ Gerar links de acesso</li>
+                        <li>✅ Gerenciar usuários</li>
+                    </ul>
+                    <div class="mt-6 inline-block bg-white text-red-600 px-4 py-2 rounded-xl font-bold text-sm">
+                        Acessar →
+                    </div>
+                </div>
+            </a>
+
+            <!-- Documentação -->
+            <a href="INSTRUCOES.md" class="card-hover">
+                <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-3xl p-8 shadow-xl border border-slate-600/30 h-full">
+                    <div class="text-5xl mb-4">📖</div>
+                    <h2 class="text-2xl font-black mb-2">Documentação</h2>
+                    <p class="text-slate-300 text-sm mb-6">Instruções de uso e configuração</p>
+                    <ul class="space-y-2 text-sm text-slate-300">
+                        <li>✅ Passo a passo</li>
+                        <li>✅ Links de acesso</li>
+                        <li>✅ Funcionalidades</li>
+                        <li>✅ Próximas melhorias</li>
+                    </ul>
+                    <div class="mt-6 inline-block bg-white text-slate-700 px-4 py-2 rounded-xl font-bold text-sm">
+                        Ler →
+                    </div>
+                </div>
+            </a>
+
+        </div>
+
+        <!-- Info Box -->
+        <div class="bg-slate-800/50 border border-slate-700 rounded-3xl p-8 mb-8">
+            <h3 class="text-2xl font-black mb-4">🚀 Como Começar</h3>
+            <div class="space-y-4 text-slate-300">
+                <p><strong>1. Para o Marcelo:</strong> Compartilhe o link do Painel Marcelo</p>
+                <p><strong>2. Para as Lojas:</strong> Compartilhe o link do Painel Loja</p>
+                <p><strong>3. Para Gerentes:</strong> Compartilhe o link de Rastreamento</p>
+                <p><strong>4. Para Relatórios:</strong> Acesse a página de Relatórios</p>
+                <p><strong>5. Para Histórico:</strong> Acesse a página de Histórico</p>
+            </div>
+        </div>
+
+        <!-- Links Diretos -->
+        <div class="bg-slate-800/50 border border-slate-700 rounded-3xl p-8 mb-8">
+            <h3 class="text-2xl font-black mb-4">🔗 Links Diretos</h3>
+            <div class="space-y-3 text-sm font-mono text-slate-300 bg-slate-900 p-4 rounded-xl overflow-x-auto">
+                <p class="text-green-400"><strong>Marcelo:</strong></p>
+                <p class="break-all mb-4">https://djmarcelocruz.github.io/Entregador-/painel-marcelo.html</p>
+                
+                <p class="text-green-400"><strong>Loja:</strong></p>
+                <p class="break-all mb-4">https://djmarcelocruz.github.io/Entregador-/painel-loja.html</p>
+                
+                <p class="text-purple-400"><strong>Rastreamento:</strong></p>
+                <p class="break-all mb-4">https://djmarcelocruz.github.io/Entregador-/rastreamento.html</p>
+                
+                <p class="text-orange-400"><strong>Relatórios:</strong></p>
+                <p class="break-all mb-4">https://djmarcelocruz.github.io/Entregador-/relatorios.html</p>
+                
+                <p class="text-red-400"><strong>Histórico:</strong></p>
+                <p class="break-all">https://djmarcelocruz.github.io/Entregador-/historico.html</p>
+            </div>
+        </div>
+
+        <!-- Downloads -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl p-8 shadow-xl border border-blue-500/30">
+                <div class="text-5xl mb-4">🏍️</div>
+                <h3 class="text-2xl font-black mb-4">Download Motoboy</h3>
+                <p class="text-blue-100 mb-6">App para o entregador (Marcelo) gerenciar suas entregas</p>
+                <button onclick="downloadMotoboy()" class="w-full bg-white text-blue-600 px-6 py-3 rounded-xl font-black hover:bg-blue-50 transition-all">
+                    📥 BAIXAR APP
+                </button>
+            </div>
+            <div class="bg-gradient-to-br from-green-600 to-green-700 rounded-3xl p-8 shadow-xl border border-green-500/30">
+                <div class="text-5xl mb-4">🏪</div>
+                <h3 class="text-2xl font-black mb-4">Download Restaurante</h3>
+                <p class="text-green-100 mb-6">App para o restaurante chamar o entregador</p>
+                <button onclick="downloadRestaurante()" class="w-full bg-white text-green-600 px-6 py-3 rounded-xl font-black hover:bg-green-50 transition-all">
+                    📥 BAIXAR APP
+                </button>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 text-center">
+                <div class="text-4xl mb-2">⚡</div>
+                <h4 class="font-black mb-2">Tempo Real</h4>
+                <p class="text-sm text-slate-400">Atualização automática a cada 5 segundos</p>
+            </div>
+            <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 text-center">
+                <div class="text-4xl mb-2">🔔</div>
+                <h4 class="font-black mb-2">Notificações</h4>
+                <p class="text-sm text-slate-400">Som e vibração para alertas importantes</p>
+            </div>
+            <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 text-center">
+                <div class="text-4xl mb-2">📱</div>
+                <h4 class="font-black mb-2">Responsivo</h4>
+                <p class="text-sm text-slate-400">Funciona em qualquer dispositivo</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center text-slate-400 text-sm border-t border-slate-700 pt-8">
+            <p>Desenvolvido com ❤️ para Marcelo Entregas</p>
+            <p class="mt-2">Firebase Firestore | Tailwind CSS | Leaflet Maps</p>
+            <p class="mt-4 text-xs text-slate-500">© 2026 - Todos os direitos reservados</p>
+        </footer>
+    </div>
+
+    <script>
+        function downloadMotoboy() {
+            const link = document.createElement('a');
+            link.href = 'painel-marcelo.html';
+            link.download = 'Marcelo-Entregas-Motoboy.html';
+            link.click();
+        }
+
+        function downloadRestaurante() {
+            const link = document.createElement('a');
+            link.href = 'painel-loja.html';
+            link.download = 'Marcelo-Entregas-Restaurante.html';
+            link.click();
+        }
+    </script>
+
+</body>
+</html>
