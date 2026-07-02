@@ -37,8 +37,7 @@
 const supabaseUrl = "https://jrcyhnonjzyhtztrxfhx.supabase.co/rest/v1/"
 const supabaseKey = "sb_publishable_26sS-4aR4t-NMFVZ3asmvQ_Dgz6xH0x"
 
-const supabase = supabase.createClient(supabaseUrl, supabaseKey)
-
+const client = supabase.createClient(supabaseUrl, supabaseKey)
 let userData = null
 
 async function login() {
