@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Checklist Industrial</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, button { padding: 10px; margin: 5px 0; width: 100%; }
+    .box { max-width: 400px; margin: auto; }
+  </style>
+</head>
+
+<body>
+
+<div class="box" id="loginBox">
+  <h2>Login</h2>
+
+  <input id="matricula" placeholder="Matrícula">
+  <input id="senha" type="password" placeholder="Senha">
+
+  <button onclick="login()">Entrar</button>
+
+  <p id="msg"></p>
+</div>
+
+<div class="box" id="appBox" style="display:none;">
+  <h2 id="titulo"></h2>
+  <p id="info"></p>
+
+  <button onclick="logout()">Sair</button>
+</div>
+
+<script>
+const supabaseUrl = "SUA_URL_AQUI"
+const supabaseKey = "SUA_ANON_KEY_AQUI"
+
+const supabase = supabase.createClient(supabaseUrl, supabaseKey)
+
+let userData = null
+
+async function login() {
+
+  const matricula = document.getElementById("matricula").value
+  const senha = document.getElementById("senha").value
+
+  // busca usuário na tabela profiles
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("registration_number", matricula)
+    .single()
+
+  if (error || !data) {
+    document.getElementById("msg").innerText = "Usuário não encontrado"
+    return
+  }
+
+  userData = data
+
+  localStorage.setItem("user", JSON.stringify(data))
+
+  abrirTela()
+}
+
+function abrirTela() {
+
+  document.getElementById("loginBox").style.display = "none"
+  document.getElementById("appBox").style.display = "block"
+
+  if (userData.role === "operator") {
+    document.getElementById("titulo").innerText = "Operador"
+    document.getElementById("info").innerText = "Tela de Checklist"
+  }
+
+  if (userData.role === "mechanic") {
+    document.getElementById("titulo").innerText = "Mecânico"
+    document.getElementById("info").innerText = "Painel de Manutenção"
+  }
+
+  if (userData.role === "supervisor") {
+    document.getElementById("titulo").innerText = "Supervisor"
+    document.getElementById("info").innerText = "Painel Geral da Frota"
+  }
+}
+
+function logout() {
+  localStorage.removeItem("user")
+  location.reload()
+}
+</script>
+
+</body>
+</html>
