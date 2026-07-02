@@ -34,32 +34,42 @@
 </div>
 
 <script>
-const supabaseUrl = "https://jrcyhnonjzyhtztrxfhx.supabase.co/rest/v1/"
+
+const supabaseUrl = "https://jrcyhnonjzyhtztrxfhx.supabase.co"
 const supabaseKey = "sb_publishable_26sS-4aR4t-NMFVZ3asmvQ_Dgz6xH0x"
 
+// cria conexão correta
 const client = supabase.createClient(supabaseUrl, supabaseKey)
+
 let userData = null
 
 async function login() {
 
-  const matricula = document.getElementById("matricula").value
-  const senha = document.getElementById("senha").value
+  console.log("clicou login")
 
-  // busca usuário na tabela profiles
-  const { data, error } = await supabase
+  const matricula = document.getElementById("matricula").value
+
+  const { data, error } = await client
     .from("profiles")
     .select("*")
     .eq("registration_number", matricula)
-    .single()
 
-  if (error || !data) {
+  console.log("DATA:", data)
+  console.log("ERROR:", error)
+
+  if (error) {
+    document.getElementById("msg").innerText = "Erro no banco"
+    return
+  }
+
+  if (!data || data.length === 0) {
     document.getElementById("msg").innerText = "Usuário não encontrado"
     return
   }
 
-  userData = data
+  userData = data[0]
 
-  localStorage.setItem("user", JSON.stringify(data))
+  localStorage.setItem("user", JSON.stringify(userData))
 
   abrirTela()
 }
@@ -89,6 +99,7 @@ function logout() {
   localStorage.removeItem("user")
   location.reload()
 }
+
 </script>
 
 </body>
