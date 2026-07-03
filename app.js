@@ -190,3 +190,130 @@ Voltar
 `;
 
 }
+async function salvarMaquina(){
+
+const maquina={
+
+name:document.getElementById("nome").value,
+
+code:document.getElementById("codigo").value,
+
+type:document.getElementById("tipo").value,
+
+status:"Liberada",
+
+maintenance_status:"OK",
+
+horimeter:Number(document.getElementById("horimetro").value),
+
+next_preventive_horimeter:
+Number(document.getElementById("horimetro").value)+
+Number(document.getElementById("preventiva").value)
+
+};
+
+const {error}=await client
+
+.from("machines")
+
+.insert([maquina]);
+
+if(error){
+
+alert(error.message);
+
+return;
+
+}
+
+alert("Máquina cadastrada com sucesso!");
+
+listarMaquinas();
+
+}
+
+async function listarMaquinas(){
+
+const {data,error}=await client
+
+.from("machines")
+
+.select("*")
+
+.order("code");
+
+if(error){
+
+alert(error.message);
+
+return;
+
+}
+
+let html=`
+
+<div class="container">
+
+<div class="card">
+
+<h2>Máquinas</h2>
+
+<button onclick="telaCadastroMaquina()">
+
+➕ Nova Máquina
+
+</button>
+
+<br><br>
+
+`;
+
+if(data.length==0){
+
+html+="Nenhuma máquina cadastrada.";
+
+}
+
+data.forEach(m=>{
+
+html+=`
+
+<div style="border:1px solid #ddd;padding:10px;margin-top:10px;border-radius:8px;">
+
+<b>${m.code}</b><br>
+
+${m.name}<br>
+
+Tipo: ${m.type}<br>
+
+Horímetro: ${m.horimeter}<br>
+
+Status: ${m.status}<br>
+
+Manutenção: ${m.maintenance_status}
+
+</div>
+
+`;
+
+});
+
+html+=`
+
+<br>
+
+<button onclick="abrirPainel()">
+
+⬅ Voltar
+
+</button>
+
+</div>
+
+</div>
+
+`;
+
+document.getElementById("app").innerHTML=html;
+
+}
