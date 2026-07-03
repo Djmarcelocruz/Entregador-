@@ -1,103 +1,209 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Checklist Industrial</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>Checklist Industrial</title>
 
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    input, button { padding: 10px; margin: 5px 0; width: 100%; }
-    .box { max-width: 400px; margin: auto; }
-  </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f2f2f2;
+margin:0;
+padding:20px;
+}
+
+.box{
+max-width:400px;
+margin:auto;
+background:#fff;
+padding:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,.15);
+}
+
+input{
+width:100%;
+padding:12px;
+margin-top:10px;
+box-sizing:border-box;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:10px;
+background:#1976d2;
+color:#fff;
+border:none;
+border-radius:5px;
+font-size:16px;
+cursor:pointer;
+}
+
+h2{
+text-align:center;
+}
+
+#msg{
+margin-top:15px;
+color:red;
+text-align:center;
+}
+
+</style>
+
 </head>
 
 <body>
 
 <div class="box" id="loginBox">
-  <h2>Login</h2>
 
-  <input id="matricula" placeholder="Matrícula">
-  <input id="senha" type="password" placeholder="Senha">
+<h2>Checklist Industrial</h2>
 
-  <button onclick="login()">Entrar</button>
+<input
+id="matricula"
+placeholder="Matrícula">
 
-  <p id="msg"></p>
+<input
+id="pin"
+type="password"
+placeholder="PIN">
+
+<button onclick="login()">
+Entrar
+</button>
+
+<p id="msg"></p>
+
 </div>
 
-<div class="box" id="appBox" style="display:none;">
-  <h2 id="titulo"></h2>
-  <p id="info"></p>
+<div
+class="box"
+id="appBox"
+style="display:none;">
 
-  <button onclick="logout()">Sair</button>
+<h2 id="titulo"></h2>
+
+<p id="info"></p>
+
+<button onclick="logout()">
+Sair
+</button>
+
 </div>
 
 <script>
 
-const supabaseUrl = "https://jrcyhnonjzyhtztrxfhx.supabase.co"
-const supabaseKey = "sb_publishable_26sS-4aR4t-NMFVZ3asmvQ_Dgz6xH0x"
+const supabaseUrl="https://jrcyhnonjzyhtztrxfhx.supabase.co";
 
-// cria conexão correta
-const client = supabase.createClient(supabaseUrl, supabaseKey)
+const supabaseKey="sb_publishable_26sS-4aR4t-NMFVZ3asmvQ_Dgz6xH0x";
 
-let userData = null
+const client=supabase.createClient(
+supabaseUrl,
+supabaseKey
+);
 
-async function login() {
+let userData=null;
 
-  console.log("clicou login")
+window.onload=function(){
 
-  const matricula = document.getElementById("matricula").value
+const salvo=localStorage.getItem("user");
 
-  const { data, error } = await client
-    .from("profiles")
-    .select("*")
-    .eq("registration_number", matricula)
+if(salvo){
 
-  console.log("DATA:", data)
-  console.log("ERROR:", error)
+userData=JSON.parse(salvo);
 
-  if (error) {
-    document.getElementById("msg").innerText = "Erro no banco"
-    return
-  }
+abrirTela();
 
-  if (!data || data.length === 0) {
-    document.getElementById("msg").innerText = "Usuário não encontrado"
-    return
-  }
-
-  userData = data[0]
-
-  localStorage.setItem("user", JSON.stringify(userData))
-
-  abrirTela()
 }
 
-function abrirTela() {
-
-  document.getElementById("loginBox").style.display = "none"
-  document.getElementById("appBox").style.display = "block"
-
-  if (userData.role === "operator") {
-    document.getElementById("titulo").innerText = "Operador"
-    document.getElementById("info").innerText = "Tela de Checklist"
-  }
-
-  if (userData.role === "mechanic") {
-    document.getElementById("titulo").innerText = "Mecânico"
-    document.getElementById("info").innerText = "Painel de Manutenção"
-  }
-
-  if (userData.role === "supervisor") {
-    document.getElementById("titulo").innerText = "Supervisor"
-    document.getElementById("info").innerText = "Painel Geral da Frota"
-  }
 }
 
-function logout() {
-  localStorage.removeItem("user")
-  location.reload()
+async function login(){
+
+document.getElementById("msg").innerHTML="";
+
+const matricula=document.getElementById("matricula").value.trim();
+
+if(matricula==""){
+
+document.getElementById("msg").innerHTML="Digite a matrícula";
+
+return;
+
+}
+
+const {data,error}=await client
+
+.from("profiles")
+
+.select("*")
+
+.eq("registration_number",matricula)
+
+.single();
+
+if(error){
+
+console.log(error);
+
+document.getElementById("msg").innerHTML="Usuário não encontrado";
+
+return;
+
+}
+
+userData=data;
+
+localStorage.setItem("user",JSON.stringify(userData));
+
+abrirTela();
+
+}
+
+function abrirTela(){
+
+document.getElementById("loginBox").style.display="none";
+
+document.getElementById("appBox").style.display="block";
+
+if(userData.role=="supervisor"){
+
+document.getElementById("titulo").innerHTML="Supervisor";
+
+document.getElementById("info").innerHTML="Painel Geral da Frota";
+
+}
+
+else if(userData.role=="mechanic"){
+
+document.getElementById("titulo").innerHTML="Mecânico";
+
+document.getElementById("info").innerHTML="Painel de Manutenção";
+
+}
+
+else{
+
+document.getElementById("titulo").innerHTML="Operador";
+
+document.getElementById("info").innerHTML="Tela de Checklist";
+
+}
+
+}
+
+function logout(){
+
+localStorage.removeItem("user");
+
+location.reload();
+
 }
 
 </script>
