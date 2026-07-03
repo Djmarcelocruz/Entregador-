@@ -1,30 +1,20 @@
 const supabaseUrl = "https://jrcyhnonjzyhtztrxfhx.supabase.co";
-const supabaseKey = "SUA_PUBLISHABLE_KEY";
+const supabaseKey = "sb_publishable_26sS-4aR4t-NMFVZ3asmvQ_Dgz6xH0x";
 
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let usuario = null;
 
+// ================= LOGIN =================
 window.onload = () => {
-
-    const salvo = localStorage.getItem("usuario");
-
-    if (salvo) {
-        usuario = JSON.parse(salvo);
-        abrirPainel();
-    } else {
-        telaLogin();
-    }
-
+    telaLogin();
 };
 
 function telaLogin() {
-
 document.getElementById("app").innerHTML = `
 <div class="container">
 <div class="card">
-
-<h2>Checklist Industrial</h2>
+<h2>Login</h2>
 
 <input id="matricula" placeholder="Matrícula">
 <input id="pin" type="password" placeholder="PIN">
@@ -32,119 +22,91 @@ document.getElementById("app").innerHTML = `
 <button onclick="login()">Entrar</button>
 
 <p id="msg"></p>
-
 </div>
 </div>
 `;
-
 }
 
 async function login() {
-
 const matricula = document.getElementById("matricula").value;
+const pin = document.getElementById("pin").value;
 
 const { data, error } = await client
 .from("profiles")
 .select("*")
 .eq("registration_number", matricula)
+.eq("pin", pin)
 .single();
 
-if (error) {
-document.getElementById("msg").innerHTML = "Usuário não encontrado";
+if (error || !data) {
+document.getElementById("msg").innerText = "Login inválido";
 return;
 }
 
 usuario = data;
-localStorage.setItem("usuario", JSON.stringify(usuario));
-
 abrirPainel();
-
 }
 
+// ================= PAINEL =================
 function abrirPainel() {
-
-if (usuario.role == "supervisor") {
-
 document.getElementById("app").innerHTML = `
 <div class="container">
 <div class="card">
 
 <h2>Bem-vindo</h2>
-<h3>${usuario.full_name}</h3>
+<h3>${usuario.full_name || ""}</h3>
 
-<div class="menu">
-
-<button onclick="telaCadastroMaquina()">🚜 Cadastrar Máquina</button>
-<button onclick="listarMaquinas()">📋 Máquinas</button>
-<button onclick="alert('Em breve')">👥 Usuários</button>
-<button onclick="alert('Em breve')">✅ Checklists</button>
-<button onclick="alert('Em breve')">🔧 Manutenções</button>
-<button onclick="alert('Em breve')">📊 Relatórios</button>
-<button onclick="logout()">🚪 Sair</button>
-
-</div>
+<button onclick="telaCadastro()">Cadastrar Máquina</button>
+<button onclick="listarMaquinas()">Listar Máquinas</button>
+<button onclick="logout()">Sair</button>
 
 </div>
 </div>
 `;
-
 }
 
-}
-
+// ================= LOGOUT =================
 function logout() {
-localStorage.removeItem("usuario");
-location.reload();
+usuario = null;
+telaLogin();
 }
 
-function telaCadastroMaquina() {
-
+// ================= CADASTRO =================
+function telaCadastro() {
 document.getElementById("app").innerHTML = `
 <div class="container">
 <div class="card">
 
-<h2>Cadastro de Máquina</h2>
+<h2>Cadastro Máquina</h2>
 
-<input id="nome" placeholder="Nome da máquina">
+<input id="nome" placeholder="Nome">
 <input id="codigo" placeholder="Código">
 
 <select id="tipo">
-<option value="Empilhadeira">Empilhadeira</option>
-<option value="Carrinho Elétrico">Carrinho Elétrico</option>
+<option>Empilhadeira</option>
+<option>Carrinho</option>
 </select>
 
-<input id="fabricante" placeholder="Fabricante">
-<input id="modelo" placeholder="Modelo">
+<input id="horimetro" type="number" placeholder="Horímetro">
 
-<input id="horimetro" type="number" placeholder="Horímetro Inicial">
-<input id="preventiva" type="number" value="250" placeholder="Intervalo Preventivo">
+<input id="preventiva" type="number" value="250">
 
-<button onclick="salvarMaquina()">Salvar Máquina</button>
+<button onclick="salvar()">Salvar</button>
 <button onclick="abrirPainel()">Voltar</button>
 
 </div>
 </div>
 `;
-
 }
 
-async function salvarMaquina() {
+async function salvar() {
 
 const maquina = {
-
 name: document.getElementById("nome").value,
 code: document.getElementById("codigo").value,
 type: document.getElementById("tipo").value,
-
-status: "Liberada",
-maintenance_status: "OK",
-
 horimeter: Number(document.getElementById("horimetro").value),
-
-next_preventive_horimeter:
-Number(document.getElementById("horimetro").value) +
-Number(document.getElementById("preventiva").value)
-
+status: "OK"
 };
 
 const { error } = await client
@@ -156,90 +118,36 @@ alert(error.message);
 return;
 }
 
-alert("Máquina cadastrada com sucesso!");
-
-// MOSTRA QR CODE PRIMEIRO
-mostrarQRCode(maquina);
-
+alert("Máquina cadastrada!");
+abrirPainel();
 }
 
+// ================= LISTA =================
 async function listarMaquinas() {
 
-const { data, error } = await client
+const { data } = await client
 .from("machines")
-.select("*")
-.order("code");
-
-if (error) {
-alert(error.message);
-return;
-}
+.select("*");
 
 let html = `
 <div class="container">
 <div class="card">
 
 <h2>Máquinas</h2>
-
-<button onclick="telaCadastroMaquina()">➕ Nova Máquina</button>
-<br><br>
+<button onclick="abrirPainel()">Voltar</button>
 `;
-
-if (data.length == 0) {
-html += "Nenhuma máquina cadastrada.";
-}
 
 data.forEach(m => {
-
 html += `
-<div style="border:1px solid #ddd;padding:10px;margin-top:10px;border-radius:8px;">
+<div style="border:1px solid #ccc;margin:10px;padding:10px">
 <b>${m.code}</b><br>
 ${m.name}<br>
-Tipo: ${m.type}<br>
-Horímetro: ${m.horimeter}<br>
-Status: ${m.status}<br>
-Manutenção: ${m.maintenance_status}
+Tipo: ${m.type}
 </div>
 `;
-
 });
 
-html += `
-<br>
-<button onclick="abrirPainel()">⬅ Voltar</button>
-
-</div>
-</div>
-`;
+html += `</div></div>`;
 
 document.getElementById("app").innerHTML = html;
-
-}
-
-function mostrarQRCode(maquina) {
-
-document.getElementById("app").innerHTML = `
-<div class="container">
-<div class="card">
-
-<h2>QR Code Gerado</h2>
-
-<p><b>${maquina.name}</b></p>
-<p>Código: ${maquina.code}</p>
-
-<div id="qrcode" style="display:flex;justify-content:center;margin:20px 0;"></div>
-
-<button onclick="listarMaquinas()">Ver Máquinas</button>
-<button onclick="abrirPainel()">Voltar ao Painel</button>
-
-</div>
-</div>
-`;
-
-new QRCode(document.getElementById("qrcode"), {
-text: maquina.code,
-width: 220,
-height: 220
-});
-
 }
