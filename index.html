@@ -119,82 +119,60 @@ if(salvo){
 userData=JSON.parse(salvo);
 
 abrirTela();
-
-}
-
-}
-
-async function login(){
-
-document.getElementById("msg").innerHTML="";
-
-const matricula=document.getElementById("matricula").value.trim();
-
-if(matricula==""){
-
-document.getElementById("msg").innerHTML="Digite a matrícula";
-
-return;
-
-}
-
-const {data,error}=await client
-
-.from("profiles")
-
-.select("*")
-
-.eq("registration_number",matricula)
-
-.single();
-
-if(error){
-
-console.log(error);
-
-document.getElementById("msg").innerHTML="Usuário não encontrado";
-
-return;
-
-}
-
-userData=data;
-
-localStorage.setItem("user",JSON.stringify(userData));
-
-abrirTela();
-
-}
-
 function abrirTela(){
 
-document.getElementById("loginBox").style.display="none";
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("appBox").style.display="block";
 
-document.getElementById("appBox").style.display="block";
+    if(userData.role=="supervisor"){
 
-if(userData.role=="supervisor"){
+        document.getElementById("titulo").innerHTML =
+        "Bem-vindo, " + userData.full_name;
 
-document.getElementById("titulo").innerHTML="Supervisor";
+        document.getElementById("info").innerHTML = `
 
-document.getElementById("info").innerHTML="Painel Geral da Frota";
+        <h3>Painel do Supervisor</h3>
 
-}
+        <button onclick="alert('Em desenvolvimento')">
+        🚜 Cadastrar Máquina
+        </button>
 
-else if(userData.role=="mechanic"){
+        <button onclick="alert('Em desenvolvimento')">
+        📋 Máquinas
+        </button>
 
-document.getElementById("titulo").innerHTML="Mecânico";
+        <button onclick="alert('Em desenvolvimento')">
+        👥 Usuários
+        </button>
 
-document.getElementById("info").innerHTML="Painel de Manutenção";
+        <button onclick="alert('Em desenvolvimento')">
+        ✅ Checklists
+        </button>
 
-}
+        <button onclick="alert('Em desenvolvimento')">
+        🔧 Manutenções
+        </button>
 
-else{
+        <button onclick="alert('Em desenvolvimento')">
+        📊 Relatórios
+        </button>
 
-document.getElementById("titulo").innerHTML="Operador";
+        `;
+    }
 
-document.getElementById("info").innerHTML="Tela de Checklist";
+    else if(userData.role=="mechanic"){
 
-}
+        document.getElementById("titulo").innerHTML="Mecânico";
+        document.getElementById("info").innerHTML="Painel do Mecânico";
+
+    }
+
+    else{
+
+        document.getElementById("titulo").innerHTML="Operador";
+        document.getElementById("info").innerHTML="Tela do Checklist";
+
+    }
 
 }
 
