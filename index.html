@@ -3,188 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Checklist Industrial</title>
 
+<link rel="stylesheet" href="style.css">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<style>
-
-body{
-font-family:Arial;
-background:#f2f2f2;
-margin:0;
-padding:20px;
-}
-
-.box{
-max-width:400px;
-margin:auto;
-background:#fff;
-padding:20px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,.15);
-}
-
-input{
-width:100%;
-padding:12px;
-margin-top:10px;
-box-sizing:border-box;
-}
-
-button{
-width:100%;
-padding:12px;
-margin-top:10px;
-background:#1976d2;
-color:#fff;
-border:none;
-border-radius:5px;
-font-size:16px;
-cursor:pointer;
-}
-
-h2{
-text-align:center;
-}
-
-#msg{
-margin-top:15px;
-color:red;
-text-align:center;
-}
-
-</style>
 
 </head>
 
 <body>
 
-<div class="box" id="loginBox">
+<div id="app"></div>
 
-<h2>Checklist Industrial</h2>
-
-<input
-id="matricula"
-placeholder="Matrícula">
-
-<input
-id="pin"
-type="password"
-placeholder="PIN">
-
-<button onclick="login()">
-Entrar
-</button>
-
-<p id="msg"></p>
-
-</div>
-
-<div
-class="box"
-id="appBox"
-style="display:none;">
-
-<h2 id="titulo"></h2>
-
-<p id="info"></p>
-
-<button onclick="logout()">
-Sair
-</button>
-
-</div>
-
-<script>
-
-const supabaseUrl="https://jrcyhnonjzyhtztrxfhx.supabase.co";
-
-const supabaseKey="sb_publishable_26sS-4aR4t-NMFVZ3asmvQ_Dgz6xH0x";
-
-const client=supabase.createClient(
-supabaseUrl,
-supabaseKey
-);
-
-let userData=null;
-
-window.onload=function(){
-
-const salvo=localStorage.getItem("user");
-
-if(salvo){
-
-userData=JSON.parse(salvo);
-
-abrirTela();
-function abrirTela(){
-
-    document.getElementById("loginBox").style.display="none";
-    document.getElementById("appBox").style.display="block";
-
-    if(userData.role=="supervisor"){
-
-        document.getElementById("titulo").innerHTML =
-        "Bem-vindo, " + userData.full_name;
-
-        document.getElementById("info").innerHTML = `
-
-        <h3>Painel do Supervisor</h3>
-
-        <button onclick="alert('Em desenvolvimento')">
-        🚜 Cadastrar Máquina
-        </button>
-
-        <button onclick="alert('Em desenvolvimento')">
-        📋 Máquinas
-        </button>
-
-        <button onclick="alert('Em desenvolvimento')">
-        👥 Usuários
-        </button>
-
-        <button onclick="alert('Em desenvolvimento')">
-        ✅ Checklists
-        </button>
-
-        <button onclick="alert('Em desenvolvimento')">
-        🔧 Manutenções
-        </button>
-
-        <button onclick="alert('Em desenvolvimento')">
-        📊 Relatórios
-        </button>
-
-        `;
-    }
-
-    else if(userData.role=="mechanic"){
-
-        document.getElementById("titulo").innerHTML="Mecânico";
-        document.getElementById("info").innerHTML="Painel do Mecânico";
-
-    }
-
-    else{
-
-        document.getElementById("titulo").innerHTML="Operador";
-        document.getElementById("info").innerHTML="Tela do Checklist";
-
-    }
-
-}
-
-function logout(){
-
-localStorage.removeItem("user");
-
-location.reload();
-
-}
-
-</script>
+<script src="app.js"></script>
 
 </body>
 </html>
