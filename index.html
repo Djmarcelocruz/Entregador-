@@ -1420,10 +1420,11 @@
                     </div>
                     ${machine.notes ? `<div style="margin-top:12px; padding:10px; background:var(--dark); border-radius:var(--radius-sm);"><div class="machine-info-label">Observações</div><div style="font-size:0.85rem; margin-top:4px;">${machine.notes}</div></div>` : ''}
                 </div>
-                <div style="display:flex; gap:8px; margin-bottom:16px;">
+                <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
                     <button class="btn btn-sm btn-primary" onclick="app.showQRCodeFromDetail()">📱 QR Code</button>
                     ${machine.status !== 'Bloqueada' ? `<button class="btn btn-sm btn-warning" onclick="app.createOSForMachine()">🔧 Criar OS</button>` : ''}
                     ${this.currentUser.role === 'supervisor' ? `<button class="btn btn-sm btn-outline" onclick="app.editMachine()">✏️ Editar</button>` : ''}
+                    ${this.currentUser.role === 'supervisor' ? `<button class="btn btn-sm btn-danger" onclick="app.deleteMachine()">🗑️ Excluir</button>` : ''}
                 </div>
             `;
 
@@ -1590,6 +1591,132 @@
 
         filterUsers() {
             this.renderUsers();
+        },
+
+        editMachine() {
+            if (!this.currentMachine) return;
+            const m = this.currentMachine;
+
+            document.getElementById('editMachineForm').innerHTML = `
+                <div class="form-group">
+                    <label class="form-label">Nome *</label>
+                    <input type="text" id="editMName" class="form-input" value="${m.name}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Código *</label>
+                    <input type="text" id="editMCode" class="form-input" value="${m.code}" readonly style="opacity:0.6;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tipo *</label>
+                    <select id="editMType" class="form-select">
+                        <option value="Empilhadeira" ${m.type === 'Empilhadeira' ? 'selected' : ''}>Empilhadeira</option>
+                        <option value="Carrinho Elétrico" ${m.type === 'Carrinho Elétrico' ? 'selected' : ''}>Carrinho Elétrico</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fabricante</label>
+                    <input type="text" id="editMManufacturer" class="form-input" value="${m.manufacturer || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Modelo</label>
+                    <input type="text" id="editMModel" class="form-input" value="${m.model || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Número de Série</label>
+                    <input type="text" id="editMSerial" class="form-input" value="${m.serial_number || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ano</label>
+                    <input type="number" id="editMYear" class="form-input" value="${m.year || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Capacidade</label>
+                    <input type="text" id="editMCapacity" class="form-input" value="${m.capacity || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Horímetro Atual</label>
+                    <input type="number" id="editMHorimeter" class="form-input" value="${m.horimeter || 0}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Intervalo Preventivo (horas)</label>
+                    <input type="number" id="editMPreventive" class="form-input" value="${m.preventive_interval || 250}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select id="editMStatus" class="form-select">
+                        <option value="Liberada" ${m.status === 'Liberada' ? 'selected' : ''}>Liberada</option>
+                        <option value="Bloqueada" ${m.status === 'Bloqueada' ? 'selected' : ''}>Bloqueada</option>
+                        <option value="Em Manutenção" ${m.status === 'Em Manutenção' ? 'selected' : ''}>Em Manutenção</option>
+                        <option value="Inativa" ${m.status === 'Inativa' ? 'selected' : ''}>Inativa</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Observações</label>
+                    <textarea id="editMNotes" class="form-textarea">${m.notes || ''}</textarea>
+                </div>
+                <button class="btn btn-primary" onclick="app.saveMachineEdit()">💾 Salvar Alterações</button>
+            `;
+            this.openModal('editMachineModal');
+        },
+
+        saveMachineEdit() {
+            if (!this.currentMachine) return;
+
+            const name = document.getElementById('editMName').value.trim();
+            const code = document.getElementById('editMCode').value.trim();
+            const type = document.getElementById('editMType').value;
+
+            if (!name || !code || !type) {
+                this.showToast('Preencha os campos obrigatórios', 'danger');
+                return;
+            }
+
+            // Update machine
+            this.currentMachine.name = name;
+            this.currentMachine.type = type;
+            this.currentMachine.manufacturer = document.getElementById('editMManufacturer').value.trim();
+            this.currentMachine.model = document.getElementById('editMModel').value.trim();
+            this.currentMachine.serial_number = document.getElementById('editMSerial').value.trim();
+            this.currentMachine.year = parseInt(document.getElementById('editMYear').value) || null;
+            this.currentMachine.capacity = document.getElementById('editMCapacity').value.trim();
+            this.currentMachine.horimeter = parseInt(document.getElementById('editMHorimeter').value) || 0;
+            this.currentMachine.preventive_interval = parseInt(document.getElementById('editMPreventive').value) || 250;
+            this.currentMachine.status = document.getElementById('editMStatus').value;
+            this.currentMachine.notes = document.getElementById('editMNotes').value.trim();
+
+            // Recalculate next preventive
+            this.currentMachine.next_preventive_horimeter = this.currentMachine.horimeter + this.currentMachine.preventive_interval;
+
+            this.saveToLocalStorage();
+
+            if (this.supabase) {
+                try { this.supabase.from('machines').update(this.currentMachine).eq('id', this.currentMachine.id); } catch(e) {}
+            }
+
+            this.closeModal('editMachineModal');
+            this.showToast('Máquina atualizada!', 'success');
+            this.viewMachineDetail(this.currentMachine.id);
+            this.renderMachines();
+        },
+
+        deleteMachine() {
+            if (!this.currentMachine) return;
+
+            if (confirm(`Tem certeza que deseja excluir a máquina "${this.currentMachine.name}"?\n\nEsta ação não pode ser desfeita!`)) {
+                const machineId = this.currentMachine.id;
+
+                // Remove from array
+                this.machines = this.machines.filter(m => m.id !== machineId);
+                this.saveToLocalStorage();
+
+                if (this.supabase) {
+                    try { this.supabase.from('machines').delete().eq('id', machineId); } catch(e) {}
+                }
+
+                this.showToast('Máquina excluída!', 'success');
+                this.goBack();
+                this.renderMachines();
+            }
         },
 
         viewUserDetail(userId) {
