@@ -560,10 +560,13 @@
                     <span class="status-dot online" id="operatorConnectionDot"></span>
                 </div>
                 <div style="text-align:center; padding: 20px 0;">
-                    <button class="btn btn-primary btn-lg" onclick="app.startQRScan()" style="margin-bottom:16px;">
+                    <button class="btn btn-primary btn-lg" onclick="app.startQRScan()" style="margin-bottom:12px;">
                         <span style="font-size:1.5rem;">📷</span> Escanear QR Code
                     </button>
-                    <p style="color:var(--gray); font-size:0.85rem;">Posicione o QR Code da máquina na câmera</p>
+                    <button class="btn btn-outline" onclick="app.showMachineSelector()" style="margin-bottom:16px;">
+                        <span>🚜</span> Selecionar Máquina Manualmente
+                    </button>
+                    <p style="color:var(--gray); font-size:0.85rem;">Posicione o QR Code da máquina na câmera ou selecione da lista</p>
                 </div>
                 <div class="section-title">Ou selecione uma máquina</div>
                 <div class="search-box"><span class="search-icon">🔍</span><input type="text" id="operatorMachineSearch" placeholder="Buscar máquina..." oninput="app.filterOperatorMachines()"></div>
@@ -1458,15 +1461,17 @@
         showQRCode(machine) {
             const container = document.getElementById('qrCodeContainer');
             container.innerHTML = '';
+            // Generate QR with clean uppercase code only
+            const cleanCode = machine.code.trim().toUpperCase();
             new QRCode(container, {
-                text: machine.code,
+                text: cleanCode,
                 width: 200,
                 height: 200,
                 colorDark: '#0f172a',
                 colorLight: '#ffffff',
                 correctLevel: QRCode.CorrectLevel.H
             });
-            document.getElementById('qrCodeLabel').textContent = `${machine.name} - ${machine.code}`;
+            document.getElementById('qrCodeLabel').textContent = `${machine.name} - ${cleanCode}`;
             this.openModal('qrCodeModal');
         },
 
@@ -1750,15 +1755,25 @@
         },
 
         handleQRCode(code) {
-            const machine = this.machines.find(m => m.code === code.trim().toUpperCase());
+            // Clean the code: remove spaces, newlines, and convert to uppercase
+            const cleanCode = code.trim().toUpperCase().replace(/\s+/g, '');
+
+            console.log('QR Code scanned:', code);
+            console.log('Cleaned code:', cleanCode);
+            console.log('Available machines:', this.machines.map(m => m.code));
+
+            const machine = this.machines.find(m => m.code.toUpperCase() === cleanCode);
+
             if (machine) {
+                console.log('Machine found:', machine.name);
                 if (this.html5QrCode) {
                     try { this.html5QrCode.stop(); } catch(e) {}
                     this.html5QrCode = null;
                 }
                 this.selectMachineForChecklist(machine.id);
             } else {
-                this.showToast('Máquina não encontrada', 'danger');
+                console.log('Machine NOT found for code:', cleanCode);
+                this.showToast('Máquina não encontrada: ' + cleanCode, 'danger');
             }
         },
 
@@ -1767,6 +1782,67 @@
             if (code) {
                 this.handleQRCode(code);
             }
+        },
+
+        showMachineSelector() {
+            // Alternative: show list of machines for selection
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay active';
+            modal.id = 'machineSelectorModal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div class="modal-title">🚜 Selecionar Máquina</div>
+                        <button class="modal-close" onclick="document.getElementById('machineSelectorModal').remove()">✕</button>
+                    </div>
+                    <div class="search-box" style="margin-bottom:12px;">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="selectorSearch" class="form-input" placeholder="Buscar máquina..." style="padding-left:44px;" oninput="app.filterSelectorMachines()">
+                    </div>
+                    <div id="selectorMachinesList"></div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            this.renderSelectorMachines();
+        },
+
+        renderSelectorMachines() {
+            const list = document.getElementById('selectorMachinesList');
+            const search = (document.getElementById('selectorSearch')?.value || '').toLowerCase();
+
+            let filtered = this.machines.filter(m => m.status !== 'Inativa');
+            if (search) {
+                filtered = filtered.filter(m => 
+                    m.name.toLowerCase().includes(search) || 
+                    m.code.toLowerCase().includes(search)
+                );
+            }
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--gray);">Nenhuma máquina disponível</div>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(m => `
+                <div class="card" onclick="app.selectMachineFromSelector('${m.id}')" style="margin-bottom:8px;">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">${m.type === 'Empilhadeira' ? '🚜' : '🛒'} ${m.name}</div>
+                            <div class="card-subtitle">Código: ${m.code}</div>
+                        </div>
+                        <span class="card-badge ${m.status === 'Liberada' ? 'badge-success' : m.status === 'Bloqueada' ? 'badge-danger' : 'badge-warning'}">${m.status}</span>
+                    </div>
+                </div>
+            `).join('');
+        },
+
+        filterSelectorMachines() {
+            this.renderSelectorMachines();
+        },
+
+        selectMachineFromSelector(machineId) {
+            document.getElementById('machineSelectorModal').remove();
+            this.selectMachineForChecklist(machineId);
         },
 
         selectMachineForChecklist(machineId) {
