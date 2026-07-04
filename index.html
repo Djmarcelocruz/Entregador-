@@ -8,7 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Checklist Industrial</title>
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ2hlY2tsaXN0IEluZHVzdHJpYWwiLCJzaG9ydF9uYW1lIjoiQ2hlY2tsaXN0IiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBmMTcyYSIsInRoZW1lX2NvbG9yIjoiIzBmMTcyYSIsInN0YXJ0X3VybCI6Ii4iLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCNGJXeHVjejBpYUhSMGNEb3ZMM2QzZHk1M015NXZjbWM2T0RBNE1DOXpkbWNpSUhkcFpIUm9QU0l6TURBd0lpQm9aV2xuYUhROUlqTXdNREFpSUdacGJHdzlJblZ5YkNqc2dabWxzYkQwaWRXNXNhVzFwZEdWa0lqc0tJQ0FnSUR4emRIbHNaVDR1UEdScGJHVWdabWxzYkQwaVlXeHpieUlnWkdsd1pXNG9KMTlUVkZNeFhTazdQQzl6ZEhsc1pUNDhMM04yWno0PSIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+    <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/module/index.js";
+    window.createSupabaseClient = createClient;
+</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
@@ -906,6 +909,7 @@
             this.setupEventListeners();
             this.setupNetworkListeners();
             this.loadFromLocalStorage();
+            this.ensureDefaultUser();
             this.checkSession();
             this.setupPinPad();
         },
@@ -942,15 +946,83 @@
 
         initSupabase() {
             try {
-                if (typeof supabase !== 'undefined') {
-                    this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                if (typeof window.createSupabaseClient !== 'undefined') {
+                    this.supabase = window.createSupabaseClient(SUPABASE_URL, SUPABASE_KEY);
                     this.showToast('Conectado ao Supabase', 'success');
+                    this.syncFromSupabase();
                 } else {
-                    this.showToast('Modo offline - dados locais', 'warning');
+                    // Fallback: try UMD version
+                    if (typeof supabase !== 'undefined' && supabase.createClient) {
+                        this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                        this.showToast('Conectado ao Supabase', 'success');
+                        this.syncFromSupabase();
+                    } else {
+                        this.showToast('Modo offline - dados locais', 'warning');
+                        this.ensureDefaultUser();
+                    }
                 }
             } catch (e) {
                 console.error('Supabase init error:', e);
                 this.showToast('Modo offline ativado', 'warning');
+                this.ensureDefaultUser();
+            }
+        },
+
+        ensureDefaultUser() {
+            // Ensure ADMIN user exists in local storage for first login
+            if (!this.users.find(u => u.registration_number === 'ADMIN')) {
+                this.users.push({
+                    id: 'admin_default',
+                    full_name: 'Administrador',
+                    registration_number: 'ADMIN',
+                    pin: '1234',
+                    role: 'supervisor',
+                    active: true,
+                    created_at: new Date().toISOString()
+                });
+                this.saveToLocalStorage();
+            }
+        },
+
+        async syncFromSupabase() {
+            if (!this.supabase) return;
+            try {
+                // Fetch users
+                const { data: usersData } = await this.supabase.from('profiles').select('*');
+                if (usersData && usersData.length > 0) {
+                    this.users = usersData;
+                } else {
+                    // If no users in Supabase, create default ADMIN
+                    const defaultUser = {
+                        id: 'admin_default',
+                        full_name: 'Administrador',
+                        registration_number: 'ADMIN',
+                        pin: '1234',
+                        role: 'supervisor',
+                        active: true,
+                        created_at: new Date().toISOString()
+                    };
+                    await this.supabase.from('profiles').insert(defaultUser);
+                    this.users = [defaultUser];
+                }
+
+                // Fetch machines
+                const { data: machinesData } = await this.supabase.from('machines').select('*');
+                if (machinesData) this.machines = machinesData;
+
+                // Fetch checklists
+                const { data: checklistsData } = await this.supabase.from('checklists').select('*');
+                if (checklistsData) this.checklists = checklistsData;
+
+                // Fetch maintenance orders
+                const { data: osData } = await this.supabase.from('maintenance_orders').select('*');
+                if (osData) this.maintenanceOrders = osData;
+
+                this.saveToLocalStorage();
+                this.showToast('Dados sincronizados!', 'success');
+            } catch (e) {
+                console.log('Sync error:', e);
+                this.ensureDefaultUser();
             }
         },
 
@@ -1049,9 +1121,24 @@
 
             this.showLoading(true);
 
-            try {
-                // Try Supabase first
-                if (this.supabase) {
+            // ALWAYS check local first (fastest and most reliable)
+            const localUser = this.users.find(u => 
+                u.registration_number === matricula && 
+                u.pin === this.pin && 
+                u.active !== false
+            );
+
+            if (localUser) {
+                this.currentUser = localUser;
+                this.saveToLocalStorage();
+                this.showLoading(false);
+                this.routeByRole();
+                return;
+            }
+
+            // If not found locally, try Supabase
+            if (this.supabase) {
+                try {
                     const { data, error } = await this.supabase
                         .from('profiles')
                         .select('*')
@@ -1060,51 +1147,22 @@
                         .eq('active', true)
                         .single();
 
-                    if (data) {
+                    if (data && !error) {
                         this.currentUser = data;
                         this.saveToLocalStorage();
                         this.showLoading(false);
                         this.routeByRole();
                         return;
                     }
-                }
-
-                // Fallback to local
-                const user = this.users.find(u => 
-                    u.registration_number === matricula && 
-                    u.pin === this.pin && 
-                    u.active !== false
-                );
-
-                if (user) {
-                    this.currentUser = user;
-                    this.saveToLocalStorage();
-                    this.showLoading(false);
-                    this.routeByRole();
-                } else {
-                    this.showLoading(false);
-                    this.showToast('Matrícula ou PIN incorretos', 'danger');
-                    this.pin = '';
-                    this.updatePinDisplay();
-                }
-            } catch (e) {
-                this.showLoading(false);
-                this.showToast('Erro de conexão. Usando modo local.', 'warning');
-
-                const user = this.users.find(u => 
-                    u.registration_number === matricula && 
-                    u.pin === this.pin && 
-                    u.active !== false
-                );
-                if (user) {
-                    this.currentUser = user;
-                    this.routeByRole();
-                } else {
-                    this.showToast('Matrícula ou PIN incorretos', 'danger');
-                    this.pin = '';
-                    this.updatePinDisplay();
+                } catch (e) {
+                    console.log('Supabase login error:', e);
                 }
             }
+
+            this.showLoading(false);
+            this.showToast('Matrícula ou PIN incorretos', 'danger');
+            this.pin = '';
+            this.updatePinDisplay();
         },
 
         routeByRole() {
