@@ -2,1800 +2,646 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist Industrial</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
 <style>
-:root {
-    --primary:#1a5276; --primary-dark:#154360; --secondary:#2e86c1;
-    --accent:#e67e22; --accent-dark:#d35400; --success:#27ae60;
-    --danger:#c0392b; --warning:#f39c12; --info:#3498db;
-    --light:#f8f9fa; --dark:#2c3e50; --gray:#7f8c8d; --gray-light:#ecf0f1;
-    --white:#ffffff; --shadow:0 2px 10px rgba(0,0,0,0.1);
-    --shadow-lg:0 4px 20px rgba(0,0,0,0.15); --radius:12px; --radius-sm:8px;
-    --transition:all 0.3s ease;
-}
+:root{--primary:#1a73e8;--primary-dark:#1557b0;--success:#34a853;--danger:#ea4335;--warning:#fbbc04;--dark:#202124;--gray:#5f6368;--light-gray:#f1f3f4;--white:#fff;--shadow:0 2px 8px rgba(0,0,0,0.12);--shadow-lg:0 4px 16px rgba(0,0,0,0.15);--radius:12px;--radius-sm:8px}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--gray-light);color:var(--dark);min-height:100vh;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
-
-#splash-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.5s ease}
-#splash-screen .logo{font-size:80px;color:var(--white);margin-bottom:20px}
-#splash-screen h1{color:var(--white);font-size:28px;font-weight:700}
-#splash-screen p{color:rgba(255,255,255,0.8);margin-top:10px;font-size:14px}
-#splash-screen .loader{width:40px;height:40px;border:3px solid rgba(255,255,255,0.3);border-top-color:var(--white);border-radius:50%;animation:spin 1s linear infinite;margin-top:30px}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-#auth-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%)}
-.auth-card{background:var(--white);border-radius:var(--radius);padding:40px 30px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);text-align:center}
-.auth-card .logo{font-size:60px;color:var(--primary);margin-bottom:15px}
-.auth-card h2{color:var(--dark);font-size:24px;margin-bottom:5px}
-.auth-card .subtitle{color:var(--gray);font-size:14px;margin-bottom:30px}
-.form-group{margin-bottom:20px;text-align:left}
-.form-group label{display:block;font-size:13px;font-weight:600;color:var(--dark);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:14px 16px;border:2px solid var(--gray-light);border-radius:var(--radius-sm);font-size:16px;transition:var(--transition);background:var(--white);color:var(--dark)}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--secondary);box-shadow:0 0 0 3px rgba(46,134,193,0.15)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;transition:var(--transition);text-transform:uppercase;letter-spacing:0.5px;width:100%}
-.btn-primary{background:var(--primary);color:var(--white)}
-.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px)}
-.btn-success{background:var(--success);color:var(--white)}
-.btn-success:hover{background:#219a52}
-.btn-danger{background:var(--danger);color:var(--white)}
-.btn-danger:hover{background:#a93226}
-.btn-warning{background:var(--warning);color:var(--white)}
-.btn-secondary{background:var(--gray-light);color:var(--dark)}
-.btn-secondary:hover{background:#d5dbdb}
-.btn-outline{background:transparent;border:2px solid var(--primary);color:var(--primary)}
-.btn-outline:hover{background:var(--primary);color:var(--white)}
-.btn-sm{padding:8px 16px;font-size:13px}
-.btn-lg{padding:16px 32px;font-size:16px}
-.btn-icon{width:44px;height:44px;padding:0;border-radius:50%}
-
-#app-container{display:none;min-height:100vh}
-.app-header{background:var(--white);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow);position:sticky;top:0;z-index:100}
-.app-header .brand{display:flex;align-items:center;gap:10px}
-.app-header .brand i{font-size:28px;color:var(--primary)}
-.app-header .brand span{font-size:18px;font-weight:700;color:var(--dark)}
-.app-header .user-info{display:flex;align-items:center;gap:12px}
-.app-header .user-badge{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600}
-.user-badge.supervisor{background:#fdebd0;color:var(--accent-dark)}
-.user-badge.operador{background:#d5f5e3;color:var(--success)}
-.user-badge.mecanico{background:#d6eaf8;color:var(--info)}
-
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--white);display:flex;justify-content:space-around;padding:8px 0;box-shadow:0 -2px 10px rgba(0,0,0,0.08);z-index:100;border-top:1px solid var(--gray-light)}
-.bottom-nav .nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;cursor:pointer;transition:var(--transition);color:var(--gray);text-decoration:none;font-size:11px;font-weight:500}
-.bottom-nav .nav-item i{font-size:20px}
-.bottom-nav .nav-item.active{color:var(--primary)}
-
-.content-area{padding:20px;padding-bottom:80px;max-width:1200px;margin:0 auto}
-.card{background:var(--white);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow);transition:var(--transition)}
-.card:hover{box-shadow:var(--shadow-lg)}
-.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
-.card-title{font-size:18px;font-weight:700;color:var(--dark);display:flex;align-items:center;gap:10px}
-.card-title i{color:var(--primary)}
-
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
-.stat-card{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);text-align:center;transition:var(--transition)}
-.stat-card:hover{transform:translateY(-2px)}
-.stat-card .stat-icon{font-size:28px;margin-bottom:8px}
-.stat-card .stat-value{font-size:28px;font-weight:700;color:var(--dark)}
-.stat-card .stat-label{font-size:12px;color:var(--gray);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
-.stat-card.primary .stat-icon{color:var(--primary)}
-.stat-card.success .stat-icon{color:var(--success)}
-.stat-card.warning .stat-icon{color:var(--warning)}
-.stat-card.danger .stat-icon{color:var(--danger)}
-
-.machine-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.machine-card{background:var(--white);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:var(--transition);cursor:pointer;border:2px solid transparent}
-.machine-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--secondary)}
-.machine-card .machine-header{padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--gray-light)}
-.machine-card .machine-icon{width:50px;height:50px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--white)}
-.machine-card .machine-info{flex:1}
-.machine-card .machine-code{font-size:12px;color:var(--gray);font-weight:600;text-transform:uppercase}
-.machine-card .machine-name{font-size:16px;font-weight:700;color:var(--dark)}
-.machine-card .machine-type{font-size:12px;color:var(--gray)}
-.machine-card .machine-body{padding:16px}
-.machine-card .machine-stats{display:flex;gap:16px;margin-bottom:12px}
-.machine-card .machine-stat{text-align:center}
-.machine-card .machine-stat .value{font-size:18px;font-weight:700;color:var(--dark)}
-.machine-card .machine-stat .label{font-size:11px;color:var(--gray);text-transform:uppercase}
-.machine-card .machine-footer{padding:12px 16px;background:var(--gray-light);display:flex;align-items:center;justify-content:space-between}
-
-.status-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600}
-.status-ativo{background:#d5f5e3;color:#1e8449}
-.status-inativo{background:#fadbd8;color:#922b21}
-.status-manutencao{background:#fdebd0;color:#9c640c}
-.status-bloqueado{background:#fadbd8;color:#c0392b}
-
-.table-container{overflow-x:auto;border-radius:var(--radius);background:var(--white);box-shadow:var(--shadow)}
-table{width:100%;border-collapse:collapse}
-th{background:var(--primary);color:var(--white);padding:14px 16px;text-align:left;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
-td{padding:14px 16px;border-bottom:1px solid var(--gray-light);font-size:14px}
-tr:hover td{background:#f8f9fa}
-tr:last-child td{border-bottom:none}
-
-.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
-.form-section{margin-bottom:24px}
-.form-section-title{font-size:14px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--gray-light);display:flex;align-items:center;gap:8px}
-
-.checklist-item{background:var(--white);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px;border:2px solid var(--gray-light);transition:var(--transition)}
-.checklist-item:hover{border-color:var(--secondary)}
-.checklist-item.critical{border-left:4px solid var(--danger)}
-.checklist-item .item-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.checklist-item .item-number{width:32px;height:32px;border-radius:50%;background:var(--primary);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
-.checklist-item .item-text{flex:1;font-size:15px;font-weight:500;color:var(--dark)}
-.checklist-item .item-critical{background:var(--danger);color:var(--white);padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase}
-.checklist-item .item-options{display:flex;gap:10px;flex-wrap:wrap}
-.option-btn{flex:1;min-width:100px;padding:10px 16px;border:2px solid var(--gray-light);border-radius:var(--radius-sm);background:var(--white);cursor:pointer;transition:var(--transition);font-size:14px;font-weight:600;text-align:center}
-.option-btn:hover{border-color:var(--secondary)}
-.option-btn.selected-ok{background:var(--success);color:var(--white);border-color:var(--success)}
-.option-btn.selected-nok{background:var(--danger);color:var(--white);border-color:var(--danger)}
-.option-btn.selected-na{background:var(--gray);color:var(--white);border-color:var(--gray)}
-.checklist-item .item-observation{margin-top:10px}
-.checklist-item .item-observation textarea{width:100%;padding:10px;border:1px solid var(--gray-light);border-radius:var(--radius-sm);font-size:14px;resize:vertical;min-height:60px}
-.checklist-item .item-photo{margin-top:10px}
-.photo-upload{border:2px dashed var(--gray-light);border-radius:var(--radius-sm);padding:20px;text-align:center;cursor:pointer;transition:var(--transition)}
-.photo-upload:hover{border-color:var(--secondary);background:#f0f7ff}
-.photo-upload i{font-size:32px;color:var(--gray);margin-bottom:8px}
-.photo-preview{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.photo-preview img{width:80px;height:80px;object-fit:cover;border-radius:var(--radius-sm);border:2px solid var(--gray-light)}
-
-#qr-reader{width:100%;max-width:400px;margin:0 auto;border-radius:var(--radius);overflow:hidden}
-
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;opacity:0;visibility:hidden;transition:var(--transition)}
-.modal-overlay.active{opacity:1;visibility:visible}
-.modal-content{background:var(--white);border-radius:var(--radius);width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);transform:scale(0.9);transition:var(--transition)}
-.modal-overlay.active .modal-content{transform:scale(1)}
-.modal-header{padding:20px;border-bottom:1px solid var(--gray-light);display:flex;align-items:center;justify-content:space-between}
-.modal-header h3{font-size:18px;font-weight:700;color:var(--dark)}
-.modal-header .close-btn{width:36px;height:36px;border-radius:50%;border:none;background:var(--gray-light);color:var(--dark);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px}
-.modal-body{padding:20px}
-.modal-footer{padding:16px 20px;border-top:1px solid var(--gray-light);display:flex;gap:10px;justify-content:flex-end}
-
-.toast-container{position:fixed;top:20px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:10px}
-.toast{padding:14px 20px;border-radius:var(--radius-sm);color:var(--white);font-size:14px;font-weight:500;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:10px;animation:slideIn 0.3s ease;max-width:400px}
-@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
-.toast-success{background:var(--success)}
-.toast-error{background:var(--danger)}
-.toast-warning{background:var(--warning)}
-.toast-info{background:var(--info)}
-
-.empty-state{text-align:center;padding:60px 20px}
-.empty-state i{font-size:60px;color:var(--gray-light);margin-bottom:16px}
-.empty-state h3{font-size:18px;color:var(--dark);margin-bottom:8px}
-.empty-state p{color:var(--gray);font-size:14px}
-
-.search-box{position:relative;margin-bottom:20px}
-.search-box input{width:100%;padding:14px 16px 14px 48px;border:2px solid var(--gray-light);border-radius:var(--radius-sm);font-size:15px;transition:var(--transition)}
-.search-box i{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--gray);font-size:18px}
-.search-box input:focus{outline:none;border-color:var(--secondary)}
-
-.tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--gray-light);padding:4px;border-radius:var(--radius-sm)}
-.tab{flex:1;padding:10px;border:none;background:transparent;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;transition:var(--transition);color:var(--gray)}
-.tab.active{background:var(--white);color:var(--primary);box-shadow:var(--shadow)}
-
-.filter-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-.filter-bar select,.filter-bar input{padding:10px 14px;border:2px solid var(--gray-light);border-radius:var(--radius-sm);font-size:14px;background:var(--white)}
-
-.progress-bar{width:100%;height:8px;background:var(--gray-light);border-radius:4px;overflow:hidden}
-.progress-bar .progress-fill{height:100%;background:var(--success);border-radius:4px;transition:width 0.3s ease}
-
-.timeline{position:relative;padding-left:30px}
-.timeline::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:2px;background:var(--gray-light)}
-.timeline-item{position:relative;padding-bottom:24px}
-.timeline-item::before{content:'';position:absolute;left:-24px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--primary);border:2px solid var(--white)}
-.timeline-item .timeline-date{font-size:12px;color:var(--gray);margin-bottom:4px}
-.timeline-item .timeline-content{background:var(--white);padding:12px;border-radius:var(--radius-sm);box-shadow:var(--shadow)}
-.timeline-item .timeline-title{font-weight:600;color:var(--dark);font-size:14px}
-.timeline-item .timeline-desc{font-size:13px;color:var(--gray);margin-top:4px}
-
-.qr-display{text-align:center;padding:20px}
-.qr-display canvas{margin:0 auto}
-
-.toggle{position:relative;display:inline-block;width:50px;height:26px}
-.toggle input{opacity:0;width:0;height:0}
-.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--gray-light);transition:.3s;border-radius:26px}
-.toggle-slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:white;transition:.3s;border-radius:50%}
-.toggle input:checked+.toggle-slider{background:var(--success)}
-.toggle input:checked+.toggle-slider:before{transform:translateX(24px)}
-
-.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600}
-.badge-primary{background:#d6eaf8;color:var(--primary)}
-.badge-success{background:#d5f5e3;color:var(--success)}
-.badge-danger{background:#fadbd8;color:var(--danger)}
-.badge-warning{background:#fdebd0;color:var(--warning)}
-
-.section-divider{height:1px;background:var(--gray-light);margin:24px 0}
-.action-row{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-.action-row .btn{width:auto}
-
-::-webkit-scrollbar{width:6px}
-::-webkit-scrollbar-track{background:var(--gray-light)}
-::-webkit-scrollbar-thumb{background:var(--gray);border-radius:3px}
-
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f2f5;color:var(--dark);min-height:100vh}
+.login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s ease}
+.login-overlay.hidden{opacity:0;pointer-events:none}
+.login-card{background:var(--white);padding:40px;border-radius:var(--radius);box-shadow:var(--shadow-lg);width:100%;max-width:380px;text-align:center}
+.login-card .logo{width:80px;height:80px;background:var(--primary);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:white;font-size:32px}
+.login-card h1{font-size:24px;margin-bottom:8px}
+.login-card p{color:var(--gray);margin-bottom:28px;font-size:14px}
+.login-card input{width:100%;padding:14px 16px;border:2px solid var(--light-gray);border-radius:var(--radius-sm);font-size:15px;margin-bottom:12px;transition:border-color .2s}
+.login-card input:focus{outline:none;border-color:var(--primary)}
+.login-card button{width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);font-size:16px;font-weight:600;cursor:pointer;transition:background .2s,transform .1s}
+.login-card button:hover{background:var(--primary-dark)}
+.login-card button:active{transform:scale(.98)}
+.login-error{color:var(--danger);font-size:13px;margin-top:12px;display:none}
+.app-header{background:var(--white);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow);position:sticky;top:0;z-index:100}
+.app-header .brand{display:flex;align-items:center;gap:12px}
+.app-header .brand .logo-icon{width:40px;height:40px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:18px}
+.app-header .brand h2{font-size:18px;font-weight:700}
+.app-header .brand span{font-size:12px;color:var(--gray);display:block}
+.header-actions{display:flex;align-items:center;gap:12px}
+.header-actions .user-badge{display:flex;align-items:center;gap:8px;background:var(--light-gray);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500}
+.btn-icon{width:36px;height:36px;border-radius:50%;border:none;background:var(--light-gray);color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.btn-icon:hover{background:#e8eaed;color:var(--dark)}
+.nav-tabs{display:flex;background:var(--white);padding:0 24px;gap:4px;border-bottom:1px solid #e0e0e0}
+.nav-tab{padding:14px 20px;border:none;background:none;font-size:14px;font-weight:500;color:var(--gray);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;display:flex;align-items:center;gap:8px}
+.nav-tab:hover{color:var(--primary)}
+.nav-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.main-content{padding:24px;max-width:1400px;margin:0 auto}
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.card-header{padding:20px 24px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between}
+.card-header h3{font-size:16px;font-weight:600}
+.card-body{padding:24px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px}
+.stat-card .stat-icon{width:48px;height:48px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:20px}
+.stat-card .stat-icon.blue{background:#e8f0fe;color:var(--primary)}
+.stat-card .stat-icon.green{background:#e6f4ea;color:var(--success)}
+.stat-card .stat-icon.orange{background:#fef3e8;color:#e37400}
+.stat-card .stat-icon.red{background:#fce8e6;color:var(--danger)}
+.stat-card .stat-value{font-size:28px;font-weight:700}
+.stat-card .stat-label{font-size:13px;color:var(--gray)}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{text-align:left;padding:12px 16px;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #eee}
+.data-table td{padding:14px 16px;border-bottom:1px solid #f0f0f0;font-size:14px}
+.data-table tr:hover{background:#fafafa}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500}
+.badge.green{background:#e6f4ea;color:var(--success)}
+.badge.yellow{background:#fef3e8;color:#e37400}
+.badge.red{background:#fce8e6;color:var(--danger)}
+.badge.blue{background:#e8f0fe;color:var(--primary)}
+.badge.gray{background:#f1f3f4;color:var(--gray)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all .2s}
+.btn-primary{background:var(--primary);color:white}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-success{background:var(--success);color:white}
+.btn-success:hover{background:#2d8e47}
+.btn-danger{background:var(--danger);color:white}
+.btn-danger:hover{background:#c53929}
+.btn-outline{background:transparent;border:1.5px solid #dadce0;color:var(--dark)}
+.btn-outline:hover{background:var(--light-gray)}
+.btn-sm{padding:6px 12px;font-size:13px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:500;margin-bottom:6px;color:var(--dark)}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 14px;border:1.5px solid #dadce0;border-radius:var(--radius-sm);font-size:14px;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-overlay.active{opacity:1;pointer-events:all}
+.modal{background:var(--white);border-radius:var(--radius);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(20px) scale(.95);transition:transform .3s}
+.modal-overlay.active .modal{transform:translateY(0) scale(1)}
+.modal-header{padding:20px 24px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between}
+.modal-header h3{font-size:18px}
+.modal-close{background:none;border:none;font-size:20px;color:var(--gray);cursor:pointer}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:10px}
+.checklist-item{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:1.5px solid #e8eaed;border-radius:var(--radius-sm);margin-bottom:10px;transition:all .2s;cursor:pointer}
+.checklist-item:hover{border-color:var(--primary)}
+.checklist-item.checked{background:#f8f9fa;border-color:var(--success)}
+.checklist-item .checkbox{width:22px;height:22px;border:2px solid #dadce0;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:all .2s}
+.checklist-item.checked .checkbox{background:var(--success);border-color:var(--success);color:white}
+.checklist-item .item-text{flex:1}
+.checklist-item .item-text h4{font-size:14px;font-weight:500;margin-bottom:2px}
+.checklist-item.checked .item-text h4{text-decoration:line-through;color:var(--gray)}
+.checklist-item .item-text p{font-size:12px;color:var(--gray)}
+.progress-bar{height:8px;background:#e8eaed;border-radius:4px;overflow:hidden}
+.progress-bar .progress-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.progress-fill.green{background:var(--success)}
+.progress-fill.yellow{background:var(--warning)}
+.progress-fill.red{background:var(--danger)}
+.toolbar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.search-box{position:relative;flex:1;min-width:240px}
+.search-box input{width:100%;padding:10px 14px 10px 38px;border:1.5px solid #dadce0;border-radius:var(--radius-sm);font-size:14px}
+.search-box i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gray)}
+@media(max-width:768px){.main-content{padding:16px}.form-row{grid-template-columns:1fr}.nav-tabs{overflow-x:auto;padding:0 12px}.nav-tab{padding:12px 14px;font-size:13px;white-space:nowrap}.stats-row{grid-template-columns:1fr 1fr}.card-header{flex-direction:column;gap:12px;align-items:flex-start}}
 .section{display:none}
-.section.active{display:block;animation:fadeIn 0.3s ease}
+.section.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-
-.loading{display:inline-block;width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:var(--white);border-radius:50%;animation:spin 0.8s linear infinite}
-
-@media(max-width:768px){
-    .machine-grid{grid-template-columns:1fr}
-    .stats-grid{grid-template-columns:repeat(2,1fr)}
-    .form-row{grid-template-columns:1fr}
-    .auth-card{padding:30px 20px}
-    .content-area{padding:16px;padding-bottom:80px}
-}
-
-@media print{
-    .app-header,.bottom-nav,.btn{display:none!important}
-    .content-area{padding:0}
-    .card{box-shadow:none;border:1px solid #ddd}
-}
+.animate-in{animation:fadeIn .3s ease}
+.empty-state{text-align:center;padding:60px 20px}
+.empty-state i{font-size:48px;color:#dadce0;margin-bottom:16px}
+.empty-state h4{font-size:16px;margin-bottom:8px}
+.empty-state p{font-size:14px;color:var(--gray)}
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:10px}
+.toast{background:var(--dark);color:white;padding:14px 20px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);font-size:14px;display:flex;align-items:center;gap:10px;animation:slideIn .3s ease}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--danger)}
+.toast.warning{background:#e37400}
 </style>
 </head>
 <body>
 
-<!-- Splash Screen -->
-<div id="splash-screen">
-    <div class="logo"><i class="fas fa-industry"></i></div>
-    <h1>Checklist Industrial</h1>
-    <p>Gestão de Frota e Manutenção</p>
-    <div class="loader"></div>
+<!-- LOGIN -->
+<div class="login-overlay" id="loginOverlay">
+<div class="login-card">
+<div class="logo"><i class="fas fa-clipboard-check"></i></div>
+<h1>Checklist Industrial</h1>
+<p>Sistema de gestão de checklists e inspeções</p>
+<input type="text" id="loginUser" placeholder="Usuário" value="ADMIN">
+<input type="password" id="loginPass" placeholder="Senha" value="1234">
+<button onclick="doLogin()">Entrar</button>
+<div class="login-error" id="loginError">Usuário ou senha incorretos</div>
+</div>
 </div>
 
-<!-- Auth Screen -->
-<div id="auth-screen" style="display:none;">
-    <div class="auth-card">
-        <div class="logo"><i class="fas fa-industry"></i></div>
-        <h2>Checklist Industrial</h2>
-        <p class="subtitle">Sistema de Gestão de Frota</p>
-        <div class="form-group">
-            <label>Usuário</label>
-            <input type="text" id="auth-username" placeholder="Digite seu usuário" value="ADMIN">
-        </div>
-        <div class="form-group">
-            <label>Senha / PIN</label>
-            <input type="password" id="auth-password" placeholder="Digite sua senha" value="1234">
-        </div>
-        <button class="btn btn-primary" onclick="app.login()">
-            <i class="fas fa-sign-in-alt"></i> Entrar
-        </button>
-        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--gray-light);">
-            <p style="font-size:12px;color:var(--gray);">
-                <i class="fas fa-info-circle"></i> 
-                Usuário padrão: <strong>ADMIN</strong> / Senha: <strong>1234</strong>
-            </p>
-        </div>
-    </div>
+<!-- APP -->
+<div id="app" style="display:none">
+<header class="app-header">
+<div class="brand">
+<div class="logo-icon"><i class="fas fa-clipboard-check"></i></div>
+<div><h2>Checklist Industrial</h2><span>Gestão de Inspeções</span></div>
+</div>
+<div class="header-actions">
+<div class="user-badge"><i class="fas fa-user-circle"></i><span id="currentUserName">ADMIN</span></div>
+<button class="btn-icon" onclick="logout()" title="Sair"><i class="fas fa-sign-out-alt"></i></button>
+</div>
+</header>
+
+<nav class="nav-tabs">
+<button class="nav-tab active" onclick="showSection('dashboard',this)"><i class="fas fa-chart-pie"></i> Dashboard</button>
+<button class="nav-tab" onclick="showSection('checklists',this)"><i class="fas fa-clipboard-list"></i> Checklists</button>
+<button class="nav-tab" onclick="showSection('inspections',this)"><i class="fas fa-search"></i> Inspeções</button>
+<button class="nav-tab" onclick="showSection('equipment',this)"><i class="fas fa-cogs"></i> Equipamentos</button>
+<button class="nav-tab" onclick="showSection('reports',this)"><i class="fas fa-file-alt"></i> Relatórios</button>
+</nav>
+
+<main class="main-content">
+<!-- DASHBOARD -->
+<section id="dashboard" class="section active">
+<div class="stats-row">
+<div class="stat-card"><div class="stat-icon blue"><i class="fas fa-clipboard-list"></i></div><div><div class="stat-value" id="statTotalChecklists">0</div><div class="stat-label">Total de Checklists</div></div></div>
+<div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div><div class="stat-value" id="statCompleted">0</div><div class="stat-label">Concluídos</div></div></div>
+<div class="stat-card"><div class="stat-icon orange"><i class="fas fa-clock"></i></div><div><div class="stat-value" id="statPending">0</div><div class="stat-label">Pendentes</div></div></div>
+<div class="stat-card"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div><div class="stat-value" id="statIssues">0</div><div class="stat-label">Problemas</div></div></div>
+</div>
+<div class="card">
+<div class="card-header"><h3><i class="fas fa-list-check"></i> Últimas Inspeções</h3><button class="btn btn-primary btn-sm" onclick="openModal('newInspectionModal')"><i class="fas fa-plus"></i> Nova Inspeção</button></div>
+<div class="card-body">
+<table class="data-table" id="recentInspectionsTable">
+<thead><tr><th>Equipamento</th><th>Checklist</th><th>Status</th><th>Data</th><th>Responsável</th><th>Progresso</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- CHECKLISTS -->
+<section id="checklists" class="section">
+<div class="toolbar">
+<div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchChecklists" placeholder="Buscar checklists..." oninput="filterChecklists()"></div>
+<button class="btn btn-primary" onclick="openModal('newChecklistModal')"><i class="fas fa-plus"></i> Novo Checklist</button>
+</div>
+<div class="card"><div class="card-body" id="checklistsList"></div></div>
+</section>
+
+<!-- INSPECTIONS -->
+<section id="inspections" class="section">
+<div class="toolbar">
+<div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchInspections" placeholder="Buscar inspeções..." oninput="filterInspections()"></div>
+<select id="filterStatus" onchange="filterInspections()" style="padding:10px 14px;border:1.5px solid #dadce0;border-radius:8px;font-size:14px"><option value="">Todos os Status</option><option value="concluido">Concluído</option><option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option></select>
+<button class="btn btn-primary" onclick="openModal('newInspectionModal')"><i class="fas fa-plus"></i> Nova Inspeção</button>
+</div>
+<div class="card">
+<div class="card-body">
+<table class="data-table" id="inspectionsTable">
+<thead><tr><th>ID</th><th>Equipamento</th><th>Checklist</th><th>Status</th><th>Data</th><th>Responsável</th><th>Progresso</th><th>Ações</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- EQUIPMENT -->
+<section id="equipment" class="section">
+<div class="toolbar">
+<div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchEquipment" placeholder="Buscar equipamentos..." oninput="filterEquipment()"></div>
+<button class="btn btn-primary" onclick="openModal('newEquipmentModal')"><i class="fas fa-plus"></i> Novo Equipamento</button>
+</div>
+<div class="card">
+<div class="card-body">
+<table class="data-table" id="equipmentTable">
+<thead><tr><th>Código</th><th>Nome</th><th>Tipo</th><th>Localização</th><th>Status</th><th>Última Inspeção</th><th>Ações</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- REPORTS -->
+<section id="reports" class="section">
+<div class="card">
+<div class="card-header"><h3><i class="fas fa-chart-bar"></i> Relatórios</h3></div>
+<div class="card-body">
+<div class="form-row" style="margin-bottom:20px">
+<div class="form-group"><label>Data Inicial</label><input type="date" id="reportDateFrom"></div>
+<div class="form-group"><label>Data Final</label><input type="date" id="reportDateTo"></div>
+<div class="form-group"><label>Equipamento</label><select id="reportEquipment"><option value="">Todos</option></select></div>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:24px">
+<button class="btn btn-primary" onclick="generateReport()"><i class="fas fa-sync"></i> Gerar Relatório</button>
+<button class="btn btn-outline" onclick="exportReport('csv')"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+<button class="btn btn-outline" onclick="exportReport('pdf')"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+</div>
+<div id="reportResults">
+<div class="empty-state"><i class="fas fa-chart-bar"></i><h4>Selecione os filtros</h4><p>Escolha o período e clique em "Gerar Relatório"</p></div>
+</div>
+</div>
+</div>
+</section>
+</main>
 </div>
 
-<!-- App Container -->
-<div id="app-container">
-    <header class="app-header">
-        <div class="brand">
-            <i class="fas fa-industry"></i>
-            <span>Checklist Industrial</span>
-        </div>
-        <div class="user-info">
-            <span class="user-badge" id="user-badge">
-                <i class="fas fa-user"></i> <span id="user-name">--</span>
-            </span>
-            <button class="btn btn-sm btn-secondary btn-icon" onclick="app.logout()" title="Sair">
-                <i class="fas fa-sign-out-alt"></i>
-            </button>
-        </div>
-    </header>
-
-    <div class="content-area">
-        <!-- DASHBOARD -->
-        <div id="section-dashboard" class="section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-chart-line"></i> Dashboard</h2>
-                <span id="dashboard-date" style="color:var(--gray);font-size:13px;"></span>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card primary">
-                    <div class="stat-icon"><i class="fas fa-truck"></i></div>
-                    <div class="stat-value" id="stat-total-machines">0</div>
-                    <div class="stat-label">Máquinas</div>
-                </div>
-                <div class="stat-card success">
-                    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                    <div class="stat-value" id="stat-active-machines">0</div>
-                    <div class="stat-label">Ativas</div>
-                </div>
-                <div class="stat-card warning">
-                    <div class="stat-icon"><i class="fas fa-wrench"></i></div>
-                    <div class="stat-value" id="stat-maintenance">0</div>
-                    <div class="stat-label">Manutenção</div>
-                </div>
-                <div class="stat-card danger">
-                    <div class="stat-icon"><i class="fas fa-ban"></i></div>
-                    <div class="stat-value" id="stat-blocked">0</div>
-                    <div class="stat-label">Bloqueadas</div>
-                </div>
-                <div class="stat-card primary">
-                    <div class="stat-icon"><i class="fas fa-clipboard-check"></i></div>
-                    <div class="stat-value" id="stat-checklists-today">0</div>
-                    <div class="stat-label">Checklists Hoje</div>
-                </div>
-                <div class="stat-card success">
-                    <div class="stat-icon"><i class="fas fa-users"></i></div>
-                    <div class="stat-value" id="stat-operators">0</div>
-                    <div class="stat-label">Operadores</div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-exclamation-triangle"></i> Alertas</h3>
-                </div>
-                <div id="alerts-container">
-                    <div class="empty-state">
-                        <i class="fas fa-check-circle"></i>
-                        <h3>Nenhum alerta</h3>
-                        <p>Todas as máquinas estão operando normalmente</p>
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-history"></i> Atividades Recentes</h3>
-                </div>
-                <div id="recent-activities">
-                    <div class="empty-state">
-                        <i class="fas fa-clock"></i>
-                        <h3>Nenhuma atividade recente</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- MÁQUINAS -->
-        <div id="section-machines" class="section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-truck"></i> Frota</h2>
-                <button class="btn btn-primary btn-sm" onclick="app.openModal('modal-machine')" id="btn-add-machine">
-                    <i class="fas fa-plus"></i> Nova Máquina
-                </button>
-            </div>
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" id="machine-search" placeholder="Buscar por código, nome ou tipo..." oninput="app.filterMachines()">
-            </div>
-            <div class="filter-bar">
-                <select id="filter-type" onchange="app.filterMachines()"><option value="">Todos os Tipos</option></select>
-                <select id="filter-status" onchange="app.filterMachines()">
-                    <option value="">Todos os Status</option>
-                    <option value="ativo">Ativo</option>
-                    <option value="inativo">Inativo</option>
-                    <option value="manutencao">Em Manutenção</option>
-                    <option value="bloqueado">Bloqueado</option>
-                </select>
-            </div>
-            <div class="machine-grid" id="machines-grid"></div>
-        </div>
-
-        <!-- CHECKLIST -->
-        <div id="section-checklist" class="section">
-            <div id="checklist-step-select">
-                <div class="card-header">
-                    <h2 class="card-title"><i class="fas fa-clipboard-check"></i> Novo Checklist</h2>
-                </div>
-                <div class="card" style="text-align:center;padding:40px;">
-                    <div style="font-size:60px;color:var(--primary);margin-bottom:20px;"><i class="fas fa-qrcode"></i></div>
-                    <h3 style="margin-bottom:10px;">Escaneie o QR Code</h3>
-                    <p style="color:var(--gray);margin-bottom:20px;">Posicione o QR Code da máquina na câmera</p>
-                    <button class="btn btn-primary btn-lg" onclick="app.startQRScanner()">
-                        <i class="fas fa-camera"></i> Abrir Câmera
-                    </button>
-                    <div style="margin-top:20px;">
-                        <p style="color:var(--gray);font-size:13px;margin-bottom:10px;">Ou selecione manualmente:</p>
-                        <button class="btn btn-outline" onclick="app.showMachineSelection()">
-                            <i class="fas fa-list"></i> Selecionar Máquina
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div id="checklist-step-form" style="display:none;">
-                <div class="card-header">
-                    <h2 class="card-title"><i class="fas fa-clipboard-check"></i> Checklist</h2>
-                    <button class="btn btn-secondary btn-sm" onclick="app.cancelChecklist()">
-                        <i class="fas fa-arrow-left"></i> Voltar
-                    </button>
-                </div>
-                <div class="card" id="machine-info-card">
-                    <div style="display:flex;align-items:center;gap:16px;">
-                        <div id="selected-machine-icon" style="width:60px;height:60px;border-radius:var(--radius);background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:28px;color:white;">
-                            <i class="fas fa-truck"></i>
-                        </div>
-                        <div>
-                            <div style="font-size:12px;color:var(--gray);font-weight:600;text-transform:uppercase;" id="selected-machine-code">--</div>
-                            <div style="font-size:20px;font-weight:700;color:var(--dark);" id="selected-machine-name">--</div>
-                            <div style="font-size:13px;color:var(--gray);" id="selected-machine-type">--</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-clock"></i> Informações do Turno</div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Data</label>
-                                <input type="date" id="checklist-date" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label>Turno</label>
-                                <select id="checklist-shift">
-                                    <option value="1">1º Turno</option>
-                                    <option value="2">2º Turno</option>
-                                    <option value="3">3º Turno</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Horímetro Atual *</label>
-                                <input type="number" id="checklist-horimeter" placeholder="Digite o horímetro atual" min="0" step="0.1">
-                            </div>
-                            <div class="form-group">
-                                <label>Último Horímetro</label>
-                                <input type="text" id="last-horimeter" readonly style="background:var(--gray-light);">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-list-check"></i> Itens do Checklist</div>
-                        <div id="checklist-items-container"></div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-sticky-note"></i> Observações Gerais</div>
-                        <textarea id="checklist-observations" rows="4" placeholder="Adicione observações gerais sobre a máquina..."></textarea>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-camera"></i> Fotos</div>
-                        <div class="photo-upload" onclick="document.getElementById('checklist-photo-input').click()">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <p>Clique para adicionar fotos</p>
-                            <p style="font-size:12px;color:var(--gray);">Máximo 5 fotos</p>
-                        </div>
-                        <input type="file" id="checklist-photo-input" accept="image/*" multiple style="display:none;" onchange="app.handlePhotoUpload(event)">
-                        <div class="photo-preview" id="checklist-photo-preview"></div>
-                    </div>
-                </div>
-                <div style="display:flex;gap:10px;margin-top:20px;">
-                    <button class="btn btn-secondary" onclick="app.cancelChecklist()">
-                        <i class="fas fa-times"></i> Cancelar
-                    </button>
-                    <button class="btn btn-success" onclick="app.submitChecklist()">
-                        <i class="fas fa-paper-plane"></i> Enviar Checklist
-                    </button>
-                </div>
-            </div>
-            <div id="qr-scanner-container" style="display:none;">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-qrcode"></i> Escanear QR Code</h3>
-                        <button class="btn btn-secondary btn-sm" onclick="app.stopQRScanner()">
-                            <i class="fas fa-times"></i> Fechar
-                        </button>
-                    </div>
-                    <div id="qr-reader"></div>
-                </div>
-            </div>
-            <div id="machine-selection" style="display:none;">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-list"></i> Selecionar Máquina</h3>
-                        <button class="btn btn-secondary btn-sm" onclick="app.hideMachineSelection()">
-                            <i class="fas fa-times"></i> Fechar
-                        </button>
-                    </div>
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="machine-select-search" placeholder="Buscar máquina..." oninput="app.filterMachineSelection()">
-                    </div>
-                    <div id="machine-select-list"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- USUÁRIOS -->
-        <div id="section-users" class="section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-users"></i> Usuários</h2>
-                <button class="btn btn-primary btn-sm" onclick="app.openModal('modal-user')">
-                    <i class="fas fa-plus"></i> Novo Usuário
-                </button>
-            </div>
-            <div class="tabs">
-                <button class="tab active" onclick="app.filterUsers('all')">Todos</button>
-                <button class="tab" onclick="app.filterUsers('operador')">Operadores</button>
-                <button class="tab" onclick="app.filterUsers('mecanico')">Mecânicos</button>
-                <button class="tab" onclick="app.filterUsers('supervisor')">Supervisores</button>
-            </div>
-            <div class="table-container">
-                <table>
-                    <thead><tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead>
-                    <tbody id="users-table"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- MODELOS -->
-        <div id="section-models" class="section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-file-alt"></i> Modelos de Checklist</h2>
-                <button class="btn btn-primary btn-sm" onclick="app.openModal('modal-model')">
-                    <i class="fas fa-plus"></i> Novo Modelo
-                </button>
-            </div>
-            <div id="models-list"></div>
-        </div>
-
-        <!-- RELATÓRIOS -->
-        <div id="section-reports" class="section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-chart-bar"></i> Relatórios</h2>
-            </div>
-            <div class="card">
-                <div class="form-section">
-                    <div class="form-section-title"><i class="fas fa-filter"></i> Filtros</div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Período Inicial</label>
-                            <input type="date" id="report-date-start">
-                        </div>
-                        <div class="form-group">
-                            <label>Período Final</label>
-                            <input type="date" id="report-date-end">
-                        </div>
-                        <div class="form-group">
-                            <label>Máquina</label>
-                            <select id="report-machine"><option value="">Todas</option></select>
-                        </div>
-                        <div class="form-group">
-                            <label>Operador</label>
-                            <select id="report-operator"><option value="">Todos</option></select>
-                        </div>
-                    </div>
-                    <div class="action-row">
-                        <button class="btn btn-primary" onclick="app.generateReport()">
-                            <i class="fas fa-search"></i> Gerar Relatório
-                        </button>
-                        <button class="btn btn-secondary" onclick="app.exportReportPDF()">
-                            <i class="fas fa-file-pdf"></i> Exportar PDF
-                        </button>
-                        <button class="btn btn-secondary" onclick="app.exportReportCSV()">
-                            <i class="fas fa-file-csv"></i> Exportar CSV
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div id="report-results"></div>
-        </div>
-
-        <!-- ORDENS DE SERVIÇO -->
-        <div id="section-orders" class="section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-wrench"></i> Ordens de Serviço</h2>
-                <button class="btn btn-primary btn-sm" onclick="app.openModal('modal-order')">
-                    <i class="fas fa-plus"></i> Nova OS
-                </button>
-            </div>
-            <div class="tabs">
-                <button class="tab active" onclick="app.filterOrders('all')">Todas</button>
-                <button class="tab" onclick="app.filterOrders('aberta')">Abertas</button>
-                <button class="tab" onclick="app.filterOrders('andamento')">Em Andamento</button>
-                <button class="tab" onclick="app.filterOrders('concluida')">Concluídas</button>
-            </div>
-            <div id="orders-list"></div>
-        </div>
-
-        <!-- PERFIL -->
-        <div id="section-profile" class="section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-user-circle"></i> Meu Perfil</h2>
-            </div>
-            <div class="card">
-                <div style="text-align:center;padding:30px;">
-                    <div style="width:100px;height:100px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:40px;color:white;">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <h3 id="profile-name" style="font-size:22px;margin-bottom:4px;">--</h3>
-                    <span class="badge badge-primary" id="profile-role">--</span>
-                </div>
-                <div class="section-divider"></div>
-                <div class="form-section">
-                    <div class="form-section-title"><i class="fas fa-lock"></i> Alterar PIN</div>
-                    <div class="form-group">
-                        <label>PIN Atual</label>
-                        <input type="password" id="current-pin" placeholder="Digite o PIN atual">
-                    </div>
-                    <div class="form-group">
-                        <label>Novo PIN</label>
-                        <input type="password" id="new-pin" placeholder="Digite o novo PIN (4 dígitos)" maxlength="4">
-                    </div>
-                    <div class="form-group">
-                        <label>Confirmar Novo PIN</label>
-                        <input type="password" id="confirm-pin" placeholder="Confirme o novo PIN" maxlength="4">
-                    </div>
-                    <button class="btn btn-primary" onclick="app.changePIN()">
-                        <i class="fas fa-save"></i> Alterar PIN
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- MECÂNICO -->
-        <div id="section-mecanico" class="section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-wrench"></i> Painel do Mecânico</h2>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card warning">
-                    <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
-                    <div class="stat-value" id="mec-stat-os-open">0</div>
-                    <div class="stat-label">OS Abertas</div>
-                </div>
-                <div class="stat-card primary">
-                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                    <div class="stat-value" id="mec-stat-os-progress">0</div>
-                    <div class="stat-label">Em Andamento</div>
-                </div>
-                <div class="stat-card success">
-                    <div class="stat-icon"><i class="fas fa-check"></i></div>
-                    <div class="stat-value" id="mec-stat-os-done">0</div>
-                    <div class="stat-label">Concluídas</div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-truck"></i> Minhas Máquinas</h3>
-                </div>
-                <div id="mecanico-machines"></div>
-            </div>
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-clipboard-list"></i> Minhas Ordens de Serviço</h3>
-                </div>
-                <div id="mecanico-orders"></div>
-            </div>
-        </div>
-
-        <!-- HISTÓRICO -->
-        <div id="section-machine-history" class="section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-history"></i> Histórico da Máquina</h2>
-                <button class="btn btn-secondary btn-sm" onclick="app.goBack()">
-                    <i class="fas fa-arrow-left"></i> Voltar
-                </button>
-            </div>
-            <div id="machine-history-content"></div>
-        </div>
-    </div>
-
-    <nav class="bottom-nav" id="bottom-nav">
-        <a class="nav-item active" data-section="dashboard" onclick="app.navigate('dashboard')">
-            <i class="fas fa-chart-line"></i><span>Dashboard</span>
-        </a>
-        <a class="nav-item" data-section="machines" onclick="app.navigate('machines')">
-            <i class="fas fa-truck"></i><span>Frota</span>
-        </a>
-        <a class="nav-item" data-section="checklist" onclick="app.navigate('checklist')">
-            <i class="fas fa-clipboard-check"></i><span>Checklist</span>
-        </a>
-        <a class="nav-item" data-section="orders" onclick="app.navigate('orders')">
-            <i class="fas fa-wrench"></i><span>OS</span>
-        </a>
-        <a class="nav-item" data-section="reports" onclick="app.navigate('reports')">
-            <i class="fas fa-chart-bar"></i><span>Relatórios</span>
-        </a>
-    </nav>
+<!-- MODALS -->
+<div class="modal-overlay" id="newChecklistModal">
+<div class="modal">
+<div class="modal-header"><h3><i class="fas fa-plus-circle"></i> Novo Checklist</h3><button class="modal-close" onclick="closeModal('newChecklistModal')"><i class="fas fa-times"></i></button></div>
+<div class="modal-body">
+<div class="form-group"><label>Nome do Checklist</label><input type="text" id="newChecklistName" placeholder="Ex: Inspeção Diária de Segurança"></div>
+<div class="form-group"><label>Descrição</label><textarea id="newChecklistDesc" rows="3" placeholder="Descrição do checklist..."></textarea></div>
+<div class="form-group"><label>Categoria</label><select id="newChecklistCategory"><option value="seguranca">Segurança</option><option value="manutencao">Manutenção</option><option value="qualidade">Qualidade</option><option value="ambiental">Ambiental</option></select></div>
+<div class="form-group">
+<label>Itens do Checklist</label>
+<div id="checklistItemsContainer">
+<div class="form-row" style="margin-bottom:8px"><input type="text" placeholder="Descrição do item" class="checklist-item-input" style="flex:1"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="width:36px"><i class="fas fa-trash"></i></button></div>
+</div>
+<button class="btn btn-outline btn-sm" onclick="addChecklistItemField()" style="margin-top:8px"><i class="fas fa-plus"></i> Adicionar Item</button>
+</div>
+</div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('newChecklistModal')">Cancelar</button><button class="btn btn-primary" onclick="saveChecklist()">Salvar</button></div>
+</div>
 </div>
 
-<!-- Modal: Nova Máquina -->
-<div class="modal-overlay" id="modal-machine">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-truck"></i> Nova Máquina</h3>
-            <button class="close-btn" onclick="app.closeModal('modal-machine')"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-info-circle"></i> Informações Básicas</div>
-                <div class="form-group">
-                    <label>Código *</label>
-                    <input type="text" id="machine-code" placeholder="Ex: EMP001" oninput="this.value=this.value.toUpperCase()">
-                </div>
-                <div class="form-group">
-                    <label>Nome / Descrição *</label>
-                    <input type="text" id="machine-name-input" placeholder="Ex: Empilhadeira Toyota 2.5T">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Tipo de Equipamento *</label>
-                        <select id="machine-type-input">
-                            <option value="">Selecione...</option>
-                            <option value="empilhadeira_combustao">Empilhadeira à Combustão</option>
-                            <option value="empilhadeira_eletrica">Empilhadeira Elétrica</option>
-                            <option value="veiculo_eletrico">Veículo Elétrico</option>
-                            <option value="trator">Trator</option>
-                            <option value="paleteira">Paleteira</option>
-                            <option value="outro">Outro</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Setor</label>
-                        <input type="text" id="machine-sector" placeholder="Ex: Produção">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Marca</label>
-                        <input type="text" id="machine-brand" placeholder="Ex: Toyota">
-                    </div>
-                    <div class="form-group">
-                        <label>Modelo</label>
-                        <input type="text" id="machine-model-input" placeholder="Ex: 8FG25">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Ano de Fabricação</label>
-                        <input type="number" id="machine-year" placeholder="Ex: 2020" min="1900" max="2099">
-                    </div>
-                    <div class="form-group">
-                        <label>Número de Série</label>
-                        <input type="text" id="machine-serial" placeholder="Ex: SN123456">
-                    </div>
-                </div>
-            </div>
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-clipboard-list"></i> Checklist</div>
-                <div class="form-group">
-                    <label>Modelo de Checklist *</label>
-                    <select id="machine-checklist-model"><option value="">Selecione um modelo...</option></select>
-                </div>
-            </div>
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-wrench"></i> Manutenção Preventiva</div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Intervalo (horas)</label>
-                        <input type="number" id="machine-maintenance-interval" placeholder="Ex: 250" min="1">
-                    </div>
-                    <div class="form-group">
-                        <label>Próxima Manutenção (horas)</label>
-                        <input type="number" id="machine-next-maintenance" placeholder="Ex: 1250" min="0">
-                    </div>
-                </div>
-            </div>
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-camera"></i> Foto</div>
-                <div class="photo-upload" onclick="document.getElementById('machine-photo-input').click()">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <p>Clique para adicionar foto da máquina</p>
-                </div>
-                <input type="file" id="machine-photo-input" accept="image/*" style="display:none;" onchange="app.handleMachinePhoto(event)">
-                <div class="photo-preview" id="machine-photo-preview"></div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="app.closeModal('modal-machine')">Cancelar</button>
-            <button class="btn btn-primary" onclick="app.saveMachine()"><i class="fas fa-save"></i> Salvar Máquina</button>
-        </div>
-    </div>
+<div class="modal-overlay" id="newInspectionModal">
+<div class="modal">
+<div class="modal-header"><h3><i class="fas fa-search-plus"></i> Nova Inspeção</h3><button class="modal-close" onclick="closeModal('newInspectionModal')"><i class="fas fa-times"></i></button></div>
+<div class="modal-body">
+<div class="form-row">
+<div class="form-group"><label>Equipamento</label><select id="inspectionEquipment"></select></div>
+<div class="form-group"><label>Checklist</label><select id="inspectionChecklist" onchange="loadChecklistItems()"></select></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Responsável</label><input type="text" id="inspectionResponsible" placeholder="Nome do responsável"></div>
+<div class="form-group"><label>Data</label><input type="date" id="inspectionDate"></div>
+</div>
+<div class="form-group"><label>Observações</label><textarea id="inspectionNotes" rows="2" placeholder="Observações gerais..."></textarea></div>
+<div id="inspectionItemsArea" style="display:none">
+<h4 style="margin:16px 0 12px;font-size:14px">Itens a Verificar</h4>
+<div id="inspectionItemsList"></div>
+</div>
+</div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('newInspectionModal')">Cancelar</button><button class="btn btn-primary" onclick="saveInspection()">Iniciar Inspeção</button></div>
+</div>
 </div>
 
-<!-- Modal: Novo Usuário -->
-<div class="modal-overlay" id="modal-user">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-user-plus"></i> Novo Usuário</h3>
-            <button class="close-btn" onclick="app.closeModal('modal-user')"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label>Nome Completo *</label>
-                <input type="text" id="user-fullname" placeholder="Ex: João Silva">
-            </div>
-            <div class="form-group">
-                <label>Nome de Usuário *</label>
-                <input type="text" id="user-username" placeholder="Ex: joao.silva" oninput="this.value=this.value.toLowerCase().replace(/\s/g,'')">
-            </div>
-            <div class="form-group">
-                <label>Perfil *</label>
-                <select id="user-role" onchange="app.onRoleChange()">
-                    <option value="">Selecione...</option>
-                    <option value="operador">Operador</option>
-                    <option value="mecanico">Mecânico</option>
-                    <option value="supervisor">Supervisor</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>PIN (4 dígitos) *</label>
-                <input type="password" id="user-pin" placeholder="1234" maxlength="4">
-            </div>
-            <div class="form-group" id="user-machines-group" style="display:none;">
-                <label>Máquinas Autorizadas</label>
-                <div id="user-machines-checkboxes" style="max-height:200px;overflow-y:auto;border:2px solid var(--gray-light);border-radius:var(--radius-sm);padding:12px;"></div>
-            </div>
-            <div class="form-group" id="user-types-group" style="display:none;">
-                <label>Tipos de Equipamentos Autorizados</label>
-                <div id="user-types-checkboxes" style="max-height:200px;overflow-y:auto;border:2px solid var(--gray-light);border-radius:var(--radius-sm);padding:12px;"></div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="app.closeModal('modal-user')">Cancelar</button>
-            <button class="btn btn-primary" onclick="app.saveUser()"><i class="fas fa-save"></i> Salvar Usuário</button>
-        </div>
-    </div>
+<div class="modal-overlay" id="newEquipmentModal">
+<div class="modal">
+<div class="modal-header"><h3><i class="fas fa-cog"></i> Novo Equipamento</h3><button class="modal-close" onclick="closeModal('newEquipmentModal')"><i class="fas fa-times"></i></button></div>
+<div class="modal-body">
+<div class="form-row">
+<div class="form-group"><label>Código</label><input type="text" id="equipCode" placeholder="EQ-001"></div>
+<div class="form-group"><label>Nome</label><input type="text" id="equipName" placeholder="Nome do equipamento"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Tipo</label><select id="equipType"><option value="maquina">Máquina</option><option value="ferramenta">Ferramenta</option><option value="veiculo">Veículo</option><option value="eletrico">Elétrico</option><option value="hidraulico">Hidráulico</option></select></div>
+<div class="form-group"><label>Localização</label><input type="text" id="equipLocation" placeholder="Setor/Área"></div>
+</div>
+<div class="form-group"><label>Descrição</label><textarea id="equipDesc" rows="2" placeholder="Descrição do equipamento..."></textarea></div>
+</div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('newEquipmentModal')">Cancelar</button><button class="btn btn-primary" onclick="saveEquipment()">Salvar</button></div>
+</div>
 </div>
 
-<!-- Modal: Novo Modelo -->
-<div class="modal-overlay" id="modal-model">
-    <div class="modal-content" style="max-width:800px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-file-alt"></i> Modelo de Checklist</h3>
-            <button class="close-btn" onclick="app.closeModal('modal-model')"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label>Nome do Modelo *</label>
-                <input type="text" id="model-name" placeholder="Ex: Empilhadeira à Combustão">
-            </div>
-            <div class="form-group">
-                <label>Descrição</label>
-                <textarea id="model-description" rows="2" placeholder="Descrição do modelo..."></textarea>
-            </div>
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-list"></i> Itens do Checklist</div>
-                <div id="model-items-container"></div>
-                <button class="btn btn-secondary" onclick="app.addModelItem()" style="margin-top:10px;">
-                    <i class="fas fa-plus"></i> Adicionar Item
-                </button>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="app.closeModal('modal-model')">Cancelar</button>
-            <button class="btn btn-primary" onclick="app.saveModel()"><i class="fas fa-save"></i> Salvar Modelo</button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal: Nova OS -->
-<div class="modal-overlay" id="modal-order">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-wrench"></i> Nova Ordem de Serviço</h3>
-            <button class="close-btn" onclick="app.closeModal('modal-order')"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label>Máquina *</label>
-                <select id="order-machine"><option value="">Selecione...</option></select>
-            </div>
-            <div class="form-group">
-                <label>Tipo de Manutenção *</label>
-                <select id="order-type">
-                    <option value="preventiva">Preventiva</option>
-                    <option value="corretiva">Corretiva</option>
-                    <option value="preditiva">Preditiva</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Prioridade *</label>
-                <select id="order-priority">
-                    <option value="baixa">Baixa</option>
-                    <option value="media">Média</option>
-                    <option value="alta">Alta</option>
-                    <option value="urgente">Urgente</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Mecânico Responsável</label>
-                <select id="order-mechanic"><option value="">Selecione...</option></select>
-            </div>
-            <div class="form-group">
-                <label>Descrição do Problema *</label>
-                <textarea id="order-description" rows="4" placeholder="Descreva o problema ou serviço a ser realizado..."></textarea>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="app.closeModal('modal-order')">Cancelar</button>
-            <button class="btn btn-primary" onclick="app.saveOrder()"><i class="fas fa-save"></i> Criar OS</button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal: QR Code -->
-<div class="modal-overlay" id="modal-qr">
-    <div class="modal-content" style="max-width:400px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-qrcode"></i> QR Code da Máquina</h3>
-            <button class="close-btn" onclick="app.closeModal('modal-qr')"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <div class="qr-display">
-                <div id="qr-code-display"></div>
-                <p style="margin-top:16px;font-size:18px;font-weight:700;color:var(--dark);" id="qr-code-text"></p>
-                <p style="color:var(--gray);font-size:13px;">Escaneie para identificar a máquina</p>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="app.printQR()"><i class="fas fa-print"></i> Imprimir</button>
-            <button class="btn btn-primary" onclick="app.downloadQR()"><i class="fas fa-download"></i> Baixar</button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal: Visualizar Checklist -->
-<div class="modal-overlay" id="modal-view-checklist">
-    <div class="modal-content" style="max-width:700px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-clipboard-check"></i> Visualizar Checklist</h3>
-            <button class="close-btn" onclick="app.closeModal('modal-view-checklist')"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body" id="view-checklist-content"></div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="app.closeModal('modal-view-checklist')">Fechar</button>
-            <button class="btn btn-primary" onclick="app.printChecklist()"><i class="fas fa-print"></i> Imprimir</button>
-        </div>
-    </div>
-</div>
-
-<!-- Toast Container -->
-<div class="toast-container" id="toast-container"></div>
-
+<div class="toast-container" id="toastContainer"></div>
 <script>
 const SUPABASE_URL='https://jrcyhnonjzyhtztrxfhx.supabase.co';
 const SUPABASE_KEY='sb_publishable_26sS-4aR4t-NMFVZ3asmvQ_Dgz6xH0x';
+let supabase=null,currentUser=null;
+let data={checklists:[],inspections:[],equipment:[],users:[]};
 
-const DEFAULT_MODELS=[
-{id:'model-empilhadeira',name:'Empilhadeira à Combustão e Elétrica',description:'Checklist diário para empilhadeiras',active:true,items:[
-{id:1,text:'Pneus traseiros',instruction:'Desgaste e/ou rachaduras e/ou trincas',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:2,text:'Pneus dianteiros',instruction:'Desgaste e/ou rachaduras e/ou trincas',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:3,text:'Banco e alavancas',instruction:'Verificar funcionamento e avarias',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:4,text:'Cinto de segurança',instruction:'Verificar funcionamento encaixe e conservação',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:5,text:'Freio de estacionamento',instruction:'Verificar funcionamento do freio',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:6,text:'Buzina',instruction:'Verificar funcionamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:7,text:'Para brisa',instruction:'Verificar palhetas, motor e vidro',critical:false,requiresPhoto:false,requiresObservation:true},
-{id:8,text:'Garfo e travas',instruction:'Verificar desgaste, trincas e alinhamento',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:9,text:'Extintor de incêndio',instruction:'Data vencimento e nível',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:10,text:'Nível de óleo de motor',instruction:'Vareta no nível máximo e mínimo',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:11,text:'Nível de óleo da transmissão',instruction:'Vareta no nível máximo e mínimo',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:12,text:'Nível de óleo hidráulico',instruction:'Vareta no nível na marca',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:13,text:'Nível de água no reservatório',instruction:'Nível entre mínimo e máximo',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:14,text:'Vazamento de fluidos',instruction:'Olhar por baixo do equipamento',critical:true,requiresPhoto:true,requiresObservation:true},
-{id:15,text:'Radiador',instruction:'Verificar colméia, limpeza e vazamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:16,text:'Cilindro de gás',instruction:'Verificar cilindro, mangueiras e conexões',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:17,text:'Torre',instruction:'Verificar desgaste, funcionamento e vazamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:18,text:'Bateria / cabos / conectores',instruction:'Verificar aparência/funcionamento',critical:false,requiresPhoto:false,requiresObservation:true},
-{id:19,text:'Erro no painel',instruction:'Verificar se há código de erro no painel',critical:true,requiresPhoto:true,requiresObservation:true},
-{id:20,text:'Mangueiras hidráulicas',instruction:'Verificar vazamentos, desgastes e torções',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:21,text:'Limitador de velocidade',instruction:'Verificar conservação do mecanismo',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:22,text:'Indicador de velocidade',instruction:'Verificar funcionamento',critical:false,requiresPhoto:false,requiresObservation:true},
-{id:23,text:'Sinalizador sonoro',instruction:'Verificar funcionamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:24,text:'Faróis e lanternas',instruction:'Verificar funcionamento',critical:false,requiresPhoto:false,requiresObservation:true},
-{id:25,text:'Luzes de Advertência',instruction:'Olhar para o painel o funcionamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:26,text:'Direção',instruction:'Verificar folgas e ruídos ao girar',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:27,text:'Acessórios',instruction:'Verificar o funcionamento de balança e outros',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:28,text:'Freio de serviço',instruction:'Verificar o funcionamento',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:29,text:'Pedal de aproximação',instruction:'Verificar o funcionamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:30,text:'Pintura geral',instruction:'Verificar marcas de riscos e impactos',critical:false,requiresPhoto:true,requiresObservation:true}
-]},
-{id:'model-veiculo-eletrico',name:'Veículos Elétricos e Tratores',description:'Checklist diário de manutenção para veículos elétricos',active:true,items:[
-{id:1,text:'Acelerador',instruction:'Verificar funcionamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:2,text:'Alarmes',instruction:'Verificar funcionamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:3,text:'Freio de estacionamento',instruction:'Verificar funcionamento',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:4,text:'Freio de serviço',instruction:'Verificar funcionamento',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:5,text:'Cabos',instruction:'Verificar estado e conexões',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:6,text:'Garfo',instruction:'Verificar desgaste e trincas',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:7,text:'Mastro',instruction:'Verificar estado geral',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:8,text:'Cabo de bateria e conector',instruction:'Verificar conexões e estado',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:9,text:'Pedais',instruction:'Verificar funcionamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:10,text:'Caretagem',instruction:'Verificar estado geral',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:11,text:'Instrumentos (painel)',instruction:'Verificar funcionamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:12,text:'Buzina',instruction:'Verificar funcionamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:13,text:'Mangueiras',instruction:'Verificar vazamentos e desgaste',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:14,text:'Horímetro',instruction:'Verificar funcionamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:15,text:'Controles hidráulicos',instruction:'Verificar funcionamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:16,text:'Luzes dianteiras e traseiras',instruction:'Verificar funcionamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:17,text:'Giroflex',instruction:'Verificar funcionamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:18,text:'Cinto de segurança',instruction:'Verificar funcionamento',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:19,text:'Carregador',instruction:'Verificar funcionamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:20,text:'Para Brisa',instruction:'Verificar estado',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:21,text:'Vazamento de óleo',instruction:'Verificar por baixo do veículo',critical:true,requiresPhoto:true,requiresObservation:true},
-{id:22,text:'Nível de óleo hidráulico',instruction:'Verificar nível',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:23,text:'Extintor',instruction:'Verificar validade e nível',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:24,text:'Direção',instruction:'Verificar folgas e ruídos',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:25,text:'Pneus / Rodas',instruction:'Verificar desgaste e pressão',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:26,text:'Barulhos / ruídos',instruction:'Verificar ruídos anormais',critical:false,requiresPhoto:false,requiresObservation:true},
-{id:27,text:'Sinal sonoro',instruction:'Verificar funcionamento',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:28,text:'Outros',instruction:'Observações diversas',critical:false,requiresPhoto:false,requiresObservation:true},
-{id:29,text:'Bateria',instruction:'Verificar nível e conexões',critical:true,requiresPhoto:false,requiresObservation:false},
-{id:30,text:'Pintura do Equipamento',instruction:'Verificar estado geral',critical:false,requiresPhoto:true,requiresObservation:false},
-{id:31,text:'Merejamento de óleo',instruction:'Verificar nível',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:32,text:'Troca da proteção do engate do trator',instruction:'Verificar estado',critical:false,requiresPhoto:false,requiresObservation:false},
-{id:33,text:'Água do radiador',instruction:'Verificar nível',critical:false,requiresPhoto:false,requiresObservation:false}
-]}
-];
-
-const TYPE_LABELS={'empilhadeira_combustao':'Empilhadeira à Combustão','empilhadeira_eletrica':'Empilhadeira Elétrica','veiculo_eletrico':'Veículo Elétrico','trator':'Trator','paleteira':'Paleteira','outro':'Outro'};
-const ROLE_LABELS={'supervisor':'Supervisor','operador':'Operador','mecanico':'Mecânico'};
-const STATUS_LABELS={'ativo':'Ativo','inativo':'Inativo','manutencao':'Em Manutenção','bloqueado':'Bloqueado'};
-const OS_STATUS_LABELS={'aberta':'Aberta','andamento':'Em Andamento','concluida':'Concluída','cancelada':'Cancelada'};
-
-const app={
-supabase:null,currentUser:null,machines:[],users:[],models:[],checklists:[],orders:[],
-currentSection:'dashboard',previousSection:'dashboard',selectedMachine:null,
-checklistData:{},checklistPhotos:[],qrScanner:null,modelItems:[],currentUserRoleFilter:'all',currentOrderFilter:'all',
-
-init(){
-try{this.supabase=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)}catch(e){console.log('Supabase offline mode')}
-this.loadLocalData();
-if(this.users.length===0){
-this.users.push({id:'user-admin',username:'ADMIN',fullname:'Administrador',role:'supervisor',pin:'1234',active:true,createdAt:new Date().toISOString(),authorizedMachines:[],authorizedTypes:[]});
-this.saveLocalData();
-}
-if(this.models.length===0){this.models=JSON.parse(JSON.stringify(DEFAULT_MODELS));this.saveLocalData();}
-document.getElementById('checklist-date').value=new Date().toISOString().split('T')[0];
-document.getElementById('dashboard-date').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-const savedUser=localStorage.getItem('checklist_user');
-if(savedUser){try{this.currentUser=JSON.parse(savedUser);this.showApp()}catch(e){this.showAuth()}}
-else{setTimeout(()=>this.showAuth(),1500);}
-},
-
-login(){
-const username=document.getElementById('auth-username').value.trim().toUpperCase();
-const password=document.getElementById('auth-password').value.trim();
-if(!username||!password){this.toast('Preencha usuário e senha','error');return;}
-const user=this.users.find(u=>u.username.toUpperCase()===username&&u.pin===password&&u.active);
-if(user){this.currentUser=user;localStorage.setItem('checklist_user',JSON.stringify(user));this.toast('Bem-vindo, '+user.fullname+'!','success');this.showApp();}
-else{this.toast('Usuário ou senha incorretos','error');}
-},
-
-logout(){this.currentUser=null;localStorage.removeItem('checklist_user');this.showAuth();this.toast('Você saiu do sistema','info');},
-showAuth(){document.getElementById('splash-screen').style.display='none';document.getElementById('auth-screen').style.display='flex';document.getElementById('app-container').style.display='none';},
-showApp(){
-document.getElementById('splash-screen').style.display='none';document.getElementById('auth-screen').style.display='none';document.getElementById('app-container').style.display='block';
-document.getElementById('user-name').textContent=this.currentUser.fullname;
-const badge=document.getElementById('user-badge');badge.className='user-badge '+this.currentUser.role;
-badge.innerHTML='<i class="fas fa-user"></i> <span>'+ROLE_LABELS[this.currentUser.role]+'</span>';
-this.setupNavigation();this.navigate('dashboard');
-},
-
-setupNavigation(){
-const nav=document.getElementById('bottom-nav');const role=this.currentUser.role;
-let navItems='';
-if(role==='supervisor'){
-navItems='<a class="nav-item active" data-section="dashboard" onclick="app.navigate('dashboard')"><i class="fas fa-chart-line"></i><span>Dashboard</span></a><a class="nav-item" data-section="machines" onclick="app.navigate('machines')"><i class="fas fa-truck"></i><span>Frota</span></a><a class="nav-item" data-section="checklist" onclick="app.navigate('checklist')"><i class="fas fa-clipboard-check"></i><span>Checklist</span></a><a class="nav-item" data-section="orders" onclick="app.navigate('orders')"><i class="fas fa-wrench"></i><span>OS</span></a><a class="nav-item" data-section="reports" onclick="app.navigate('reports')"><i class="fas fa-chart-bar"></i><span>Relatórios</span></a>';
-}else if(role==='operador'){
-navItems='<a class="nav-item active" data-section="checklist" onclick="app.navigate('checklist')"><i class="fas fa-clipboard-check"></i><span>Checklist</span></a><a class="nav-item" data-section="machines" onclick="app.navigate('machines')"><i class="fas fa-truck"></i><span>Frota</span></a><a class="nav-item" data-section="profile" onclick="app.navigate('profile')"><i class="fas fa-user"></i><span>Perfil</span></a>';
-}else if(role==='mecanico'){
-navItems='<a class="nav-item active" data-section="mecanico" onclick="app.navigate('mecanico')"><i class="fas fa-wrench"></i><span>Minhas OS</span></a><a class="nav-item" data-section="machines" onclick="app.navigate('machines')"><i class="fas fa-truck"></i><span>Frota</span></a><a class="nav-item" data-section="orders" onclick="app.navigate('orders')"><i class="fas fa-clipboard-list"></i><span>Todas OS</span></a><a class="nav-item" data-section="profile" onclick="app.navigate('profile')"><i class="fas fa-user"></i><span>Perfil</span></a>';
-}
-nav.innerHTML=navItems;
-},
-
-navigate(section){
-this.previousSection=this.currentSection;this.currentSection=section;
-document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-const targetSection=document.getElementById('section-'+section);if(targetSection)targetSection.classList.add('active');
-const navItem=document.querySelector('.nav-item[data-section="'+section+'"]');if(navItem)navItem.classList.add('active');
-this.refreshSection(section);
-},
-goBack(){this.navigate(this.previousSection);},
-
-refreshSection(section){
-switch(section){
-case'dashboard':this.loadDashboard();break;
-case'machines':this.loadMachines();break;
-case'checklist':this.resetChecklist();break;
-case'users':this.loadUsers();break;
-case'models':this.loadModels();break;
-case'reports':this.loadReportFilters();break;
-case'orders':this.loadOrders();break;
-case'profile':this.loadProfile();break;
-case'mecanico':this.loadMecanicoDashboard();break;
-case'machine-history':this.loadMachineHistory();break;
-}
-},
-
-loadDashboard(){
-const machines=this.machines.filter(m=>m.status!=='inativo');
-const activeMachines=machines.filter(m=>m.status==='ativo');
-const maintenanceMachines=machines.filter(m=>m.status==='manutencao');
-const blockedMachines=machines.filter(m=>m.status==='bloqueado');
-document.getElementById('stat-total-machines').textContent=machines.length;
-document.getElementById('stat-active-machines').textContent=activeMachines.length;
-document.getElementById('stat-maintenance').textContent=maintenanceMachines.length;
-document.getElementById('stat-blocked').textContent=blockedMachines.length;
-const today=new Date().toISOString().split('T')[0];
-const todayChecklists=this.checklists.filter(c=>c.date===today);
-document.getElementById('stat-checklists-today').textContent=todayChecklists.length;
-const operators=this.users.filter(u=>u.role==='operador'&&u.active);
-document.getElementById('stat-operators').textContent=operators.length;
-
-const alertsContainer=document.getElementById('alerts-container');
-const alerts=[];
-machines.forEach(m=>{
-if(m.status==='bloqueado')alerts.push({type:'danger',icon:'fa-ban',text:'Máquina '+m.code+' está BLOQUEADA'});
-if(m.status==='manutencao')alerts.push({type:'warning',icon:'fa-wrench',text:'Máquina '+m.code+' em MANUTENÇÃO'});
-if(m.nextMaintenance&&m.horimeter&&m.nextMaintenance-m.horimeter<=50)alerts.push({type:'warning',icon:'fa-clock',text:'Máquina '+m.code+' próxima da manutenção preventiva'});
-});
-if(alerts.length===0){
-alertsContainer.innerHTML='<div class="empty-state"><i class="fas fa-check-circle" style="color:var(--success)"></i><h3>Nenhum alerta</h3><p>Todas as máquinas estão operando normalmente</p></div>';
-}else{
-alertsContainer.innerHTML=alerts.map(a=>'<div style="display:flex;align-items:center;gap:12px;padding:14px;background:'+(a.type==='danger'?'#fadbd8':'#fdebd0')+';border-radius:var(--radius-sm);margin-bottom:8px;"><i class="fas '+a.icon+'" style="font-size:20px;color:'+(a.type==='danger'?'var(--danger)':'var(--warning)')+';"></i><span style="font-weight:500;">'+a.text+'</span></div>').join('');
-}
-
-const recentActivities=document.getElementById('recent-activities');
-const recent=[...this.checklists,...this.orders].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,10);
-if(recent.length===0){
-recentActivities.innerHTML='<div class="empty-state"><i class="fas fa-clock"></i><h3>Nenhuma atividade recente</h3></div>';
-}else{
-recentActivities.innerHTML='<div class="timeline">'+recent.map(item=>{
-const isChecklist=item.hasOwnProperty('items');
-const date=new Date(item.createdAt).toLocaleString('pt-BR');
-return'<div class="timeline-item"><div class="timeline-date">'+date+'</div><div class="timeline-content"><div class="timeline-title"><i class="fas '+(isChecklist?'fa-clipboard-check':'fa-wrench')+'"></i> '+(isChecklist?'Checklist realizado':'Ordem de Serviço')+'</div><div class="timeline-desc">'+(isChecklist?'Máquina: '+item.machineCode+' | Operador: '+item.operatorName:'Máquina: '+item.machineCode+' | Tipo: '+item.type)+'</div></div></div>';
-}).join('')+'</div>';
-}
-},
-
-loadMachines(){
-const grid=document.getElementById('machines-grid');
-const role=this.currentUser.role;
-let machines=this.machines;
-if(role==='mecanico'){
-const authMachines=this.currentUser.authorizedMachines||[];
-const authTypes=this.currentUser.authorizedTypes||[];
-machines=machines.filter(m=>authMachines.includes(m.id)||authTypes.includes(m.type));
-}
-if(role==='operador')machines=machines.filter(m=>m.status==='ativo');
-
-const typeSelect=document.getElementById('filter-type');
-const types=[...new Set(this.machines.map(m=>m.type))];
-typeSelect.innerHTML='<option value="">Todos os Tipos</option>'+types.map(t=>'<option value="'+t+'">'+(TYPE_LABELS[t]||t)+'</option>').join('');
-
-const search=document.getElementById('machine-search').value.toLowerCase();
-const typeFilter=document.getElementById('filter-type').value;
-const statusFilter=document.getElementById('filter-status').value;
-machines=machines.filter(m=>{
-const matchesSearch=!search||m.code.toLowerCase().includes(search)||m.name.toLowerCase().includes(search)||(TYPE_LABELS[m.type]||'').toLowerCase().includes(search);
-const matchesType=!typeFilter||m.type===typeFilter;
-const matchesStatus=!statusFilter||m.status===statusFilter;
-return matchesSearch&&matchesType&&matchesStatus;
+document.addEventListener('DOMContentLoaded',async()=>{
+  const savedUser=localStorage.getItem('checklist_user');
+  if(savedUser){currentUser=JSON.parse(savedUser);showApp();}
+  try{supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);await loadData();}
+  catch(e){console.warn('Supabase offline');loadLocalData();}
+  document.getElementById('inspectionDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('reportDateFrom').value=new Date(new Date().setDate(1)).toISOString().split('T')[0];
+  document.getElementById('reportDateTo').value=new Date().toISOString().split('T')[0];
 });
 
-if(machines.length===0){
-grid.innerHTML='<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-truck"></i><h3>Nenhuma máquina encontrada</h3><p>Cadastre uma nova máquina ou ajuste os filtros</p></div>';
-return;
+function doLogin(){
+  const user=document.getElementById('loginUser').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  const errorEl=document.getElementById('loginError');
+  if(user==='ADMIN'&&pass==='1234'){
+    currentUser={id:1,name:'ADMIN',role:'admin'};
+    localStorage.setItem('checklist_user',JSON.stringify(currentUser));
+    errorEl.style.display='none';showApp();showToast('Bem-vindo, ADMIN!','success');
+  }else{errorEl.style.display='block';}
+}
+function showApp(){
+  document.getElementById('loginOverlay').classList.add('hidden');
+  document.getElementById('app').style.display='block';
+  document.getElementById('currentUserName').textContent=currentUser?.name||'ADMIN';
+  updateDashboard();renderChecklists();renderInspections();renderEquipment();populateSelects();
+}
+function logout(){
+  localStorage.removeItem('checklist_user');currentUser=null;
+  document.getElementById('loginOverlay').classList.remove('hidden');
+  document.getElementById('app').style.display='none';
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+}
+function showSection(sectionId,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(sectionId).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  if(btn)btn.classList.add('active');
 }
 
-grid.innerHTML=machines.map(m=>{
-const typeIcon=this.getMachineTypeIcon(m.type);
-const typeColor=this.getMachineTypeColor(m.type);
-const statusClass='status-'+m.status;
-const statusText=STATUS_LABELS[m.status];
-const lastChecklist=this.checklists.filter(c=>c.machineId===m.id).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))[0];
-const lastHorimeter=m.horimeter||0;
-return'<div class="machine-card" onclick="app.viewMachineHistory(''+m.id+'')"><div class="machine-header"><div class="machine-icon" style="background:'+typeColor+';"><i class="fas '+typeIcon+'"></i></div><div class="machine-info"><div class="machine-code">'+m.code+'</div><div class="machine-name">'+m.name+'</div><div class="machine-type">'+(TYPE_LABELS[m.type]||m.type)+'</div></div></div><div class="machine-body"><div class="machine-stats"><div class="machine-stat"><div class="value">'+lastHorimeter+'</div><div class="label">Horímetro</div></div><div class="machine-stat"><div class="value">'+(m.nextMaintenance||'--')+'</div><div class="label">Próx. Prev.</div></div><div class="machine-stat"><div class="value">'+this.checklists.filter(c=>c.machineId===m.id).length+'</div><div class="label">Checklists</div></div></div>'+(m.sector?'<div style="font-size:12px;color:var(--gray);margin-bottom:8px;"><i class="fas fa-map-marker-alt"></i> '+m.sector+'</div>':'')+(lastChecklist?'<div style="font-size:12px;color:var(--gray);"><i class="fas fa-calendar"></i> Último checklist: '+new Date(lastChecklist.createdAt).toLocaleDateString('pt-BR')+'</div>':'')+'</div><div class="machine-footer"><span class="status-badge '+statusClass+'">'+statusText+'</span><div style="display:flex;gap:6px;">'+(role==='supervisor'?'<button class="btn btn-sm btn-secondary btn-icon" onclick="event.stopPropagation();app.showQRCode(''+m.id+'')" title="QR Code"><i class="fas fa-qrcode"></i></button><button class="btn btn-sm btn-secondary btn-icon" onclick="event.stopPropagation();app.editMachine(''+m.id+'')" title="Editar"><i class="fas fa-edit"></i></button>':'')+'</div></div></div>';
-}).join('');
-
-const addBtn=document.getElementById('btn-add-machine');
-if(addBtn)addBtn.style.display=role==='supervisor'?'inline-flex':'none';
-},
-
-filterMachines(){this.loadMachines();},
-getMachineTypeIcon(type){
-const icons={'empilhadeira_combustao':'fa-truck-loading','empilhadeira_eletrica':'fa-bolt','veiculo_eletrico':'fa-car','trator':'fa-tractor','paleteira':'fa-dolly','outro':'fa-cog'};
-return icons[type]||'fa-cog';
-},
-getMachineTypeColor(type){
-const colors={'empilhadeira_combustao':'#e67e22','empilhadeira_eletrica':'#3498db','veiculo_eletrico':'#27ae60','trator':'#8e44ad','paleteira':'#16a085','outro':'#7f8c8d'};
-return colors[type]||'#7f8c8d';
-},
-
-saveMachine(){
-const code=document.getElementById('machine-code').value.trim().toUpperCase();
-const name=document.getElementById('machine-name-input').value.trim();
-const type=document.getElementById('machine-type-input').value;
-const sector=document.getElementById('machine-sector').value.trim();
-const brand=document.getElementById('machine-brand').value.trim();
-const model=document.getElementById('machine-model-input').value.trim();
-const year=document.getElementById('machine-year').value;
-const serial=document.getElementById('machine-serial').value.trim();
-const checklistModel=document.getElementById('machine-checklist-model').value;
-const maintenanceInterval=document.getElementById('machine-maintenance-interval').value;
-const nextMaintenance=document.getElementById('machine-next-maintenance').value;
-if(!code||!name||!type||!checklistModel){this.toast('Preencha todos os campos obrigatórios','error');return;}
-if(this.machines.some(m=>m.code===code)){this.toast('Já existe uma máquina com este código','error');return;}
-const machine={id:'machine-'+Date.now(),code:code,name:name,type:type,sector:sector,brand:brand,model:model,year:year,serial:serial,checklistModel:checklistModel,maintenanceInterval:parseInt(maintenanceInterval)||250,nextMaintenance:parseInt(nextMaintenance)||250,horimeter:0,status:'ativo',createdAt:new Date().toISOString(),photo:null};
-this.machines.push(machine);this.saveLocalData();this.closeModal('modal-machine');this.toast('Máquina cadastrada com sucesso!','success');this.loadMachines();this.resetMachineForm();
-},
-
-resetMachineForm(){
-document.getElementById('machine-code').value='';document.getElementById('machine-name-input').value='';
-document.getElementById('machine-type-input').value='';document.getElementById('machine-sector').value='';
-document.getElementById('machine-brand').value='';document.getElementById('machine-model-input').value='';
-document.getElementById('machine-year').value='';document.getElementById('machine-serial').value='';
-document.getElementById('machine-checklist-model').value='';document.getElementById('machine-maintenance-interval').value='';
-document.getElementById('machine-next-maintenance').value='';document.getElementById('machine-photo-preview').innerHTML='';
-},
-
-editMachine(id){this.toast('Função de edição em desenvolvimento','info');},
-
-handleMachinePhoto(event){
-const file=event.target.files[0];if(!file)return;
-const reader=new FileReader();
-reader.onload=(e)=>{document.getElementById('machine-photo-preview').innerHTML='<img src="'+e.target.result+'" style="width:120px;height:120px;object-fit:cover;border-radius:var(--radius-sm);">';};
-reader.readAsDataURL(file);
-},
-
-showQRCode(machineId){
-const machine=this.machines.find(m=>m.id===machineId);if(!machine)return;
-document.getElementById('qr-code-text').textContent=machine.code;
-document.getElementById('qr-code-display').innerHTML='';
-new QRCode(document.getElementById('qr-code-display'),{text:machine.code,width:200,height:200,colorDark:'#1a5276',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
-this.openModal('modal-qr');
-},
-
-printQR(){window.print();},
-downloadQR(){
-const canvas=document.querySelector('#qr-code-display canvas');
-if(canvas){const link=document.createElement('a');link.download='qrcode-'+document.getElementById('qr-code-text').textContent+'.png';link.href=canvas.toDataURL();link.click();}
-},
-
-resetChecklist(){
-document.getElementById('checklist-step-select').style.display='block';
-document.getElementById('checklist-step-form').style.display='none';
-document.getElementById('qr-scanner-container').style.display='none';
-document.getElementById('machine-selection').style.display='none';
-this.selectedMachine=null;this.checklistData={};this.checklistPhotos=[];
-document.getElementById('checklist-horimeter').value='';
-document.getElementById('last-horimeter').value='';
-document.getElementById('checklist-observations').value='';
-document.getElementById('checklist-photo-preview').innerHTML='';
-},
-
-startQRScanner(){
-document.getElementById('checklist-step-select').style.display='none';
-document.getElementById('qr-scanner-container').style.display='block';
-const qrReader=document.getElementById('qr-reader');qrReader.innerHTML='';
-this.qrScanner=new Html5Qrcode('qr-reader');
-this.qrScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250}},
-(decodedText)=>{this.stopQRScanner();this.selectMachineByCode(decodedText);},
-(error)=>{}
-).catch(err=>{this.toast('Erro ao acessar câmera: '+err.message,'error');this.stopQRScanner();});
-},
-
-stopQRScanner(){
-if(this.qrScanner){this.qrScanner.stop().then(()=>{this.qrScanner=null;}).catch(()=>{this.qrScanner=null;});}
-document.getElementById('qr-scanner-container').style.display='none';
-document.getElementById('checklist-step-select').style.display='block';
-},
-
-showMachineSelection(){
-document.getElementById('checklist-step-select').style.display='none';
-document.getElementById('machine-selection').style.display='block';
-this.renderMachineSelectionList();
-},
-
-hideMachineSelection(){
-document.getElementById('machine-selection').style.display='none';
-document.getElementById('checklist-step-select').style.display='block';
-},
-
-renderMachineSelectionList(){
-const list=document.getElementById('machine-select-list');
-const activeMachines=this.machines.filter(m=>m.status==='ativo');
-if(activeMachines.length===0){
-list.innerHTML='<div class="empty-state"><i class="fas fa-truck"></i><h3>Nenhuma máquina ativa</h3></div>';
-return;
+async function loadData(){
+  if(!supabase)return;
+  try{
+    const[c,i,e]=await Promise.all([
+      supabase.from('checklists').select('*'),
+      supabase.from('inspections').select('*'),
+      supabase.from('equipment').select('*')
+    ]);
+    if(c.data)data.checklists=c.data;
+    if(i.data)data.inspections=i.data;
+    if(e.data)data.equipment=e.data;
+    saveLocalData();
+  }catch(e){loadLocalData();}
+  updateAllViews();
 }
-list.innerHTML=activeMachines.map(m=>'<div style="display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid var(--gray-light);cursor:pointer;transition:var(--transition);" onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background='transparent'" onclick="app.selectMachineById(''+m.id+'')"><div style="width:40px;height:40px;border-radius:var(--radius-sm);background:'+this.getMachineTypeColor(m.type)+';display:flex;align-items:center;justify-content:center;color:white;font-size:16px;"><i class="fas '+this.getMachineTypeIcon(m.type)+'"></i></div><div style="flex:1;"><div style="font-weight:600;color:var(--dark);">'+m.code+' - '+m.name+'</div><div style="font-size:12px;color:var(--gray);">'+(TYPE_LABELS[m.type]||m.type)+'</div></div><i class="fas fa-chevron-right" style="color:var(--gray);"></i></div>').join('');
-},
-
-filterMachineSelection(){
-const search=document.getElementById('machine-select-search').value.toLowerCase();
-const items=document.querySelectorAll('#machine-select-list > div');
-items.forEach(item=>{const text=item.textContent.toLowerCase();item.style.display=text.includes(search)?'flex':'none';});
-},
-
-selectMachineByCode(code){
-const machine=this.machines.find(m=>m.code.toUpperCase()===code.toUpperCase()&&m.status==='ativo');
-if(machine){this.selectMachineById(machine.id);}
-else{this.toast('Máquina não encontrada ou inativa','error');}
-},
-
-selectMachineById(machineId){
-const machine=this.machines.find(m=>m.id===machineId);if(!machine)return;
-this.selectedMachine=machine;
-document.getElementById('selected-machine-code').textContent=machine.code;
-document.getElementById('selected-machine-name').textContent=machine.name;
-document.getElementById('selected-machine-type').textContent=TYPE_LABELS[machine.type]||machine.type;
-document.getElementById('selected-machine-icon').style.background=this.getMachineTypeColor(machine.type);
-document.getElementById('last-horimeter').value=machine.horimeter||'0';
-this.loadChecklistItems(machine);
-document.getElementById('checklist-step-select').style.display='none';
-document.getElementById('machine-selection').style.display='none';
-document.getElementById('checklist-step-form').style.display='block';
-},
-
-loadChecklistItems(machine){
-const container=document.getElementById('checklist-items-container');
-const model=this.models.find(m=>m.id===machine.checklistModel);
-if(!model){
-container.innerHTML='<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Modelo de checklist não encontrado</h3></div>';
-return;
+function loadLocalData(){
+  const saved=localStorage.getItem('checklist_data');
+  if(saved){data=JSON.parse(saved);}
+  else{
+    data={
+      checklists:[
+        {id:1,name:'Inspeção Diária de Segurança',category:'seguranca',description:'Verificação diária dos EPIs e condições de segurança',items:['EPI completo','Área limpa','Sinalização visível','Extintores ok'],created_at:new Date().toISOString()},
+        {id:2,name:'Manutenção Preventiva - Máquina A',category:'manutencao',description:'Checklist mensal de manutenção',items:['Lubrificação','Aperto de parafusos','Verificação de correias','Teste de emergência'],created_at:new Date().toISOString()},
+        {id:3,name:'Controle de Qualidade - Lote B',category:'qualidade',description:'Verificação de qualidade do produto',items:['Dimensões','Acabamento','Embalagem','Etiquetagem'],created_at:new Date().toISOString()}
+      ],
+      equipment:[
+        {id:1,code:'EQ-001',name:'Prensa Hidráulica 50T',type:'maquina',location:'Setor A - Linha 1',status:'ativo',last_inspection:'2026-07-01',description:'Prensa hidráulica de 50 toneladas'},
+        {id:2,code:'EQ-002',name:'Torno CNC',type:'maquina',location:'Setor B - Usinagem',status:'ativo',last_inspection:'2026-06-28',description:'Torno CNC controlado por computador'},
+        {id:3,code:'EQ-003',name:'Empilhadeira Toyota',type:'veiculo',location:'Pátio',status:'manutencao',last_inspection:'2026-06-15',description:'Empilhadeira para movimentação de cargas'}
+      ],
+      inspections:[
+        {id:1,equipment_id:1,checklist_id:1,status:'concluido',date:'2026-07-01',responsible:'João Silva',progress:100,items:[{item:'EPI completo',ok:true},{item:'Área limpa',ok:true},{item:'Sinalização visível',ok:true},{item:'Extintores ok',ok:true}],notes:''},
+        {id:2,equipment_id:2,checklist_id:2,status:'em_andamento',date:'2026-07-05',responsible:'Maria Santos',progress:50,items:[{item:'Lubrificação',ok:true},{item:'Aperto de parafusos',ok:true},{item:'Verificação de correias',ok:false},{item:'Teste de emergência',ok:false}],notes:'Aguardando peças'},
+        {id:3,equipment_id:3,checklist_id:1,status:'pendente',date:'2026-07-06',responsible:'Pedro Costa',progress:0,items:[],notes:''}
+      ]
+    };
+    saveLocalData();
+  }
 }
-container.innerHTML=model.items.map((item,index)=>'<div class="checklist-item '+(item.critical?'critical':'')+'" data-item-id="'+item.id+'"><div class="item-header"><div class="item-number">'+(index+1)+'</div><div class="item-text">'+item.text+(item.critical?'<span class="item-critical"><i class="fas fa-exclamation-circle"></i> Crítico</span>':'')+'</div></div>'+(item.instruction?'<div style="font-size:13px;color:var(--gray);margin-bottom:10px;padding-left:44px;"><i class="fas fa-info-circle"></i> '+item.instruction+'</div>':'')+'<div class="item-options" style="padding-left:44px;"><button class="option-btn" onclick="app.selectChecklistOption('+item.id+','ok',this)"><i class="fas fa-check"></i> OK</button><button class="option-btn" onclick="app.selectChecklistOption('+item.id+','nok',this)"><i class="fas fa-times"></i> NÃO OK</button><button class="option-btn" onclick="app.selectChecklistOption('+item.id+','na',this)"><i class="fas fa-minus"></i> N/A</button></div>'+(item.requiresObservation?'<div class="item-observation" style="padding-left:44px;"><textarea placeholder="Observações..." onchange="app.setItemObservation('+item.id+',this.value)"></textarea></div>':'')+(item.requiresPhoto?'<div class="item-photo" style="padding-left:44px;"><div class="photo-upload" style="padding:10px;" onclick="app.captureItemPhoto('+item.id+')"><i class="fas fa-camera" style="font-size:20px;"></i><p style="font-size:12px;">Adicionar foto</p></div><div class="photo-preview" id="item-photo-'+item.id+'"></div></div>':'')+'</div>').join('');
-},
+function saveLocalData(){localStorage.setItem('checklist_data',JSON.stringify(data));}
+function updateAllViews(){updateDashboard();renderChecklists();renderInspections();renderEquipment();populateSelects();}
 
-selectChecklistOption(itemId,value,btn){
-const parent=btn.parentElement;
-parent.querySelectorAll('.option-btn').forEach(b=>{b.classList.remove('selected-ok','selected-nok','selected-na');});
-btn.classList.add('selected-'+value);
-if(!this.checklistData.items)this.checklistData.items={};
-this.checklistData.items[itemId]={value:value};
-},
+function updateDashboard(){
+  const total=data.checklists.length;
+  const completed=data.inspections.filter(i=>i.status==='concluido').length;
+  const pending=data.inspections.filter(i=>i.status==='pendente').length;
+  const issues=data.inspections.filter(i=>i.items&&i.items.some(item=>item.ok===false)).length;
+  document.getElementById('statTotalChecklists').textContent=total;
+  document.getElementById('statCompleted').textContent=completed;
+  document.getElementById('statPending').textContent=pending;
+  document.getElementById('statIssues').textContent=issues;
+  const tbody=document.querySelector('#recentInspectionsTable tbody');
+  const recent=[...data.inspections].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
+  tbody.innerHTML=recent.map(ins=>{
+    const equip=data.equipment.find(e=>e.id==ins.equipment_id);
+    const checklist=data.checklists.find(c=>c.id==ins.checklist_id);
+    const sc=ins.status==='concluido'?'green':ins.status==='em_andamento'?'yellow':'red';
+    const st=ins.status==='concluido'?'Concluído':ins.status==='em_andamento'?'Em Andamento':'Pendente';
+    return '<tr><td>'+(equip?.name||'N/A')+'</td><td>'+(checklist?.name||'N/A')+'</td><td><span class="badge '+sc+'">'+st+'</span></td><td>'+formatDate(ins.date)+'</td><td>'+ins.responsible+'</td><td><div class="progress-bar" style="width:120px"><div class="progress-fill '+(ins.progress>=80?'green':ins.progress>=40?'yellow':'red')+'" style="width:'+ins.progress+'%"></div></div><span style="font-size:12px;color:var(--gray)">'+ins.progress+'%</span></td></tr>';
+  }).join('');
+}
 
-setItemObservation(itemId,value){
-if(!this.checklistData.items)this.checklistData.items={};
-if(!this.checklistData.items[itemId])this.checklistData.items[itemId]={};
-this.checklistData.items[itemId].observation=value;
-},
+function renderChecklists(){
+  const container=document.getElementById('checklistsList');
+  const search=document.getElementById('searchChecklists')?.value.toLowerCase()||'';
+  const filtered=data.checklists.filter(c=>c.name.toLowerCase().includes(search)||c.description?.toLowerCase().includes(search));
+  if(filtered.length===0){container.innerHTML='<div class="empty-state"><i class="fas fa-clipboard-list"></i><h4>Nenhum checklist encontrado</h4><p>Crie um novo checklist para começar</p></div>';return;}
+  const catLabels={seguranca:'Segurança',manutencao:'Manutenção',qualidade:'Qualidade',ambiental:'Ambiental'};
+  const catColors={seguranca:'blue',manutencao:'orange',qualidade:'green',ambiental:'gray'};
+  container.innerHTML=filtered.map(c=>'<div class="card" style="margin-bottom:16px"><div class="card-header"><div><h3 style="font-size:15px">'+c.name+'</h3><span class="badge '+(catColors[c.category]||'gray')+'" style="margin-top:6px">'+(catLabels[c.category]||c.category)+'</span></div><div style="display:flex;gap:8px"><button class="btn btn-outline btn-sm" onclick="deleteChecklist('+c.id+')"><i class="fas fa-trash"></i></button></div></div><div class="card-body"><p style="color:var(--gray);font-size:14px;margin-bottom:12px">'+(c.description||'Sem descrição')+'</p><div style="font-size:13px;color:var(--gray)"><i class="fas fa-list-ul"></i> '+(c.items?.length||0)+' itens <span style="margin:0 8px">|</span> <i class="fas fa-calendar"></i> '+formatDate(c.created_at)+'</div></div></div>').join('');
+}
+function filterChecklists(){renderChecklists();}
+function addChecklistItemField(){
+  const container=document.getElementById('checklistItemsContainer');
+  const div=document.createElement('div');div.className='form-row';div.style.marginBottom='8px';
+  div.innerHTML='<input type="text" placeholder="Descrição do item" class="checklist-item-input" style="flex:1"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="width:36px"><i class="fas fa-trash"></i></button>';
+  container.appendChild(div);
+}
+function saveChecklist(){
+  const name=document.getElementById('newChecklistName').value.trim();
+  const desc=document.getElementById('newChecklistDesc').value.trim();
+  const category=document.getElementById('newChecklistCategory').value;
+  const itemInputs=document.querySelectorAll('.checklist-item-input');
+  const items=Array.from(itemInputs).map(i=>i.value.trim()).filter(v=>v);
+  if(!name){showToast('Informe o nome do checklist','error');return;}
+  if(items.length===0){showToast('Adicione pelo menos um item','error');return;}
+  data.checklists.push({id:Date.now(),name,description:desc,category,items,created_at:new Date().toISOString()});
+  saveLocalData();renderChecklists();populateSelects();closeModal('newChecklistModal');showToast('Checklist criado com sucesso!','success');
+  document.getElementById('newChecklistName').value='';
+  document.getElementById('newChecklistDesc').value='';
+  document.getElementById('checklistItemsContainer').innerHTML='<div class="form-row" style="margin-bottom:8px"><input type="text" placeholder="Descrição do item" class="checklist-item-input" style="flex:1"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="width:36px"><i class="fas fa-trash"></i></button></div>';
+}
+function deleteChecklist(id){
+  if(!confirm('Deseja excluir este checklist?'))return;
+  data.checklists=data.checklists.filter(c=>c.id!==id);
+  saveLocalData();renderChecklists();showToast('Checklist excluído','success');
+}
 
-captureItemPhoto(itemId){
-const input=document.createElement('input');input.type='file';input.accept='image/*';input.capture='environment';
-input.onchange=(e)=>{
-const file=e.target.files[0];if(!file)return;
-const reader=new FileReader();
-reader.onload=(ev)=>{
-if(!this.checklistData.items)this.checklistData.items={};
-if(!this.checklistData.items[itemId])this.checklistData.items[itemId]={};
-if(!this.checklistData.items[itemId].photos)this.checklistData.items[itemId].photos=[];
-this.checklistData.items[itemId].photos.push(ev.target.result);
-const preview=document.getElementById('item-photo-'+itemId);
-preview.innerHTML=this.checklistData.items[itemId].photos.map(p=>'<img src="'+p+'">').join('');
-};
-reader.readAsDataURL(file);
-};
-input.click();
-},
+function renderInspections(){
+  const tbody=document.querySelector('#inspectionsTable tbody');
+  const search=document.getElementById('searchInspections')?.value.toLowerCase()||'';
+  const statusFilter=document.getElementById('filterStatus')?.value||'';
+  let filtered=data.inspections;
+  if(search)filtered=filtered.filter(i=>{const e=data.equipment.find(x=>x.id==i.equipment_id);const c=data.checklists.find(x=>x.id==i.checklist_id);return(e?.name?.toLowerCase().includes(search)||c?.name?.toLowerCase().includes(search)||i.responsible?.toLowerCase().includes(search));});
+  if(statusFilter)filtered=filtered.filter(i=>i.status===statusFilter);
+  if(filtered.length===0){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray)">Nenhuma inspeção encontrada</td></tr>';return;}
+  tbody.innerHTML=filtered.map(ins=>{
+    const equip=data.equipment.find(e=>e.id==ins.equipment_id);
+    const checklist=data.checklists.find(c=>c.id==ins.checklist_id);
+    const sc=ins.status==='concluido'?'green':ins.status==='em_andamento'?'yellow':'red';
+    const st=ins.status==='concluido'?'Concluído':ins.status==='em_andamento'?'Em Andamento':'Pendente';
+    return '<tr><td>#'+ins.id+'</td><td>'+(equip?.name||'N/A')+'</td><td>'+(checklist?.name||'N/A')+'</td><td><span class="badge '+sc+'">'+st+'</span></td><td>'+formatDate(ins.date)+'</td><td>'+ins.responsible+'</td><td><div class="progress-bar" style="width:80px;display:inline-block;vertical-align:middle;margin-right:8px"><div class="progress-fill '+(ins.progress>=80?'green':ins.progress>=40?'yellow':'red')+'" style="width:'+ins.progress+'%"></div></div><span style="font-size:12px">'+ins.progress+'%</span></td><td><button class="btn btn-outline btn-sm" onclick="viewInspection('+ins.id+')"><i class="fas fa-eye"></i></button> <button class="btn btn-danger btn-sm" onclick="deleteInspection('+ins.id+')"><i class="fas fa-trash"></i></button></td></tr>';
+  }).join('');
+}
+function filterInspections(){renderInspections();}
+function loadChecklistItems(){
+  const checklistId=document.getElementById('inspectionChecklist').value;
+  const area=document.getElementById('inspectionItemsArea');
+  const list=document.getElementById('inspectionItemsList');
+  if(!checklistId){area.style.display='none';return;}
+  const checklist=data.checklists.find(c=>c.id==checklistId);
+  if(!checklist||!checklist.items){area.style.display='none';return;}
+  area.style.display='block';
+  list.innerHTML=checklist.items.map((item,idx)=>'<div class="checklist-item" onclick="toggleInspectionItem(this)" data-idx="'+idx+'"><div class="checkbox"><i class="fas fa-check" style="display:none"></i></div><div class="item-text"><h4>'+item+'</h4></div></div>').join('');
+}
+function toggleInspectionItem(el){
+  el.classList.toggle('checked');
+  el.querySelector('.checkbox i').style.display=el.classList.contains('checked')?'block':'none';
+}
+function saveInspection(){
+  const equipmentId=document.getElementById('inspectionEquipment').value;
+  const checklistId=document.getElementById('inspectionChecklist').value;
+  const responsible=document.getElementById('inspectionResponsible').value.trim();
+  const date=document.getElementById('inspectionDate').value;
+  const notes=document.getElementById('inspectionNotes').value.trim();
+  if(!equipmentId){showToast('Selecione um equipamento','error');return;}
+  if(!checklistId){showToast('Selecione um checklist','error');return;}
+  if(!responsible){showToast('Informe o responsável','error');return;}
+  const checklist=data.checklists.find(c=>c.id==checklistId);
+  const items=[];
+  if(checklist&&checklist.items){
+    document.querySelectorAll('#inspectionItemsList .checklist-item').forEach((el,idx)=>{
+      items.push({item:checklist.items[idx],ok:el.classList.contains('checked')});
+    });
+  }
+  const checkedCount=items.filter(i=>i.ok).length;
+  const progress=checklist?.items?.length?Math.round((checkedCount/checklist.items.length)*100):0;
+  const status=progress===100?'concluido':progress>0?'em_andamento':'pendente';
+  data.inspections.push({id:Date.now(),equipment_id:parseInt(equipmentId),checklist_id:parseInt(checklistId),status,date,responsible,notes,items,progress});
+  const equip=data.equipment.find(e=>e.id==equipmentId);
+  if(equip)equip.last_inspection=date;
+  saveLocalData();renderInspections();updateDashboard();closeModal('newInspectionModal');showToast('Inspeção criada com sucesso!','success');
+}
+function viewInspection(id){
+  const ins=data.inspections.find(i=>i.id===id);if(!ins)return;
+  const equip=data.equipment.find(e=>e.id==ins.equipment_id);
+  const checklist=data.checklists.find(c=>c.id==ins.checklist_id);
+  let itemsHtml='';
+  if(ins.items&&ins.items.length){
+    itemsHtml=ins.items.map(item=>'<div class="checklist-item '+(item.ok?'checked':'')+'" style="cursor:default"><div class="checkbox" style="background:'+(item.ok?'var(--success)':'transparent')+';border-color:'+(item.ok?'var(--success)':'#dadce0')+';color:white"><i class="fas fa-check" style="display:'+(item.ok?'block':'none')+'"></i></div><div class="item-text"><h4 style="text-decoration:'+(item.ok?'line-through':'none')+';color:'+(item.ok?'var(--gray)':'var(--dark)')+'">'+item.item+'</h4></div><span class="badge '+(item.ok?'green':'red')+'">'+(item.ok?'OK':'Pendente')+'</span></div>').join('');
+  }
+  const modal=document.createElement('div');modal.className='modal-overlay active';
+  modal.innerHTML='<div class="modal" style="max-width:600px"><div class="modal-header"><h3><i class="fas fa-eye"></i> Detalhes da Inspeção #'+ins.id+'</h3><button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="form-row" style="margin-bottom:16px"><div><strong>Equipamento:</strong> '+(equip?.name||'N/A')+'</div><div><strong>Checklist:</strong> '+(checklist?.name||'N/A')+'</div></div><div class="form-row" style="margin-bottom:16px"><div><strong>Responsável:</strong> '+ins.responsible+'</div><div><strong>Data:</strong> '+formatDate(ins.date)+'</div></div><div style="margin-bottom:16px"><strong>Status:</strong> <span class="badge '+(ins.status==='concluido'?'green':ins.status==='em_andamento'?'yellow':'red')+'">'+(ins.status==='concluido'?'Concluído':ins.status==='em_andamento'?'Em Andamento':'Pendente')+'</span><span style="margin-left:16px"><strong>Progresso:</strong> '+ins.progress+'%</span></div>'+(ins.notes?'<div style="margin-bottom:16px;padding:12px;background:#f8f9fa;border-radius:8px"><strong>Observações:</strong> '+ins.notes+'</div>':'')+'<h4 style="margin-bottom:12px;font-size:14px">Itens Verificados</h4>'+(itemsHtml||'<p style="color:var(--gray)">Nenhum item verificado</p>')+'</div><div class="modal-footer"><button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Fechar</button></div></div>';
+  document.body.appendChild(modal);
+}
+function deleteInspection(id){
+  if(!confirm('Deseja excluir esta inspeção?'))return;
+  data.inspections=data.inspections.filter(i=>i.id!==id);
+  saveLocalData();renderInspections();updateDashboard();showToast('Inspeção excluída','success');
+}
 
-handlePhotoUpload(event){
-const files=Array.from(event.target.files);
-if(this.checklistPhotos.length+files.length>5){this.toast('Máximo de 5 fotos permitido','warning');return;}
-files.forEach(file=>{
-const reader=new FileReader();
-reader.onload=(e)=>{this.checklistPhotos.push(e.target.result);this.updatePhotoPreview();};
-reader.readAsDataURL(file);
+function renderEquipment(){
+  const tbody=document.querySelector('#equipmentTable tbody');
+  const search=document.getElementById('searchEquipment')?.value.toLowerCase()||'';
+  let filtered=data.equipment;
+  if(search)filtered=filtered.filter(e=>e.name.toLowerCase().includes(search)||e.code.toLowerCase().includes(search)||e.location.toLowerCase().includes(search));
+  if(filtered.length===0){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--gray)">Nenhum equipamento encontrado</td></tr>';return;}
+  const typeLabels={maquina:'Máquina',ferramenta:'Ferramenta',veiculo:'Veículo',eletrico:'Elétrico',hidraulico:'Hidráulico'};
+  tbody.innerHTML=filtered.map(e=>{
+    const sc=e.status==='ativo'?'green':e.status==='manutencao'?'yellow':'red';
+    const st=e.status==='ativo'?'Ativo':e.status==='manutencao'?'Em Manutenção':'Inativo';
+    return '<tr><td><strong>'+e.code+'</strong></td><td>'+e.name+'</td><td>'+(typeLabels[e.type]||e.type)+'</td><td>'+e.location+'</td><td><span class="badge '+sc+'">'+st+'</span></td><td>'+(e.last_inspection?formatDate(e.last_inspection):'Nunca')+'</td><td><button class="btn btn-outline btn-sm" onclick="deleteEquipment('+e.id+')"><i class="fas fa-trash"></i></button></td></tr>';
+  }).join('');
+}
+function filterEquipment(){renderEquipment();}
+function saveEquipment(){
+  const code=document.getElementById('equipCode').value.trim();
+  const name=document.getElementById('equipName').value.trim();
+  const type=document.getElementById('equipType').value;
+  const location=document.getElementById('equipLocation').value.trim();
+  const desc=document.getElementById('equipDesc').value.trim();
+  if(!code){showToast('Informe o código do equipamento','error');return;}
+  if(!name){showToast('Informe o nome do equipamento','error');return;}
+  data.equipment.push({id:Date.now(),code,name,type,location,description:desc,status:'ativo',last_inspection:null});
+  saveLocalData();renderEquipment();populateSelects();closeModal('newEquipmentModal');showToast('Equipamento cadastrado!','success');
+  document.getElementById('equipCode').value='';
+  document.getElementById('equipName').value='';
+  document.getElementById('equipLocation').value='';
+  document.getElementById('equipDesc').value='';
+}
+function deleteEquipment(id){
+  if(!confirm('Deseja excluir este equipamento?'))return;
+  data.equipment=data.equipment.filter(e=>e.id!==id);
+  saveLocalData();renderEquipment();populateSelects();showToast('Equipamento excluído','success');
+}
+
+function generateReport(){
+  const from=document.getElementById('reportDateFrom').value;
+  const to=document.getElementById('reportDateTo').value;
+  const equipFilter=document.getElementById('reportEquipment').value;
+  let filtered=data.inspections.filter(i=>{
+    const d=new Date(i.date);
+    const fromOk=!from||d>=new Date(from);
+    const toOk=!to||d<=new Date(to+'T23:59:59');
+    const equipOk=!equipFilter||i.equipment_id==equipFilter;
+    return fromOk&&toOk&&equipOk;
+  });
+  const container=document.getElementById('reportResults');
+  if(filtered.length===0){container.innerHTML='<div class="empty-state"><i class="fas fa-search"></i><h4>Nenhum resultado encontrado</h4><p>Tente ajustar os filtros</p></div>';return;}
+  const completed=filtered.filter(i=>i.status==='concluido').length;
+  const pending=filtered.filter(i=>i.status==='pendente').length;
+  const inProgress=filtered.filter(i=>i.status==='em_andamento').length;
+  const totalItems=filtered.reduce((sum,i)=>sum+(i.items?.length||0),0);
+  const okItems=filtered.reduce((sum,i)=>sum+(i.items?.filter(x=>x.ok).length||0),0);
+  const issueRate=totalItems?Math.round(((totalItems-okItems)/totalItems)*100):0;
+  container.innerHTML='<div class="stats-row" style="margin-bottom:20px"><div class="stat-card"><div class="stat-icon blue"><i class="fas fa-clipboard-list"></i></div><div><div class="stat-value">'+filtered.length+'</div><div class="stat-label">Total Inspeções</div></div></div><div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div><div class="stat-value">'+completed+'</div><div class="stat-label">Concluídas</div></div></div><div class="stat-card"><div class="stat-icon orange"><i class="fas fa-clock"></i></div><div><div class="stat-value">'+inProgress+'</div><div class="stat-label">Em Andamento</div></div></div><div class="stat-card"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div><div class="stat-value">'+issueRate+'%</div><div class="stat-label">Taxa de Problemas</div></div></div></div><div class="card"><div class="card-header"><h3>Detalhamento</h3></div><div class="card-body"><table class="data-table"><thead><tr><th>ID</th><th>Equipamento</th><th>Checklist</th><th>Status</th><th>Data</th><th>Responsável</th><th>Itens OK</th></tr></thead><tbody>'+filtered.map(ins=>{
+    const equip=data.equipment.find(e=>e.id==ins.equipment_id);
+    const checklist=data.checklists.find(c=>c.id==ins.checklist_id);
+    const okCount=ins.items?.filter(x=>x.ok).length||0;
+    const totalCount=ins.items?.length||0;
+    const sc=ins.status==='concluido'?'green':ins.status==='em_andamento'?'yellow':'red';
+    const st=ins.status==='concluido'?'Concluído':ins.status==='em_andamento'?'Em Andamento':'Pendente';
+    return '<tr><td>#'+ins.id+'</td><td>'+(equip?.name||'')+'</td><td>'+(checklist?.name||'')+'</td><td><span class="badge '+sc+'">'+st+'</span></td><td>'+formatDate(ins.date)+'</td><td>'+ins.responsible+'</td><td>'+okCount+'/'+totalCount+'</td></tr>';
+  }).join('')+'</tbody></table></div></div>';
+}
+function exportReport(format){
+  const from=document.getElementById('reportDateFrom').value;
+  const to=document.getElementById('reportDateTo').value;
+  const equipFilter=document.getElementById('reportEquipment').value;
+  let filtered=data.inspections.filter(i=>{
+    const d=new Date(i.date);
+    return(!from||d>=new Date(from))&&(!to||d<=new Date(to+'T23:59:59'))&&(!equipFilter||i.equipment_id==equipFilter);
+  });
+  if(format==='csv'){
+    let csv='ID,Equipamento,Checklist,Status,Data,Responsavel,Progresso,Observacoes
+';
+    filtered.forEach(ins=>{
+      const equip=data.equipment.find(e=>e.id==ins.equipment_id);
+      const checklist=data.checklists.find(c=>c.id==ins.checklist_id);
+      csv+=ins.id+',"'+(equip?.name||'')+'","'+(checklist?.name||'')+'",'+ins.status+','+ins.date+','+ins.responsible+','+ins.progress+'%,"'+((ins.notes||'').replace(/"/g,'""'))+'"
+';
+    });
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const link=document.createElement('a');
+    link.href=URL.createObjectURL(blob);
+    link.download='relatorio_checklist_'+new Date().toISOString().split('T')[0]+'.csv';
+    link.click();
+    showToast('CSV exportado!','success');
+  }else{
+    const pw=window.open('','_blank');
+    pw.document.write('<html><head><title>Relatorio Checklist Industrial</title><style>body{font-family:Arial;padding:40px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{padding:10px;border:1px solid #ccc;text-align:left}th{background:#f0f0f0}</style></head><body><h1>Relatorio Checklist Industrial</h1><p>Periodo: '+(from||'Inicio')+' a '+(to||'Hoje')+'</p><table><thead><tr><th>ID</th><th>Equipamento</th><th>Checklist</th><th>Status</th><th>Data</th><th>Responsavel</th><th>Progresso</th></tr></thead><tbody>'+filtered.map(ins=>{const equip=data.equipment.find(e=>e.id==ins.equipment_id);const checklist=data.checklists.find(c=>c.id==ins.checklist_id);return '<tr><td>'+ins.id+'</td><td>'+(equip?.name||'')+'</td><td>'+(checklist?.name||'')+'</td><td>'+ins.status+'</td><td>'+ins.date+'</td><td>'+ins.responsible+'</td><td>'+ins.progress+'%</td></tr>';}).join('')+'</tbody></table></body></html>');
+    pw.document.close();pw.print();
+    showToast('PDF gerado!','success');
+  }
+}
+
+function populateSelects(){
+  const equipSelect=document.getElementById('inspectionEquipment');
+  const checklistSelect=document.getElementById('inspectionChecklist');
+  const reportEquip=document.getElementById('reportEquipment');
+  if(equipSelect){equipSelect.innerHTML='<option value="">Selecione...</option>'+data.equipment.map(e=>'<option value="'+e.id+'">'+e.code+' - '+e.name+'</option>').join('');}
+  if(checklistSelect){checklistSelect.innerHTML='<option value="">Selecione...</option>'+data.checklists.map(c=>'<option value="'+c.id+'">'+c.name+'</option>').join('');}
+  if(reportEquip){reportEquip.innerHTML='<option value="">Todos</option>'+data.equipment.map(e=>'<option value="'+e.id+'">'+e.code+' - '+e.name+'</option>').join('');}
+}
+function formatDate(dateStr){
+  if(!dateStr)return'-';
+  const d=new Date(dateStr);
+  if(isNaN(d))return dateStr;
+  return d.toLocaleDateString('pt-BR');
+}
+function openModal(id){document.getElementById(id).classList.add('active');}
+function closeModal(id){document.getElementById(id).classList.remove('active');}
+function showToast(message,type){
+  const container=document.getElementById('toastContainer');
+  const toast=document.createElement('div');
+  toast.className='toast '+(type||'');
+  const icon=type==='success'?'check-circle':type==='error'?'times-circle':'info-circle';
+  toast.innerHTML='<i class="fas fa-'+icon+'"></i> '+message;
+  container.appendChild(toast);
+  setTimeout(()=>{toast.remove();},3000);
+}
+document.querySelectorAll('.modal-overlay').forEach(overlay=>{
+  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('active');});
 });
-},
-
-updatePhotoPreview(){
-document.getElementById('checklist-photo-preview').innerHTML=this.checklistPhotos.map(p=>'<img src="'+p+'">').join('');
-},
-
-cancelChecklist(){if(confirm('Deseja realmente cancelar o checklist?')){this.resetChecklist();}},
-
-submitChecklist(){
-if(!this.selectedMachine){this.toast('Selecione uma máquina primeiro','error');return;}
-const horimeter=parseFloat(document.getElementById('checklist-horimeter').value);
-const lastHorimeter=parseFloat(this.selectedMachine.horimeter)||0;
-if(!horimeter&&horimeter!==0){this.toast('Informe o horímetro atual','error');return;}
-if(horimeter<lastHorimeter){this.toast('O horímetro não pode ser menor que o último registrado ('+lastHorimeter+')','error');return;}
-
-const model=this.models.find(m=>m.id===this.selectedMachine.checklistModel);
-const answeredItems=Object.keys(this.checklistData.items||{});
-const totalItems=model?model.items.length:0;
-if(answeredItems.length<totalItems){this.toast('Responda todos os '+totalItems+' itens do checklist','error');return;}
-
-const criticalNOK=[];
-if(model){
-model.items.forEach(item=>{if(item.critical&&this.checklistData.items[item.id]?.value==='nok')criticalNOK.push(item.text);});
-}
-
-const checklist={
-id:'checklist-'+Date.now(),machineId:this.selectedMachine.id,machineCode:this.selectedMachine.code,machineName:this.selectedMachine.name,
-operatorId:this.currentUser.id,operatorName:this.currentUser.fullname,
-date:document.getElementById('checklist-date').value,shift:document.getElementById('checklist-shift').value,
-horimeter:horimeter,previousHorimeter:lastHorimeter,hoursWorked:horimeter-lastHorimeter,
-items:this.checklistData.items,observations:document.getElementById('checklist-observations').value,
-photos:this.checklistPhotos,criticalIssues:criticalNOK,createdAt:new Date().toISOString()
-};
-
-this.selectedMachine.horimeter=horimeter;
-if(this.selectedMachine.nextMaintenance&&this.selectedMachine.maintenanceInterval){
-const remaining=this.selectedMachine.nextMaintenance-horimeter;
-if(remaining<=0){this.selectedMachine.status='manutencao';this.toast('Máquina atingiu o limite de horas para manutenção preventiva!','warning');}
-}
-
-if(criticalNOK.length>0){
-this.selectedMachine.status='bloqueado';
-const order={id:'order-'+Date.now(),machineId:this.selectedMachine.id,machineCode:this.selectedMachine.code,type:'corretiva',priority:'urgente',description:'Itens críticos com falha: '+criticalNOK.join(', '),status:'aberta',createdBy:this.currentUser.id,createdAt:new Date().toISOString(),mechanicId:null};
-this.orders.push(order);
-this.toast('Máquina BLOQUEADA! OS criada automaticamente.','warning');
-}
-
-this.checklists.push(checklist);this.saveLocalData();
-this.toast('Checklist enviado com sucesso!','success');
-this.resetChecklist();this.navigate('dashboard');
-},
-
-loadUsers(){
-const tbody=document.getElementById('users-table');
-const roleFilter=this.currentUserRoleFilter||'all';
-let users=this.users;
-if(roleFilter!=='all')users=users.filter(u=>u.role===roleFilter);
-tbody.innerHTML=users.map(u=>'<tr><td><strong>'+u.fullname+'</strong></td><td>'+u.username+'</td><td><span class="badge badge-'+(u.role==='supervisor'?'warning':u.role==='mecanico'?'primary':'success')+'">'+ROLE_LABELS[u.role]+'</span></td><td><span class="status-badge '+(u.active?'status-ativo':'status-inativo')+'">'+(u.active?'Ativo':'Inativo')+'</span></td><td><button class="btn btn-sm btn-secondary btn-icon" onclick="app.resetUserPIN(''+u.id+'')" title="Resetar PIN"><i class="fas fa-key"></i></button><button class="btn btn-sm '+(u.active?'btn-danger':'btn-success')+' btn-icon" onclick="app.toggleUserStatus(''+u.id+'')" title="'+(u.active?'Desativar':'Ativar')+'"><i class="fas '+(u.active?'fa-user-slash':'fa-user-check')+'"></i></button></td></tr>').join('');
-},
-
-filterUsers(role){this.currentUserRoleFilter=role;document.querySelectorAll('#section-users .tab').forEach(t=>t.classList.remove('active'));event.target.classList.add('active');this.loadUsers();},
-
-saveUser(){
-const fullname=document.getElementById('user-fullname').value.trim();
-const username=document.getElementById('user-username').value.trim().toUpperCase();
-const role=document.getElementById('user-role').value;
-const pin=document.getElementById('user-pin').value.trim();
-if(!fullname||!username||!role||!pin){this.toast('Preencha todos os campos obrigatórios','error');return;}
-if(pin.length!==4||!/\d+/.test(pin)){this.toast('O PIN deve ter 4 dígitos numéricos','error');return;}
-if(this.users.some(u=>u.username.toUpperCase()===username)){this.toast('Já existe um usuário com este nome','error');return;}
-const authorizedMachines=[];const authorizedTypes=[];
-if(role==='mecanico'){
-document.querySelectorAll('#user-machines-checkboxes input:checked').forEach(cb=>authorizedMachines.push(cb.value));
-document.querySelectorAll('#user-types-checkboxes input:checked').forEach(cb=>authorizedTypes.push(cb.value));
-}
-const user={id:'user-'+Date.now(),username:username,fullname:fullname,role:role,pin:pin,active:true,createdAt:new Date().toISOString(),authorizedMachines:authorizedMachines,authorizedTypes:authorizedTypes};
-this.users.push(user);this.saveLocalData();this.closeModal('modal-user');this.toast('Usuário cadastrado com sucesso!','success');this.loadUsers();this.resetUserForm();
-},
-
-resetUserForm(){document.getElementById('user-fullname').value='';document.getElementById('user-username').value='';document.getElementById('user-role').value='';document.getElementById('user-pin').value='';document.getElementById('user-machines-group').style.display='none';document.getElementById('user-types-group').style.display='none';},
-
-onRoleChange(){
-const role=document.getElementById('user-role').value;
-const machinesGroup=document.getElementById('user-machines-group');
-const typesGroup=document.getElementById('user-types-group');
-if(role==='mecanico'){
-machinesGroup.style.display='block';typesGroup.style.display='block';
-const machinesContainer=document.getElementById('user-machines-checkboxes');
-machinesContainer.innerHTML=this.machines.map(m=>'<label style="display:flex;align-items:center;gap:8px;padding:6px;cursor:pointer;"><input type="checkbox" value="'+m.id+'"><span>'+m.code+' - '+m.name+'</span></label>').join('');
-const typesContainer=document.getElementById('user-types-checkboxes');
-const types=[...new Set(this.machines.map(m=>m.type))];
-typesContainer.innerHTML=types.map(t=>'<label style="display:flex;align-items:center;gap:8px;padding:6px;cursor:pointer;"><input type="checkbox" value="'+t+'"><span>'+(TYPE_LABELS[t]||t)+'</span></label>').join('');
-}else{machinesGroup.style.display='none';typesGroup.style.display='none';}
-},
-
-toggleUserStatus(userId){
-const user=this.users.find(u=>u.id===userId);
-if(user){user.active=!user.active;this.saveLocalData();this.loadUsers();this.toast('Usuário '+(user.active?'ativado':'desativado'),'success');}
-},
-
-resetUserPIN(userId){
-const user=this.users.find(u=>u.id===userId);if(!user)return;
-const newPIN=prompt('Digite o novo PIN para '+user.fullname+' (4 dígitos):');
-if(!newPIN)return;
-if(newPIN.length!==4||!/\d+/.test(newPIN)){this.toast('O PIN deve ter 4 dígitos numéricos','error');return;}
-user.pin=newPIN;this.saveLocalData();this.toast('PIN resetado com sucesso!','success');
-},
-
-loadModels(){
-const container=document.getElementById('models-list');
-if(this.models.length===0){
-container.innerHTML='<div class="empty-state"><i class="fas fa-file-alt"></i><h3>Nenhum modelo cadastrado</h3></div>';
-return;
-}
-container.innerHTML=this.models.map(m=>'<div class="card"><div class="card-header"><div><h3 class="card-title">'+m.name+'</h3><p style="color:var(--gray);font-size:13px;margin-top:4px;">'+(m.description||'')+'</p></div><span class="status-badge '+(m.active?'status-ativo':'status-inativo')+'">'+(m.active?'Ativo':'Inativo')+'</span></div><div style="display:flex;gap:10px;flex-wrap:wrap;"><span class="badge badge-primary"><i class="fas fa-list"></i> '+m.items.length+' itens</span><span class="badge badge-'+(m.items.filter(i=>i.critical).length>0?'danger':'success')+'"><i class="fas fa-exclamation-circle"></i> '+m.items.filter(i=>i.critical).length+' críticos</span></div><div style="margin-top:16px;display:flex;gap:10px;"><button class="btn btn-sm btn-secondary" onclick="app.duplicateModel(''+m.id+'')"><i class="fas fa-copy"></i> Duplicar</button><button class="btn btn-sm btn-secondary" onclick="app.toggleModelStatus(''+m.id+'')"><i class="fas '+(m.active?'fa-eye-slash':'fa-eye')+'"></i> '+(m.active?'Desativar':'Ativar')+'</button></div></div>').join('');
-
-const selects=document.querySelectorAll('#machine-checklist-model');
-selects.forEach(select=>{if(select){const currentValue=select.value;select.innerHTML='<option value="">Selecione um modelo...</option>'+this.models.filter(m=>m.active).map(m=>'<option value="'+m.id+'">'+m.name+'</option>').join('');select.value=currentValue;}});
-},
-
-addModelItem(){
-this.modelItems.push({id:Date.now(),text:'',instruction:'',critical:false,requiresPhoto:false,requiresObservation:false});
-this.renderModelItems();
-},
-
-renderModelItems(){
-const container=document.getElementById('model-items-container');
-container.innerHTML=this.modelItems.map((item,index)=>'<div style="background:var(--gray-light);padding:16px;border-radius:var(--radius-sm);margin-bottom:12px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">'+(index+1)+'</span><button class="btn btn-sm btn-danger" onclick="app.removeModelItem('+index+')" style="width:auto;margin-left:auto;"><i class="fas fa-trash"></i></button></div><div class="form-group"><label>Item *</label><input type="text" id="model-item-text-'+index+'" placeholder="Ex: Freio de serviço" value="'+item.text+'"></div><div class="form-group"><label>Instrução de Inspeção</label><input type="text" id="model-item-instruction-'+index+'" placeholder="Ex: Verificar funcionamento" value="'+item.instruction+'"></div><div style="display:flex;gap:16px;flex-wrap:wrap;"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="model-item-critical-'+index+'" '+(item.critical?'checked':'')+'><span>Item Crítico</span></label><label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="model-item-photo-'+index+'" '+(item.requiresPhoto?'checked':'')+'><span>Exige Foto</span></label><label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="model-item-obs-'+index+'" '+(item.requiresObservation?'checked':'')+'><span>Exige Observação</span></label></div></div>').join('');
-},
-
-removeModelItem(index){this.modelItems.splice(index,1);this.renderModelItems();},
-
-saveModel(){
-const name=document.getElementById('model-name').value.trim();
-const description=document.getElementById('model-description').value.trim();
-if(!name){this.toast('Informe o nome do modelo','error');return;}
-if(this.modelItems.length===0){this.toast('Adicione pelo menos um item','error');return;}
-const items=this.modelItems.map((item,index)=>({id:index+1,text:document.getElementById('model-item-text-'+index).value,instruction:document.getElementById('model-item-instruction-'+index).value,critical:document.getElementById('model-item-critical-'+index).checked,requiresPhoto:document.getElementById('model-item-photo-'+index).checked,requiresObservation:document.getElementById('model-item-obs-'+index).checked})).filter(item=>item.text.trim()!=='');
-const model={id:'model-'+Date.now(),name:name,description:description,items:items,active:true,createdAt:new Date().toISOString()};
-this.models.push(model);this.saveLocalData();this.closeModal('modal-model');this.toast('Modelo salvo com sucesso!','success');this.loadModels();this.resetModelForm();
-},
-
-resetModelForm(){document.getElementById('model-name').value='';document.getElementById('model-description').value='';this.modelItems=[];this.renderModelItems();},
-
-duplicateModel(modelId){
-const model=this.models.find(m=>m.id===modelId);if(!model)return;
-const newModel={...JSON.parse(JSON.stringify(model)),id:'model-'+Date.now(),name:model.name+' (Cópia)',active:true,createdAt:new Date().toISOString()};
-this.models.push(newModel);this.saveLocalData();this.loadModels();this.toast('Modelo duplicado com sucesso!','success');
-},
-
-toggleModelStatus(modelId){
-const model=this.models.find(m=>m.id===modelId);
-if(model){model.active=!model.active;this.saveLocalData();this.loadModels();this.toast('Modelo '+(model.active?'ativado':'desativado'),'success');}
-},
-
-loadOrders(){
-const container=document.getElementById('orders-list');
-const role=this.currentUser.role;
-let orders=this.orders;
-const filter=this.currentOrderFilter||'all';
-if(filter!=='all')orders=orders.filter(o=>o.status===filter);
-
-if(role==='mecanico'){
-orders=orders.filter(o=>o.mechanicId===this.currentUser.id||o.status==='aberta');
-}
-
-if(orders.length===0){
-container.innerHTML='<div class="empty-state"><i class="fas fa-clipboard-list"></i><h3>Nenhuma ordem de serviço</h3></div>';
-return;
-}
-
-container.innerHTML=orders.map(o=>{
-const machine=this.machines.find(m=>m.id===o.machineId);
-const priorityColors={'baixa':'badge-success','media':'badge-warning','alta':'badge-danger','urgente':'badge-danger'};
-const statusColors={'aberta':'badge-warning','andamento':'badge-primary','concluida':'badge-success','cancelada':'badge-danger'};
-const mechanic=this.users.find(u=>u.id===o.mechanicId);
-return'<div class="card"><div class="card-header"><div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="badge '+(statusColors[o.status]||'badge-secondary')+'">'+(OS_STATUS_LABELS[o.status]||o.status)+'</span><span class="badge '+(priorityColors[o.priority]||'badge-secondary')+'">'+o.priority.toUpperCase()+'</span></div><h3 style="font-size:16px;font-weight:700;">OS #'+o.id.split('-')[1]+' - '+(machine?machine.code:'--')+'</h3></div><div style="font-size:12px;color:var(--gray);">'+new Date(o.createdAt).toLocaleDateString('pt-BR')+'</div></div><p style="margin-bottom:12px;color:var(--dark);">'+o.description+'</p><div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;"><span class="badge badge-primary"><i class="fas fa-wrench"></i> '+(o.type==='preventiva'?'Preventiva':o.type==='corretiva'?'Corretiva':'Preditiva')+'</span>'+(mechanic?'<span class="badge badge-info"><i class="fas fa-user"></i> '+mechanic.fullname+'</span>':'')+'</div>'+(role==='supervisor'||role==='mecanico'?'<div style="display:flex;gap:8px;">'+(o.status==='aberta'?'<button class="btn btn-sm btn-primary" onclick="app.startOrder(''+o.id+'')"><i class="fas fa-play"></i> Iniciar</button>':'')+(o.status==='andamento'?'<button class="btn btn-sm btn-success" onclick="app.completeOrder(''+o.id+'')"><i class="fas fa-check"></i> Concluir</button>':'')+'</div>':'')+'</div>';
-}).join('');
-},
-
-filterOrders(status){this.currentOrderFilter=status;document.querySelectorAll('#section-orders .tab').forEach(t=>t.classList.remove('active'));event.target.classList.add('active');this.loadOrders();},
-
-saveOrder(){
-const machineId=document.getElementById('order-machine').value;
-const type=document.getElementById('order-type').value;
-const priority=document.getElementById('order-priority').value;
-const mechanicId=document.getElementById('order-mechanic').value;
-const description=document.getElementById('order-description').value.trim();
-if(!machineId||!description){this.toast('Preencha todos os campos obrigatórios','error');return;}
-const machine=this.machines.find(m=>m.id===machineId);
-const order={id:'order-'+Date.now(),machineId:machineId,machineCode:machine?machine.code:'--',type:type,priority:priority,description:description,status:'aberta',createdBy:this.currentUser.id,createdAt:new Date().toISOString(),mechanicId:mechanicId||null};
-this.orders.push(order);this.saveLocalData();this.closeModal('modal-order');this.toast('Ordem de serviço criada com sucesso!','success');this.loadOrders();this.resetOrderForm();
-},
-
-resetOrderForm(){document.getElementById('order-machine').value='';document.getElementById('order-type').value='preventiva';document.getElementById('order-priority').value='media';document.getElementById('order-mechanic').value='';document.getElementById('order-description').value='';},
-
-startOrder(orderId){
-const order=this.orders.find(o=>o.id===orderId);
-if(order){order.status='andamento';order.startedAt=new Date().toISOString();this.saveLocalData();this.loadOrders();this.toast('OS iniciada!','success');}
-},
-
-completeOrder(orderId){
-const order=this.orders.find(o=>o.id===orderId);
-if(order){order.status='concluida';order.completedAt=new Date().toISOString();
-const machine=this.machines.find(m=>m.id===order.machineId);
-if(machine){machine.status='ativo';if(machine.nextMaintenance&&machine.maintenanceInterval){machine.nextMaintenance=parseFloat(machine.horimeter||0)+machine.maintenanceInterval;}}
-this.saveLocalData();this.loadOrders();this.toast('OS concluída! Máquina liberada.','success');}
-},
-
-loadReportFilters(){
-const machineSelect=document.getElementById('report-machine');
-machineSelect.innerHTML='<option value="">Todas</option>'+this.machines.map(m=>'<option value="'+m.id+'">'+m.code+' - '+m.name+'</option>').join('');
-const operatorSelect=document.getElementById('report-operator');
-operatorSelect.innerHTML='<option value="">Todos</option>'+this.users.filter(u=>u.role==='operador').map(u=>'<option value="'+u.id+'">'+u.fullname+'</option>').join('');
-},
-
-generateReport(){
-const startDate=document.getElementById('report-date-start').value;
-const endDate=document.getElementById('report-date-end').value;
-const machineId=document.getElementById('report-machine').value;
-const operatorId=document.getElementById('report-operator').value;
-let results=this.checklists;
-if(startDate)results=results.filter(c=>c.date>=startDate);
-if(endDate)results=results.filter(c=>c.date<=endDate);
-if(machineId)results=results.filter(c=>c.machineId===machineId);
-if(operatorId)results=results.filter(c=>c.operatorId===operatorId);
-
-const container=document.getElementById('report-results');
-if(results.length===0){
-container.innerHTML='<div class="empty-state"><i class="fas fa-search"></i><h3>Nenhum resultado encontrado</h3></div>';
-return;
-}
-
-container.innerHTML='<div class="card"><div class="card-header"><h3 class="card-title"><i class="fas fa-list"></i> Resultados ('+results.length+')</h3></div><div class="table-container"><table><thead><tr><th>Data</th><th>Máquina</th><th>Operador</th><th>Horímetro</th><th>Itens OK</th><th>Itens NOK</th><th>Ações</th></tr></thead><tbody>'+results.map(r=>{
-const items=Object.values(r.items||{});
-const okCount=items.filter(i=>i.value==='ok').length;
-const nokCount=items.filter(i=>i.value==='nok').length;
-return'<tr><td>'+new Date(r.date).toLocaleDateString('pt-BR')+'</td><td>'+r.machineCode+'</td><td>'+r.operatorName+'</td><td>'+r.horimeter+'</td><td style="color:var(--success);font-weight:600;">'+okCount+'</td><td style="color:var(--danger);font-weight:600;">'+nokCount+'</td><td><button class="btn btn-sm btn-secondary" onclick="app.viewChecklist(''+r.id+'')"><i class="fas fa-eye"></i></button></td></tr>';
-}).join('')+'</tbody></table></div></div>';
-},
-
-viewChecklist(checklistId){
-const checklist=this.checklists.find(c=>c.id===checklistId);if(!checklist)return;
-const machine=this.machines.find(m=>m.id===checklist.machineId);
-const model=this.models.find(m=>m.id===(machine?machine.checklistModel:''));
-let itemsHtml='';
-if(model){
-itemsHtml='<div style="margin-top:16px;">'+model.items.map(item=>{
-const answer=checklist.items&&checklist.items[item.id]?checklist.items[item.id]:null;
-const statusIcon=answer?answer.value==='ok'?'<i class="fas fa-check-circle" style="color:var(--success)"></i>':answer.value==='nok'?'<i class="fas fa-times-circle" style="color:var(--danger)"></i>':'<i class="fas fa-minus-circle" style="color:var(--gray)"></i>':'<i class="fas fa-question-circle" style="color:var(--gray)"></i>';
-const obs=answer&&answer.observation?'<div style="font-size:12px;color:var(--gray);margin-top:4px;"><i class="fas fa-comment"></i> '+answer.observation+'</div>':'';
-return'<div style="padding:10px;border-bottom:1px solid var(--gray-light);display:flex;align-items:flex-start;gap:10px;"><div style="flex-shrink:0;">'+statusIcon+'</div><div style="flex:1;"><div style="font-weight:500;">'+(item.critical?'<span style="color:var(--danger)"><i class="fas fa-exclamation-circle"></i></span> ':'')+item.text+'</div>'+obs+'</div></div>';
-}).join('')+'</div>';
-}
-
-document.getElementById('view-checklist-content').innerHTML='
-<div style="text-align:center;margin-bottom:20px;"><div style="font-size:14px;color:var(--gray);">'+checklist.machineCode+'</div><h2 style="font-size:22px;margin-bottom:4px;">'+checklist.machineName+'</h2><div style="font-size:13px;color:var(--gray);">'+new Date(checklist.date).toLocaleDateString('pt-BR')+' | Turno '+checklist.shift+' | Operador: '+checklist.operatorName+'</div></div>
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;"><div style="text-align:center;padding:12px;background:var(--gray-light);border-radius:var(--radius-sm);"><div style="font-size:24px;font-weight:700;color:var(--dark);">'+checklist.horimeter+'</div><div style="font-size:11px;color:var(--gray);text-transform:uppercase;">Horímetro</div></div><div style="text-align:center;padding:12px;background:var(--gray-light);border-radius:var(--radius-sm);"><div style="font-size:24px;font-weight:700;color:var(--dark);">'+checklist.hoursWorked+'</div><div style="font-size:11px;color:var(--gray);text-transform:uppercase;">Horas Trab.</div></div><div style="text-align:center;padding:12px;background:var(--gray-light);border-radius:var(--radius-sm);"><div style="font-size:24px;font-weight:700;color:var(--dark);">'+(checklist.criticalIssues&&checklist.criticalIssues.length>0?'<span style="color:var(--danger)">'+checklist.criticalIssues.length+'</span>':'0')+'</div><div style="font-size:11px;color:var(--gray);text-transform:uppercase;">Críticos</div></div></div>
-'+itemsHtml+(checklist.observations?'<div style="margin-top:16px;padding:12px;background:#fff3cd;border-radius:var(--radius-sm);"><strong><i class="fas fa-sticky-note"></i> Observações:</strong><br>'+checklist.observations+'</div>':'')+(checklist.photos&&checklist.photos.length>0?'<div style="margin-top:16px;"><strong><i class="fas fa-camera"></i> Fotos:</strong><div class="photo-preview" style="margin-top:8px;">'+checklist.photos.map(p=>'<img src="'+p+'" style="width:100px;height:100px;object-fit:cover;border-radius:var(--radius-sm);">').join('')+'</div></div>':'');
-this.openModal('modal-view-checklist');
-},
-
-printChecklist(){window.print();},
-
-exportReportPDF(){
-const{jsPDF}=window.jspdf;
-const doc=new jsPDF();
-doc.setFontSize(18);doc.text('Relatório de Checklists',14,20);
-doc.setFontSize(10);doc.text('Gerado em: '+new Date().toLocaleDateString('pt-BR'),14,30);
-doc.save('relatorio-checklists.pdf');
-this.toast('PDF gerado!','success');
-},
-
-exportReportCSV(){
-let csv='Data,Máquina,Operador,Horímetro,Horas Trabalhadas,Itens OK,Itens NOK,Criticos\n';
-this.checklists.forEach(c=>{
-const items=Object.values(c.items||{});
-const okCount=items.filter(i=>i.value==='ok').length;
-const nokCount=items.filter(i=>i.value==='nok').length;
-csv+=c.date+','+c.machineCode+','+c.operatorName+','+c.horimeter+','+c.hoursWorked+','+okCount+','+nokCount+','+(c.criticalIssues?c.criticalIssues.length:0)+'\n';
-});
-const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='relatorio-checklists.csv';link.click();
-this.toast('CSV exportado!','success');
-},
-
-loadProfile(){
-document.getElementById('profile-name').textContent=this.currentUser.fullname;
-document.getElementById('profile-role').textContent=ROLE_LABELS[this.currentUser.role];
-},
-
-changePIN(){
-const currentPIN=document.getElementById('current-pin').value.trim();
-const newPIN=document.getElementById('new-pin').value.trim();
-const confirmPIN=document.getElementById('confirm-pin').value.trim();
-if(!currentPIN||!newPIN||!confirmPIN){this.toast('Preencha todos os campos','error');return;}
-if(currentPIN!==this.currentUser.pin){this.toast('PIN atual incorreto','error');return;}
-if(newPIN.length!==4||!/\d+/.test(newPIN)){this.toast('O novo PIN deve ter 4 dígitos numéricos','error');return;}
-if(newPIN!==confirmPIN){this.toast('Os PINs não conferem','error');return;}
-this.currentUser.pin=newPIN;
-const user=this.users.find(u=>u.id===this.currentUser.id);
-if(user)user.pin=newPIN;
-this.saveLocalData();
-document.getElementById('current-pin').value='';document.getElementById('new-pin').value='';document.getElementById('confirm-pin').value='';
-this.toast('PIN alterado com sucesso!','success');
-},
-
-loadMecanicoDashboard(){
-const myOrders=this.orders.filter(o=>o.mechanicId===this.currentUser.id||o.status==='aberta');
-const openOrders=myOrders.filter(o=>o.status==='aberta');
-const progressOrders=myOrders.filter(o=>o.status==='andamento');
-const doneOrders=myOrders.filter(o=>o.status==='concluida');
-document.getElementById('mec-stat-os-open').textContent=openOrders.length;
-document.getElementById('mec-stat-os-progress').textContent=progressOrders.length;
-document.getElementById('mec-stat-os-done').textContent=doneOrders.length;
-
-const authMachines=this.currentUser.authorizedMachines||[];
-const authTypes=this.currentUser.authorizedTypes||[];
-const myMachines=this.machines.filter(m=>authMachines.includes(m.id)||authTypes.includes(m.type));
-const machinesContainer=document.getElementById('mecanico-machines');
-if(myMachines.length===0){
-machinesContainer.innerHTML='<div class="empty-state"><i class="fas fa-truck"></i><h3>Nenhuma máquina atribuída</h3></div>';
-}else{
-machinesContainer.innerHTML='<div class="machine-grid">'+myMachines.map(m=>'<div class="machine-card" onclick="app.viewMachineHistory(''+m.id+'')"><div class="machine-header"><div class="machine-icon" style="background:'+this.getMachineTypeColor(m.type)+';"><i class="fas '+this.getMachineTypeIcon(m.type)+'"></i></div><div class="machine-info"><div class="machine-code">'+m.code+'</div><div class="machine-name">'+m.name+'</div><div class="machine-type">'+(TYPE_LABELS[m.type]||m.type)+'</div></div></div><div class="machine-footer"><span class="status-badge status-'+m.status+'">'+STATUS_LABELS[m.status]+'</span></div></div>').join('')+'</div>';
-}
-
-const ordersContainer=document.getElementById('mecanico-orders');
-if(myOrders.length===0){
-ordersContainer.innerHTML='<div class="empty-state"><i class="fas fa-clipboard-list"></i><h3>Nenhuma ordem de serviço</h3></div>';
-}else{
-ordersContainer.innerHTML=myOrders.map(o=>{
-const machine=this.machines.find(m=>m.id===o.machineId);
-return'<div class="card" style="margin-bottom:12px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><span class="badge badge-'+(o.status==='aberta'?'warning':o.status==='andamento'?'primary':'success')+'">'+(OS_STATUS_LABELS[o.status]||o.status)+'</span><span style="font-size:12px;color:var(--gray);">'+new Date(o.createdAt).toLocaleDateString('pt-BR')+'</span></div><div style="font-weight:600;margin-bottom:4px;">'+(machine?machine.code:'--')+' - '+(machine?machine.name:'--')+'</div><p style="font-size:13px;color:var(--gray);margin-bottom:8px;">'+o.description.substring(0,100)+(o.description.length>100?'...':'')+'</p><div style="display:flex;gap:8px;">'+(o.status==='aberta'?'<button class="btn btn-sm btn-primary" onclick="app.startOrder(''+o.id+'')"><i class="fas fa-play"></i> Iniciar</button>':'')+(o.status==='andamento'?'<button class="btn btn-sm btn-success" onclick="app.completeOrder(''+o.id+'')"><i class="fas fa-check"></i> Concluir</button>':'')+'</div></div>';
-}).join('');
-}
-},
-
-viewMachineHistory(machineId){
-const machine=this.machines.find(m=>m.id===machineId);if(!machine)return;
-this.selectedMachine=machine;
-const machineChecklists=this.checklists.filter(c=>c.machineId===machineId).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
-const machineOrders=this.orders.filter(o=>o.machineId===machineId).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
-const container=document.getElementById('machine-history-content');
-
-let historyHtml='<div class="card"><div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;"><div style="width:60px;height:60px;border-radius:var(--radius);background:'+this.getMachineTypeColor(machine.type)+';display:flex;align-items:center;justify-content:center;font-size:28px;color:white;"><i class="fas '+this.getMachineTypeIcon(machine.type)+'"></i></div><div><div style="font-size:12px;color:var(--gray);font-weight:600;text-transform:uppercase;">'+machine.code+'</div><div style="font-size:22px;font-weight:700;color:var(--dark);">'+machine.name+'</div><div style="font-size:13px;color:var(--gray);">'+(TYPE_LABELS[m.type]||machine.type)+' | '+STATUS_LABELS[machine.status]+'</div></div></div>';
-historyHtml+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px;"><div style="text-align:center;padding:12px;background:var(--gray-light);border-radius:var(--radius-sm);"><div style="font-size:22px;font-weight:700;">'+(machine.horimeter||0)+'</div><div style="font-size:11px;color:var(--gray);text-transform:uppercase;">Horímetro</div></div><div style="text-align:center;padding:12px;background:var(--gray-light);border-radius:var(--radius-sm);"><div style="font-size:22px;font-weight:700;">'+(machine.nextMaintenance||'--')+'</div><div style="font-size:11px;color:var(--gray);text-transform:uppercase;">Próx. Prev.</div></div><div style="text-align:center;padding:12px;background:var(--gray-light);border-radius:var(--radius-sm);"><div style="font-size:22px;font-weight:700;">'+machineChecklists.length+'</div><div style="font-size:11px;color:var(--gray);text-transform:uppercase;">Checklists</div></div><div style="text-align:center;padding:12px;background:var(--gray-light);border-radius:var(--radius-sm);"><div style="font-size:22px;font-weight:700;">'+machineOrders.length+'</div><div style="font-size:11px;color:var(--gray);text-transform:uppercase;">OS</div></div></div>';
-
-historyHtml+='<div class="form-section"><div class="form-section-title"><i class="fas fa-clipboard-check"></i> Checklists Realizados ('+machineChecklists.length+')</div>';
-if(machineChecklists.length===0){historyHtml+='<p style="color:var(--gray);">Nenhum checklist realizado</p>';}
-else{
-historyHtml+='<div class="table-container"><table><thead><tr><th>Data</th><th>Turno</th><th>Operador</th><th>Horímetro</th><th>Status</th><th>Ações</th></tr></thead><tbody>'+machineChecklists.map(c=>{
-const items=Object.values(c.items||{});
-const nokCount=items.filter(i=>i.value==='nok').length;
-return'<tr><td>'+new Date(c.date).toLocaleDateString('pt-BR')+'</td><td>'+c.shift+'º</td><td>'+c.operatorName+'</td><td>'+c.horimeter+'</td><td>'+(nokCount>0?'<span style="color:var(--danger);font-weight:600;"><i class="fas fa-times-circle"></i> '+nokCount+' NOK</span>':'<span style="color:var(--success);"><i class="fas fa-check-circle"></i> OK</span>')+'</td><td><button class="btn btn-sm btn-secondary" onclick="app.viewChecklist(''+c.id+'')"><i class="fas fa-eye"></i></button></td></tr>';
-}).join('')+'</tbody></table></div>';
-}
-historyHtml+='</div>';
-
-historyHtml+='<div class="form-section"><div class="form-section-title"><i class="fas fa-wrench"></i> Ordens de Serviço ('+machineOrders.length+')</div>';
-if(machineOrders.length===0){historyHtml+='<p style="color:var(--gray);">Nenhuma ordem de serviço</p>';}
-else{
-historyHtml+='<div class="table-container"><table><thead><tr><th>Data</th><th>Tipo</th><th>Prioridade</th><th>Status</th><th>Descrição</th></tr></thead><tbody>'+machineOrders.map(o=>'<tr><td>'+new Date(o.createdAt).toLocaleDateString('pt-BR')+'</td><td>'+(o.type==='preventiva'?'Preventiva':o.type==='corretiva'?'Corretiva':'Preditiva')+'</td><td>'+o.priority.toUpperCase()+'</td><td><span class="badge badge-'+(o.status==='aberta'?'warning':o.status==='andamento'?'primary':o.status==='concluida'?'success':'danger')+'">'+(OS_STATUS_LABELS[o.status]||o.status)+'</span></td><td>'+o.description.substring(0,50)+(o.description.length>50?'...':'')+'</td></tr>').join('')+'</tbody></table></div>';
-}
-historyHtml+='</div>';
-
-historyHtml+='<div class="form-section"><div class="form-section-title"><i class="fas fa-clock"></i> Histórico de Horímetros</div>';
-if(machineChecklists.length===0){historyHtml+='<p style="color:var(--gray);">Nenhum registro de horímetro</p>';}
-else{
-historyHtml+='<div class="timeline">'+machineChecklists.map(c=>'<div class="timeline-item"><div class="timeline-date">'+new Date(c.date).toLocaleDateString('pt-BR')+' - '+c.operatorName+'</div><div class="timeline-content"><div class="timeline-title">Horímetro: '+c.horimeter+'</div><div class="timeline-desc">Horas trabalhadas: '+(c.hoursWorked||0)+' | Turno: '+c.shift+'º</div></div></div>').join('')+'</div>';
-}
-historyHtml+='</div></div>';
-
-container.innerHTML=historyHtml;
-this.navigate('machine-history');
-},
-
-// ============================================
-// UTILITÁRIOS
-// ============================================
-openModal(modalId){document.getElementById(modalId).classList.add('active');},
-closeModal(modalId){document.getElementById(modalId).classList.remove('active');},
-
-toast(message,type='info'){
-const container=document.getElementById('toast-container');
-const toast=document.createElement('div');
-toast.className='toast toast-'+type;
-toast.innerHTML='<i class="fas fa-'+(type==='success'?'check-circle':type==='error'?'times-circle':type==='warning'?'exclamation-triangle':'info-circle')+'"></i> '+message;
-container.appendChild(toast);
-setTimeout(()=>{toast.style.animation='slideIn 0.3s ease reverse';setTimeout(()=>toast.remove(),300);},4000);
-},
-
-loadLocalData(){
-const data=localStorage.getItem('checklist_data');
-if(data){
-const parsed=JSON.parse(data);
-this.machines=parsed.machines||[];
-this.users=parsed.users||[];
-this.models=parsed.models||[];
-this.checklists=parsed.checklists||[];
-this.orders=parsed.orders||[];
-}
-},
-
-saveLocalData(){
-localStorage.setItem('checklist_data',JSON.stringify({
-machines:this.machines,users:this.users,models:this.models,checklists:this.checklists,orders:this.orders
-}));
-}
-};
-
-// Inicializar ao carregar
-document.addEventListener('DOMContentLoaded',()=>{app.init();});
+document.getElementById('loginPass').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
 </script>
 </body>
 </html>
