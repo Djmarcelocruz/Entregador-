@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist Industrial</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
 <style>
 :root{--primary:#1a73e8;--primary-dark:#1557b0;--success:#34a853;--danger:#ea4335;--warning:#fbbc04;--dark:#202124;--gray:#5f6368;--light-gray:#f1f3f4;--white:#fff;--shadow:0 2px 8px rgba(0,0,0,0.12);--shadow-lg:0 4px 16px rgba(0,0,0,0.15);--radius:12px;--radius-sm:8px}
@@ -62,7 +63,9 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f2f
 .btn-primary{background:var(--primary);color:white}
 .btn-primary:hover{background:var(--primary-dark)}
 .btn-success{background:var(--success);color:white}
+.btn-success:hover{background:#2d8e47}
 .btn-danger{background:var(--danger);color:white}
+.btn-danger:hover{background:#c53929}
 .btn-outline{background:transparent;border:1.5px solid #dadce0;color:var(--dark)}
 .btn-outline:hover{background:var(--light-gray)}
 .btn-sm{padding:6px 12px;font-size:13px}
@@ -88,6 +91,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f2f
 .checklist-item .item-text{flex:1}
 .checklist-item .item-text h4{font-size:14px;font-weight:500;margin-bottom:2px}
 .checklist-item.checked .item-text h4{text-decoration:line-through;color:var(--gray)}
+.checklist-item .item-text p{font-size:12px;color:var(--gray)}
 .progress-bar{height:8px;background:#e8eaed;border-radius:4px;overflow:hidden}
 .progress-bar .progress-fill{height:100%;border-radius:4px;transition:width .5s ease}
 .progress-fill.green{background:var(--success)}
@@ -100,6 +104,8 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f2f
 @media(max-width:768px){.main-content{padding:16px}.form-row{grid-template-columns:1fr}.nav-tabs{overflow-x:auto;padding:0 12px}.nav-tab{padding:12px 14px;font-size:13px;white-space:nowrap}.stats-row{grid-template-columns:1fr 1fr}.card-header{flex-direction:column;gap:12px;align-items:flex-start}}
 .section{display:none}
 .section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.animate-in{animation:fadeIn .3s ease}
 .empty-state{text-align:center;padding:60px 20px}
 .empty-state i{font-size:48px;color:#dadce0;margin-bottom:16px}
 .empty-state h4{font-size:16px;margin-bottom:8px}
@@ -109,6 +115,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f2f
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 .toast.success{background:var(--success)}
 .toast.error{background:var(--danger)}
+.toast.warning{background:#e37400}
 </style>
 </head>
 <body>
@@ -121,7 +128,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f2f
 <p>Sistema de gestão de checklists e inspeções</p>
 <input type="text" id="loginUser" placeholder="Usuário" value="ADMIN">
 <input type="password" id="loginPass" placeholder="Senha" value="1234">
-<button onclick="doLogin()" id="loginBtn">Entrar</button>
+<button onclick="doLogin()">Entrar</button>
 <div class="login-error" id="loginError">Usuário ou senha incorretos</div>
 </div>
 </div>
@@ -296,47 +303,177 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f2f
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-// ===== DATA STORE =====
-let data={checklists:[],inspections:[],equipment:[]};
-let currentUser=null;
+// ===== CONFIG =====
+var SUPABASE_URL='https://jrcyhnonjzyhtztrxfhx.supabase.co';
+var SUPABASE_KEY='sb_publishable_26sS-4aR4t-NMFVZ3asmvQ_Dgz6xH0x';
+var supabaseOnline=false;
+var data={checklists:[],inspections:[],equipment:[]};
+var currentUser=null;
 
-// ===== INIT - Roda imediatamente =====
-(function init(){
-  // Carrega dados locais primeiro (não depende de nada externo)
-  loadLocalData();
-
-  // Verifica se já tem sessão salva
-  const savedUser=localStorage.getItem('checklist_user');
-  if(savedUser){
-    try{
-      currentUser=JSON.parse(savedUser);
-      showApp();
-    }catch(e){
-      localStorage.removeItem('checklist_user');
-    }
+// ===== STATUS BAR =====
+function setStatus(type,message){
+  var bar=document.getElementById('statusBar');
+  bar.className='status-bar '+type;
+  if(type==='online'){bar.innerHTML='<i class="fas fa-check-circle"></i> <span>'+message+'</span>';}
+  else if(type==='offline'){bar.innerHTML='<i class="fas fa-wifi-slash"></i> <span>'+message+'</span>';}
+  else{bar.innerHTML='<i class="fas fa-circle-notch fa-spin"></i> <span>'+message+'</span>';}
+  setTimeout(function(){bar.classList.add('hidden');},4000);
+}
+function setSyncStatus(online){
+  var badge=document.getElementById('syncBadge');
+  var icon=document.getElementById('syncIcon');
+  var text=document.getElementById('syncText');
+  if(online){
+    badge.style.background='#e6f4ea';badge.style.color='#1e8e3e';
+    icon.className='fas fa-wifi';text.textContent='Sincronizado';
+  }else{
+    badge.style.background='#fce8e6';badge.style.color='#c53929';
+    icon.className='fas fa-wifi-slash';text.textContent='Modo Offline';
   }
+}
 
-  // Seta datas default
-  const today=new Date().toISOString().split('T')[0];
-  const firstDay=new Date(new Date().setDate(1)).toISOString().split('T')[0];
-  const dateEl=document.getElementById('inspectionDate');
-  const fromEl=document.getElementById('reportDateFrom');
-  const toEl=document.getElementById('reportDateTo');
-  if(dateEl)dateEl.value=today;
-  if(fromEl)fromEl.value=firstDay;
-  if(toEl)toEl.value=today;
+// ===== CHECK SUPABASE =====
+function checkSupabaseConnection(){
+  return new Promise(function(resolve){
+    var xhr=new XMLHttpRequest();
+    xhr.timeout=5000;
+    xhr.onreadystatechange=function(){
+      if(xhr.readyState===4){
+        if(xhr.status===200||xhr.status===401){
+          try{var resp=JSON.parse(xhr.responseText);}
+          catch(e){var resp={};}
+          if(resp.code==='42501'){
+            supabaseOnline=true;
+            setStatus('offline','Supabase online mas sem permissao. Rode o SQL de permissoes.');
+            setSyncStatus(false);
+            resolve(true);
+          }else{
+            supabaseOnline=true;
+            setStatus('online','Conectado ao Supabase!');
+            setSyncStatus(true);
+            resolve(true);
+          }
+        }else{
+          supabaseOnline=false;
+          setStatus('offline','Sem conexao com Supabase. Usando dados locais.');
+          setSyncStatus(false);
+          resolve(false);
+        }
+      }
+    };
+    xhr.onerror=function(){
+      supabaseOnline=false;
+      setStatus('offline','Sem conexao com Supabase. Usando dados locais.');
+      setSyncStatus(false);
+      resolve(false);
+    };
+    xhr.ontimeout=function(){
+      supabaseOnline=false;
+      setStatus('offline','Timeout na conexao. Usando dados locais.');
+      setSyncStatus(false);
+      resolve(false);
+    };
+    xhr.open('GET',SUPABASE_URL+'/rest/v1/checklists?select=id&limit=1',true);
+    xhr.setRequestHeader('apikey',SUPABASE_KEY);
+    xhr.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
+    xhr.send();
+  });
+}
+
+// ===== INIT =====
+(function init(){
+  loadLocalData();
+  checkSupabaseConnection().then(function(){
+    if(supabaseOnline)loadFromSupabase();
+  });
+  var savedUser=localStorage.getItem('checklist_user');
+  if(savedUser){
+    try{currentUser=JSON.parse(savedUser);showApp();}
+    catch(e){localStorage.removeItem('checklist_user');}
+  }
+  var today=new Date().toISOString().split('T')[0];
+  var firstDay=new Date(new Date().setDate(1)).toISOString().split('T')[0];
+  var de=document.getElementById('inspectionDate');
+  var dfrom=document.getElementById('reportDateFrom');
+  var dto=document.getElementById('reportDateTo');
+  if(de)de.value=today;
+  if(dfrom)dfrom.value=firstDay;
+  if(dto)dto.value=today;
 })();
+
+// ===== SUPABASE LOAD =====
+function loadFromSupabase(){
+  var xhr1=new XMLHttpRequest();
+  xhr1.open('GET',SUPABASE_URL+'/rest/v1/checklists?select=*',true);
+  xhr1.setRequestHeader('apikey',SUPABASE_KEY);
+  xhr1.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
+  xhr1.onload=function(){
+    if(xhr1.status===200){
+      try{
+        var checklists=JSON.parse(xhr1.responseText);
+        if(checklists&&checklists.length>0){data.checklists=checklists;saveLocalData();updateAllViews();showToast('Dados carregados do Supabase!','success');}
+      }catch(e){}
+    }
+  };
+  xhr1.send();
+  var xhr2=new XMLHttpRequest();
+  xhr2.open('GET',SUPABASE_URL+'/rest/v1/equipment?select=*',true);
+  xhr2.setRequestHeader('apikey',SUPABASE_KEY);
+  xhr2.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
+  xhr2.onload=function(){
+    if(xhr2.status===200){
+      try{var equipment=JSON.parse(xhr2.responseText);if(equipment&&equipment.length>0){data.equipment=equipment;saveLocalData();updateAllViews();}}catch(e){}
+    }
+  };
+  xhr2.send();
+  var xhr3=new XMLHttpRequest();
+  xhr3.open('GET',SUPABASE_URL+'/rest/v1/inspections?select=*',true);
+  xhr3.setRequestHeader('apikey',SUPABASE_KEY);
+  xhr3.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
+  xhr3.onload=function(){
+    if(xhr3.status===200){
+      try{var inspections=JSON.parse(xhr3.responseText);if(inspections&&inspections.length>0){data.inspections=inspections;saveLocalData();updateAllViews();}}catch(e){}
+    }
+  };
+  xhr3.send();
+}
+
+// ===== SUPABASE SAVE =====
+function saveToSupabase(table,record){
+  if(!supabaseOnline)return Promise.resolve(false);
+  return new Promise(function(resolve){
+    var xhr=new XMLHttpRequest();
+    xhr.open('POST',SUPABASE_URL+'/rest/v1/'+table,true);
+    xhr.setRequestHeader('apikey',SUPABASE_KEY);
+    xhr.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
+    xhr.setRequestHeader('Content-Type','application/json');
+    xhr.setRequestHeader('Prefer','return=minimal');
+    xhr.onload=function(){resolve(xhr.status===201||xhr.status===200);};
+    xhr.onerror=function(){resolve(false);};
+    xhr.send(JSON.stringify(record));
+  });
+}
+function deleteFromSupabase(table,id){
+  if(!supabaseOnline)return Promise.resolve(false);
+  return new Promise(function(resolve){
+    var xhr=new XMLHttpRequest();
+    xhr.open('DELETE',SUPABASE_URL+'/rest/v1/'+table+'?id=eq.'+id,true);
+    xhr.setRequestHeader('apikey',SUPABASE_KEY);
+    xhr.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
+    xhr.onload=function(){resolve(xhr.status===204||xhr.status===200);};
+    xhr.onerror=function(){resolve(false);};
+    xhr.send();
+  });
+}
 
 // ===== LOGIN =====
 function doLogin(){
-  const user=document.getElementById('loginUser').value.trim();
-  const pass=document.getElementById('loginPass').value;
-  const errorEl=document.getElementById('loginError');
-  const btn=document.getElementById('loginBtn');
-
+  var user=document.getElementById('loginUser').value.trim();
+  var pass=document.getElementById('loginPass').value;
+  var errorEl=document.getElementById('loginError');
+  var btn=document.getElementById('loginBtn');
   btn.textContent='Entrando...';
   btn.disabled=true;
-
   setTimeout(function(){
     if(user==='ADMIN'&&pass==='1234'){
       currentUser={id:1,name:'ADMIN',role:'admin'};
@@ -351,21 +488,14 @@ function doLogin(){
     }
   },300);
 }
-
 function showApp(){
   document.getElementById('loginOverlay').classList.add('hidden');
   document.getElementById('app').style.display='block';
-  document.getElementById('currentUserName').textContent=currentUser?.name||'ADMIN';
-  updateDashboard();
-  renderChecklists();
-  renderInspections();
-  renderEquipment();
-  populateSelects();
+  document.getElementById('currentUserName').textContent=currentUser?currentUser.name:'ADMIN';
+  updateDashboard();renderChecklists();renderInspections();renderEquipment();populateSelects();
 }
-
 function logout(){
-  localStorage.removeItem('checklist_user');
-  currentUser=null;
+  localStorage.removeItem('checklist_user');currentUser=null;
   document.getElementById('loginOverlay').classList.remove('hidden');
   document.getElementById('app').style.display='none';
   document.getElementById('loginUser').value='ADMIN';
@@ -385,36 +515,31 @@ function showSection(sectionId,btn){
 
 // ===== DATA =====
 function loadLocalData(){
-  const saved=localStorage.getItem('checklist_data');
-  if(saved){
-    try{data=JSON.parse(saved);}catch(e){data=getDefaultData();}
-  }else{
-    data=getDefaultData();
-    saveLocalData();
-  }
+  var saved=localStorage.getItem('checklist_data');
+  if(saved){try{data=JSON.parse(saved);}catch(e){data=getDefaultData();}}
+  else{data=getDefaultData();saveLocalData();}
 }
-
 function getDefaultData(){
   return{
     checklists:[
-      {id:1,name:'Inspeção Diária de Segurança',category:'seguranca',description:'Verificação diária dos EPIs e condições de segurança',items:['EPI completo','Área limpa','Sinalização visível','Extintores ok'],created_at:new Date().toISOString()},
-      {id:2,name:'Manutenção Preventiva - Máquina A',category:'manutencao',description:'Checklist mensal de manutenção',items:['Lubrificação','Aperto de parafusos','Verificação de correias','Teste de emergência'],created_at:new Date().toISOString()},
-      {id:3,name:'Controle de Qualidade - Lote B',category:'qualidade',description:'Verificação de qualidade do produto',items:['Dimensões','Acabamento','Embalagem','Etiquetagem'],created_at:new Date().toISOString()}
+      {id:1,name:'Inspecao Diaria de Seguranca',category:'seguranca',description:'Verificacao diaria dos EPIs e condicoes de seguranca',items:['EPI completo','Area limpa','Sinalizacao visivel','Extintores ok'],created_at:new Date().toISOString()},
+      {id:2,name:'Manutencao Preventiva - Maquina A',category:'manutencao',description:'Checklist mensal de manutencao',items:['Lubrificacao','Aperto de parafusos','Verificacao de correias','Teste de emergencia'],created_at:new Date().toISOString()},
+      {id:3,name:'Controle de Qualidade - Lote B',category:'qualidade',description:'Verificacao de qualidade do produto',items:['Dimensoes','Acabamento','Embalagem','Etiquetagem'],created_at:new Date().toISOString()}
     ],
     equipment:[
-      {id:1,code:'EQ-001',name:'Prensa Hidráulica 50T',type:'maquina',location:'Setor A - Linha 1',status:'ativo',last_inspection:'2026-07-01',description:'Prensa hidráulica de 50 toneladas'},
+      {id:1,code:'EQ-001',name:'Prensa Hidraulica 50T',type:'maquina',location:'Setor A - Linha 1',status:'ativo',last_inspection:'2026-07-01',description:'Prensa hidraulica de 50 toneladas'},
       {id:2,code:'EQ-002',name:'Torno CNC',type:'maquina',location:'Setor B - Usinagem',status:'ativo',last_inspection:'2026-06-28',description:'Torno CNC controlado por computador'},
-      {id:3,code:'EQ-003',name:'Empilhadeira Toyota',type:'veiculo',location:'Pátio',status:'manutencao',last_inspection:'2026-06-15',description:'Empilhadeira para movimentação de cargas'}
+      {id:3,code:'EQ-003',name:'Empilhadeira Toyota',type:'veiculo',location:'Patio',status:'manutencao',last_inspection:'2026-06-15',description:'Empilhadeira para movimentacao de cargas'}
     ],
     inspections:[
-      {id:1,equipment_id:1,checklist_id:1,status:'concluido',date:'2026-07-01',responsible:'João Silva',progress:100,items:[{item:'EPI completo',ok:true},{item:'Área limpa',ok:true},{item:'Sinalização visível',ok:true},{item:'Extintores ok',ok:true}],notes:''},
-      {id:2,equipment_id:2,checklist_id:2,status:'em_andamento',date:'2026-07-05',responsible:'Maria Santos',progress:50,items:[{item:'Lubrificação',ok:true},{item:'Aperto de parafusos',ok:true},{item:'Verificação de correias',ok:false},{item:'Teste de emergência',ok:false}],notes:'Aguardando peças'},
+      {id:1,equipment_id:1,checklist_id:1,status:'concluido',date:'2026-07-01',responsible:'Joao Silva',progress:100,items:[{item:'EPI completo',ok:true},{item:'Area limpa',ok:true},{item:'Sinalizacao visivel',ok:true},{item:'Extintores ok',ok:true}],notes:''},
+      {id:2,equipment_id:2,checklist_id:2,status:'em_andamento',date:'2026-07-05',responsible:'Maria Santos',progress:50,items:[{item:'Lubrificacao',ok:true},{item:'Aperto de parafusos',ok:true},{item:'Verificacao de correias',ok:false},{item:'Teste de emergencia',ok:false}],notes:'Aguardando pecas'},
       {id:3,equipment_id:3,checklist_id:1,status:'pendente',date:'2026-07-06',responsible:'Pedro Costa',progress:0,items:[],notes:''}
     ]
   };
 }
-
 function saveLocalData(){localStorage.setItem('checklist_data',JSON.stringify(data));}
+function updateAllViews(){updateDashboard();renderChecklists();renderInspections();renderEquipment();populateSelects();}
 
 // ===== DASHBOARD =====
 function updateDashboard(){
@@ -432,7 +557,7 @@ function updateDashboard(){
     var equip=data.equipment.find(function(e){return e.id==ins.equipment_id;});
     var checklist=data.checklists.find(function(c){return c.id==ins.checklist_id;});
     var sc=ins.status==='concluido'?'green':ins.status==='em_andamento'?'yellow':'red';
-    var st=ins.status==='concluido'?'Concluído':ins.status==='em_andamento'?'Em Andamento':'Pendente';
+    var st=ins.status==='concluido'?'Concluido':ins.status==='em_andamento'?'Em Andamento':'Pendente';
     return '<tr><td>'+(equip?equip.name:'N/A')+'</td><td>'+(checklist?checklist.name:'N/A')+'</td><td><span class="badge '+sc+'">'+st+'</span></td><td>'+formatDate(ins.date)+'</td><td>'+ins.responsible+'</td><td><div class="progress-bar" style="width:120px"><div class="progress-fill '+(ins.progress>=80?'green':ins.progress>=40?'yellow':'red')+'" style="width:'+ins.progress+'%"></div></div><span style="font-size:12px;color:var(--gray)">'+ins.progress+'%</span></td></tr>';
   }).join('');
 }
@@ -442,18 +567,18 @@ function renderChecklists(){
   var container=document.getElementById('checklistsList');
   var search=(document.getElementById('searchChecklists')?document.getElementById('searchChecklists').value:'').toLowerCase();
   var filtered=data.checklists.filter(function(c){return c.name.toLowerCase().includes(search)||(c.description&&c.description.toLowerCase().includes(search));});
-  if(filtered.length===0){container.innerHTML='<div class="empty-state"><i class="fas fa-clipboard-list"></i><h4>Nenhum checklist encontrado</h4><p>Crie um novo checklist para começar</p></div>';return;}
-  var catLabels={seguranca:'Segurança',manutencao:'Manutenção',qualidade:'Qualidade',ambiental:'Ambiental'};
+  if(filtered.length===0){container.innerHTML='<div class="empty-state"><i class="fas fa-clipboard-list"></i><h4>Nenhum checklist encontrado</h4><p>Crie um novo checklist para comecar</p></div>';return;}
+  var catLabels={seguranca:'Seguranca',manutencao:'Manutencao',qualidade:'Qualidade',ambiental:'Ambiental'};
   var catColors={seguranca:'blue',manutencao:'orange',qualidade:'green',ambiental:'gray'};
   container.innerHTML=filtered.map(function(c){
-    return '<div class="card" style="margin-bottom:16px"><div class="card-header"><div><h3 style="font-size:15px">'+c.name+'</h3><span class="badge '+(catColors[c.category]||'gray')+'" style="margin-top:6px">'+(catLabels[c.category]||c.category)+'</span></div><div style="display:flex;gap:8px"><button class="btn btn-danger btn-sm" onclick="deleteChecklist('+c.id+')"><i class="fas fa-trash"></i></button></div></div><div class="card-body"><p style="color:var(--gray);font-size:14px;margin-bottom:12px">'+(c.description||'Sem descrição')+'</p><div style="font-size:13px;color:var(--gray)"><i class="fas fa-list-ul"></i> '+(c.items?c.items.length:0)+' itens <span style="margin:0 8px">|</span> <i class="fas fa-calendar"></i> '+formatDate(c.created_at)+'</div></div></div>';
+    return '<div class="card" style="margin-bottom:16px"><div class="card-header"><div><h3 style="font-size:15px">'+c.name+'</h3><span class="badge '+(catColors[c.category]||'gray')+'" style="margin-top:6px">'+(catLabels[c.category]||c.category)+'</span></div><div style="display:flex;gap:8px"><button class="btn btn-danger btn-sm" onclick="deleteChecklist('+c.id+')"><i class="fas fa-trash"></i></button></div></div><div class="card-body"><p style="color:var(--gray);font-size:14px;margin-bottom:12px">'+(c.description||'Sem descricao')+'</p><div style="font-size:13px;color:var(--gray)"><i class="fas fa-list-ul"></i> '+(c.items?c.items.length:0)+' itens <span style="margin:0 8px">|</span> <i class="fas fa-calendar"></i> '+formatDate(c.created_at)+'</div></div></div>';
   }).join('');
 }
 function filterChecklists(){renderChecklists();}
 function addChecklistItemField(){
   var container=document.getElementById('checklistItemsContainer');
   var div=document.createElement('div');div.className='form-row';div.style.marginBottom='8px';
-  div.innerHTML='<input type="text" placeholder="Descrição do item" class="checklist-item-input" style="flex:1"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="width:36px"><i class="fas fa-trash"></i></button>';
+  div.innerHTML='<input type="text" placeholder="Descricao do item" class="checklist-item-input" style="flex:1"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="width:36px"><i class="fas fa-trash"></i></button>';
   container.appendChild(div);
 }
 function saveChecklist(){
@@ -464,16 +589,20 @@ function saveChecklist(){
   var items=Array.from(itemInputs).map(function(i){return i.value.trim();}).filter(function(v){return v;});
   if(!name){showToast('Informe o nome do checklist','error');return;}
   if(items.length===0){showToast('Adicione pelo menos um item','error');return;}
-  data.checklists.push({id:Date.now(),name:name,description:desc,category:category,items:items,created_at:new Date().toISOString()});
-  saveLocalData();renderChecklists();populateSelects();closeModal('newChecklistModal');showToast('Checklist criado com sucesso!','success');
+  var newChecklist={id:Date.now(),name:name,description:desc,category:category,items:items,created_at:new Date().toISOString()};
+  data.checklists.push(newChecklist);
+  saveLocalData();
+  saveToSupabase('checklists',newChecklist).then(function(ok){if(ok)showToast('Sincronizado com Supabase!','success');});
+  renderChecklists();populateSelects();closeModal('newChecklistModal');showToast('Checklist criado com sucesso!','success');
   document.getElementById('newChecklistName').value='';
   document.getElementById('newChecklistDesc').value='';
-  document.getElementById('checklistItemsContainer').innerHTML='<div class="form-row" style="margin-bottom:8px"><input type="text" placeholder="Descrição do item" class="checklist-item-input" style="flex:1"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="width:36px"><i class="fas fa-trash"></i></button></div>';
+  document.getElementById('checklistItemsContainer').innerHTML='<div class="form-row" style="margin-bottom:8px"><input type="text" placeholder="Descricao do item" class="checklist-item-input" style="flex:1"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="width:36px"><i class="fas fa-trash"></i></button></div>';
 }
 function deleteChecklist(id){
   if(!confirm('Deseja excluir este checklist?'))return;
   data.checklists=data.checklists.filter(function(c){return c.id!==id;});
-  saveLocalData();renderChecklists();showToast('Checklist excluído','success');
+  saveLocalData();deleteFromSupabase('checklists',id);
+  renderChecklists();showToast('Checklist excluido','success');
 }
 
 // ===== INSPECTIONS =====
@@ -488,12 +617,12 @@ function renderInspections(){
     return(e&&e.name&&e.name.toLowerCase().includes(search))||(c&&c.name&&c.name.toLowerCase().includes(search))||(i.responsible&&i.responsible.toLowerCase().includes(search));
   });
   if(statusFilter)filtered=filtered.filter(function(i){return i.status===statusFilter;});
-  if(filtered.length===0){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray)">Nenhuma inspeção encontrada</td></tr>';return;}
+  if(filtered.length===0){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray)">Nenhuma inspecao encontrada</td></tr>';return;}
   tbody.innerHTML=filtered.map(function(ins){
     var equip=data.equipment.find(function(e){return e.id==ins.equipment_id;});
     var checklist=data.checklists.find(function(c){return c.id==ins.checklist_id;});
     var sc=ins.status==='concluido'?'green':ins.status==='em_andamento'?'yellow':'red';
-    var st=ins.status==='concluido'?'Concluído':ins.status==='em_andamento'?'Em Andamento':'Pendente';
+    var st=ins.status==='concluido'?'Concluido':ins.status==='em_andamento'?'Em Andamento':'Pendente';
     return '<tr><td>#'+ins.id+'</td><td>'+(equip?equip.name:'N/A')+'</td><td>'+(checklist?checklist.name:'N/A')+'</td><td><span class="badge '+sc+'">'+st+'</span></td><td>'+formatDate(ins.date)+'</td><td>'+ins.responsible+'</td><td><div class="progress-bar" style="width:80px;display:inline-block;vertical-align:middle;margin-right:8px"><div class="progress-fill '+(ins.progress>=80?'green':ins.progress>=40?'yellow':'red')+'" style="width:'+ins.progress+'%"></div></div><span style="font-size:12px">'+ins.progress+'%</span></td><td><button class="btn btn-outline btn-sm" onclick="viewInspection('+ins.id+')"><i class="fas fa-eye"></i></button> <button class="btn btn-danger btn-sm" onclick="deleteInspection('+ins.id+')"><i class="fas fa-trash"></i></button></td></tr>';
   }).join('');
 }
@@ -522,7 +651,7 @@ function saveInspection(){
   var notes=document.getElementById('inspectionNotes').value.trim();
   if(!equipmentId){showToast('Selecione um equipamento','error');return;}
   if(!checklistId){showToast('Selecione um checklist','error');return;}
-  if(!responsible){showToast('Informe o responsável','error');return;}
+  if(!responsible){showToast('Informe o responsavel','error');return;}
   var checklist=data.checklists.find(function(c){return c.id==checklistId;});
   var items=[];
   if(checklist&&checklist.items){
@@ -533,10 +662,13 @@ function saveInspection(){
   var checkedCount=items.filter(function(i){return i.ok;}).length;
   var progress=checklist&&checklist.items&&checklist.items.length?Math.round((checkedCount/checklist.items.length)*100):0;
   var status=progress===100?'concluido':progress>0?'em_andamento':'pendente';
-  data.inspections.push({id:Date.now(),equipment_id:parseInt(equipmentId),checklist_id:parseInt(checklistId),status:status,date:date,responsible:responsible,notes:notes,items:items,progress:progress});
+  var newInspection={id:Date.now(),equipment_id:parseInt(equipmentId),checklist_id:parseInt(checklistId),status:status,date:date,responsible:responsible,notes:notes,items:items,progress:progress};
+  data.inspections.push(newInspection);
   var equip=data.equipment.find(function(e){return e.id==equipmentId;});
   if(equip)equip.last_inspection=date;
-  saveLocalData();renderInspections();updateDashboard();closeModal('newInspectionModal');showToast('Inspeção criada com sucesso!','success');
+  saveLocalData();
+  saveToSupabase('inspections',newInspection).then(function(ok){if(ok)showToast('Sincronizado com Supabase!','success');});
+  renderInspections();updateDashboard();closeModal('newInspectionModal');showToast('Inspecao criada com sucesso!','success');
 }
 function viewInspection(id){
   var ins=data.inspections.find(function(i){return i.id===id;});if(!ins)return;
@@ -549,13 +681,14 @@ function viewInspection(id){
     }).join('');
   }
   var modal=document.createElement('div');modal.className='modal-overlay active';
-  modal.innerHTML='<div class="modal" style="max-width:600px"><div class="modal-header"><h3><i class="fas fa-eye"></i> Detalhes da Inspeção #'+ins.id+'</h3><button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="form-row" style="margin-bottom:16px"><div><strong>Equipamento:</strong> '+(equip?equip.name:'N/A')+'</div><div><strong>Checklist:</strong> '+(checklist?checklist.name:'N/A')+'</div></div><div class="form-row" style="margin-bottom:16px"><div><strong>Responsável:</strong> '+ins.responsible+'</div><div><strong>Data:</strong> '+formatDate(ins.date)+'</div></div><div style="margin-bottom:16px"><strong>Status:</strong> <span class="badge '+(ins.status==='concluido'?'green':ins.status==='em_andamento'?'yellow':'red')+'">'+(ins.status==='concluido'?'Concluído':ins.status==='em_andamento'?'Em Andamento':'Pendente')+'</span><span style="margin-left:16px"><strong>Progresso:</strong> '+ins.progress+'%</span></div>'+(ins.notes?'<div style="margin-bottom:16px;padding:12px;background:#f8f9fa;border-radius:8px"><strong>Observações:</strong> '+ins.notes+'</div>':'')+'<h4 style="margin-bottom:12px;font-size:14px">Itens Verificados</h4>'+(itemsHtml||'<p style="color:var(--gray)">Nenhum item verificado</p>')+'</div><div class="modal-footer"><button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Fechar</button></div></div>';
+  modal.innerHTML='<div class="modal" style="max-width:600px"><div class="modal-header"><h3><i class="fas fa-eye"></i> Detalhes da Inspecao #'+ins.id+'</h3><button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="form-row" style="margin-bottom:16px"><div><strong>Equipamento:</strong> '+(equip?equip.name:'N/A')+'</div><div><strong>Checklist:</strong> '+(checklist?checklist.name:'N/A')+'</div></div><div class="form-row" style="margin-bottom:16px"><div><strong>Responsavel:</strong> '+ins.responsible+'</div><div><strong>Data:</strong> '+formatDate(ins.date)+'</div></div><div style="margin-bottom:16px"><strong>Status:</strong> <span class="badge '+(ins.status==='concluido'?'green':ins.status==='em_andamento'?'yellow':'red')+'">'+(ins.status==='concluido'?'Concluido':ins.status==='em_andamento'?'Em Andamento':'Pendente')+'</span><span style="margin-left:16px"><strong>Progresso:</strong> '+ins.progress+'%</span></div>'+(ins.notes?'<div style="margin-bottom:16px;padding:12px;background:#f8f9fa;border-radius:8px"><strong>Observacoes:</strong> '+ins.notes+'</div>':'')+'<h4 style="margin-bottom:12px;font-size:14px">Itens Verificados</h4>'+(itemsHtml||'<p style="color:var(--gray)">Nenhum item verificado</p>')+'</div><div class="modal-footer"><button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Fechar</button></div></div>';
   document.body.appendChild(modal);
 }
 function deleteInspection(id){
-  if(!confirm('Deseja excluir esta inspeção?'))return;
+  if(!confirm('Deseja excluir esta inspecao?'))return;
   data.inspections=data.inspections.filter(function(i){return i.id!==id;});
-  saveLocalData();renderInspections();updateDashboard();showToast('Inspeção excluída','success');
+  saveLocalData();deleteFromSupabase('inspections',id);
+  renderInspections();updateDashboard();showToast('Inspecao excluida','success');
 }
 
 // ===== EQUIPMENT =====
@@ -565,10 +698,10 @@ function renderEquipment(){
   var filtered=data.equipment;
   if(search)filtered=filtered.filter(function(e){return e.name.toLowerCase().includes(search)||e.code.toLowerCase().includes(search)||e.location.toLowerCase().includes(search);});
   if(filtered.length===0){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--gray)">Nenhum equipamento encontrado</td></tr>';return;}
-  var typeLabels={maquina:'Máquina',ferramenta:'Ferramenta',veiculo:'Veículo',eletrico:'Elétrico',hidraulico:'Hidráulico'};
+  var typeLabels={maquina:'Maquina',ferramenta:'Ferramenta',veiculo:'Veiculo',eletrico:'Eletrico',hidraulico:'Hidraulico'};
   tbody.innerHTML=filtered.map(function(e){
     var sc=e.status==='ativo'?'green':e.status==='manutencao'?'yellow':'red';
-    var st=e.status==='ativo'?'Ativo':e.status==='manutencao'?'Em Manutenção':'Inativo';
+    var st=e.status==='ativo'?'Ativo':e.status==='manutencao'?'Em Manutencao':'Inativo';
     return '<tr><td><strong>'+e.code+'</strong></td><td>'+e.name+'</td><td>'+(typeLabels[e.type]||e.type)+'</td><td>'+e.location+'</td><td><span class="badge '+sc+'">'+st+'</span></td><td>'+(e.last_inspection?formatDate(e.last_inspection):'Nunca')+'</td><td><button class="btn btn-danger btn-sm" onclick="deleteEquipment('+e.id+')"><i class="fas fa-trash"></i></button></td></tr>';
   }).join('');
 }
@@ -579,10 +712,13 @@ function saveEquipment(){
   var type=document.getElementById('equipType').value;
   var location=document.getElementById('equipLocation').value.trim();
   var desc=document.getElementById('equipDesc').value.trim();
-  if(!code){showToast('Informe o código do equipamento','error');return;}
+  if(!code){showToast('Informe o codigo do equipamento','error');return;}
   if(!name){showToast('Informe o nome do equipamento','error');return;}
-  data.equipment.push({id:Date.now(),code:code,name:name,type:type,location:location,description:desc,status:'ativo',last_inspection:null});
-  saveLocalData();renderEquipment();populateSelects();closeModal('newEquipmentModal');showToast('Equipamento cadastrado!','success');
+  var newEquip={id:Date.now(),code:code,name:name,type:type,location:location,description:desc,status:'ativo',last_inspection:null};
+  data.equipment.push(newEquip);
+  saveLocalData();
+  saveToSupabase('equipment',newEquip).then(function(ok){if(ok)showToast('Sincronizado com Supabase!','success');});
+  renderEquipment();populateSelects();closeModal('newEquipmentModal');showToast('Equipamento cadastrado!','success');
   document.getElementById('equipCode').value='';
   document.getElementById('equipName').value='';
   document.getElementById('equipLocation').value='';
@@ -591,7 +727,8 @@ function saveEquipment(){
 function deleteEquipment(id){
   if(!confirm('Deseja excluir este equipamento?'))return;
   data.equipment=data.equipment.filter(function(e){return e.id!==id;});
-  saveLocalData();renderEquipment();populateSelects();showToast('Equipamento excluído','success');
+  saveLocalData();deleteFromSupabase('equipment',id);
+  renderEquipment();populateSelects();showToast('Equipamento excluido','success');
 }
 
 // ===== REPORTS =====
@@ -614,13 +751,13 @@ function generateReport(){
   var totalItems=filtered.reduce(function(sum,i){return sum+(i.items?i.items.length:0);},0);
   var okItems=filtered.reduce(function(sum,i){return sum+(i.items?i.items.filter(function(x){return x.ok;}).length:0);},0);
   var issueRate=totalItems?Math.round(((totalItems-okItems)/totalItems)*100):0;
-  container.innerHTML='<div class="stats-row" style="margin-bottom:20px"><div class="stat-card"><div class="stat-icon blue"><i class="fas fa-clipboard-list"></i></div><div><div class="stat-value">'+filtered.length+'</div><div class="stat-label">Total Inspeções</div></div></div><div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div><div class="stat-value">'+completed+'</div><div class="stat-label">Concluídas</div></div></div><div class="stat-card"><div class="stat-icon orange"><i class="fas fa-clock"></i></div><div><div class="stat-value">'+inProgress+'</div><div class="stat-label">Em Andamento</div></div></div><div class="stat-card"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div><div class="stat-value">'+issueRate+'%</div><div class="stat-label">Taxa de Problemas</div></div></div></div><div class="card"><div class="card-header"><h3>Detalhamento</h3></div><div class="card-body"><table class="data-table"><thead><tr><th>ID</th><th>Equipamento</th><th>Checklist</th><th>Status</th><th>Data</th><th>Responsável</th><th>Itens OK</th></tr></thead><tbody>'+filtered.map(function(ins){
+  container.innerHTML='<div class="stats-row" style="margin-bottom:20px"><div class="stat-card"><div class="stat-icon blue"><i class="fas fa-clipboard-list"></i></div><div><div class="stat-value">'+filtered.length+'</div><div class="stat-label">Total Inspecoes</div></div></div><div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div><div class="stat-value">'+completed+'</div><div class="stat-label">Concluidas</div></div></div><div class="stat-card"><div class="stat-icon orange"><i class="fas fa-clock"></i></div><div><div class="stat-value">'+inProgress+'</div><div class="stat-label">Em Andamento</div></div></div><div class="stat-card"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div><div class="stat-value">'+issueRate+'%</div><div class="stat-label">Taxa de Problemas</div></div></div></div><div class="card"><div class="card-header"><h3>Detalhamento</h3></div><div class="card-body"><table class="data-table"><thead><tr><th>ID</th><th>Equipamento</th><th>Checklist</th><th>Status</th><th>Data</th><th>Responsavel</th><th>Itens OK</th></tr></thead><tbody>'+filtered.map(function(ins){
     var equip=data.equipment.find(function(e){return e.id==ins.equipment_id;});
     var checklist=data.checklists.find(function(c){return c.id==ins.checklist_id;});
     var okCount=ins.items?ins.items.filter(function(x){return x.ok;}).length:0;
     var totalCount=ins.items?ins.items.length:0;
     var sc=ins.status==='concluido'?'green':ins.status==='em_andamento'?'yellow':'red';
-    var st=ins.status==='concluido'?'Concluído':ins.status==='em_andamento'?'Em Andamento':'Pendente';
+    var st=ins.status==='concluido'?'Concluido':ins.status==='em_andamento'?'Em Andamento':'Pendente';
     return '<tr><td>#'+ins.id+'</td><td>'+(equip?equip.name:'')+'</td><td>'+(checklist?checklist.name:'')+'</td><td><span class="badge '+sc+'">'+st+'</span></td><td>'+formatDate(ins.date)+'</td><td>'+ins.responsible+'</td><td>'+okCount+'/'+totalCount+'</td></tr>';
   }).join('')+'</tbody></table></div></div>';
 }
@@ -681,13 +818,9 @@ function showToast(message,type){
   container.appendChild(toast);
   setTimeout(function(){toast.remove();},3000);
 }
-
-// Close modal on overlay click
 document.querySelectorAll('.modal-overlay').forEach(function(overlay){
   overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.classList.remove('active');});
 });
-
-// Enter key on login
 document.getElementById('loginPass').addEventListener('keypress',function(e){if(e.key==='Enter')doLogin();});
 </script>
 </body>
