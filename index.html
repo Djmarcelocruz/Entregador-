@@ -1,827 +1,1112 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Checklist Industrial</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-<style>
-:root{--primary:#1a73e8;--primary-dark:#1557b0;--success:#34a853;--danger:#ea4335;--warning:#fbbc04;--dark:#202124;--gray:#5f6368;--light-gray:#f1f3f4;--white:#fff;--shadow:0 2px 8px rgba(0,0,0,0.12);--shadow-lg:0 4px 16px rgba(0,0,0,0.15);--radius:12px;--radius-sm:8px}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f2f5;color:var(--dark);min-height:100vh}
-.login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s ease}
-.login-overlay.hidden{opacity:0;pointer-events:none}
-.login-card{background:var(--white);padding:40px;border-radius:var(--radius);box-shadow:var(--shadow-lg);width:100%;max-width:380px;text-align:center}
-.login-card .logo{width:80px;height:80px;background:var(--primary);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:white;font-size:32px}
-.login-card h1{font-size:24px;margin-bottom:8px}
-.login-card p{color:var(--gray);margin-bottom:28px;font-size:14px}
-.login-card input{width:100%;padding:14px 16px;border:2px solid var(--light-gray);border-radius:var(--radius-sm);font-size:15px;margin-bottom:12px;transition:border-color .2s}
-.login-card input:focus{outline:none;border-color:var(--primary)}
-.login-card button{width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);font-size:16px;font-weight:600;cursor:pointer;transition:background .2s,transform .1s}
-.login-card button:hover{background:var(--primary-dark)}
-.login-card button:active{transform:scale(.98)}
-.login-error{color:var(--danger);font-size:13px;margin-top:12px;display:none}
-.app-header{background:var(--white);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow);position:sticky;top:0;z-index:100}
-.app-header .brand{display:flex;align-items:center;gap:12px}
-.app-header .brand .logo-icon{width:40px;height:40px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:18px}
-.app-header .brand h2{font-size:18px;font-weight:700}
-.app-header .brand span{font-size:12px;color:var(--gray);display:block}
-.header-actions{display:flex;align-items:center;gap:12px}
-.header-actions .user-badge{display:flex;align-items:center;gap:8px;background:var(--light-gray);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500}
-.btn-icon{width:36px;height:36px;border-radius:50%;border:none;background:var(--light-gray);color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
-.btn-icon:hover{background:#e8eaed;color:var(--dark)}
-.nav-tabs{display:flex;background:var(--white);padding:0 24px;gap:4px;border-bottom:1px solid #e0e0e0}
-.nav-tab{padding:14px 20px;border:none;background:none;font-size:14px;font-weight:500;color:var(--gray);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;display:flex;align-items:center;gap:8px}
-.nav-tab:hover{color:var(--primary)}
-.nav-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
-.main-content{padding:24px;max-width:1400px;margin:0 auto}
-.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-.card-header{padding:20px 24px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between}
-.card-header h3{font-size:16px;font-weight:600}
-.card-body{padding:24px}
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
-.stat-card{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px}
-.stat-card .stat-icon{width:48px;height:48px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:20px}
-.stat-card .stat-icon.blue{background:#e8f0fe;color:var(--primary)}
-.stat-card .stat-icon.green{background:#e6f4ea;color:var(--success)}
-.stat-card .stat-icon.orange{background:#fef3e8;color:#e37400}
-.stat-card .stat-icon.red{background:#fce8e6;color:var(--danger)}
-.stat-card .stat-value{font-size:28px;font-weight:700}
-.stat-card .stat-label{font-size:13px;color:var(--gray)}
-.data-table{width:100%;border-collapse:collapse}
-.data-table th{text-align:left;padding:12px 16px;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #eee}
-.data-table td{padding:14px 16px;border-bottom:1px solid #f0f0f0;font-size:14px}
-.data-table tr:hover{background:#fafafa}
-.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500}
-.badge.green{background:#e6f4ea;color:var(--success)}
-.badge.yellow{background:#fef3e8;color:#e37400}
-.badge.red{background:#fce8e6;color:var(--danger)}
-.badge.blue{background:#e8f0fe;color:var(--primary)}
-.badge.gray{background:#f1f3f4;color:var(--gray)}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all .2s}
-.btn-primary{background:var(--primary);color:white}
-.btn-primary:hover{background:var(--primary-dark)}
-.btn-success{background:var(--success);color:white}
-.btn-success:hover{background:#2d8e47}
-.btn-danger{background:var(--danger);color:white}
-.btn-danger:hover{background:#c53929}
-.btn-outline{background:transparent;border:1.5px solid #dadce0;color:var(--dark)}
-.btn-outline:hover{background:var(--light-gray)}
-.btn-sm{padding:6px 12px;font-size:13px}
-.form-group{margin-bottom:16px}
-.form-group label{display:block;font-size:13px;font-weight:500;margin-bottom:6px;color:var(--dark)}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 14px;border:1.5px solid #dadce0;border-radius:var(--radius-sm);font-size:14px;transition:border-color .2s}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary)}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .3s}
-.modal-overlay.active{opacity:1;pointer-events:all}
-.modal{background:var(--white);border-radius:var(--radius);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(20px) scale(.95);transition:transform .3s}
-.modal-overlay.active .modal{transform:translateY(0) scale(1)}
-.modal-header{padding:20px 24px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between}
-.modal-header h3{font-size:18px}
-.modal-close{background:none;border:none;font-size:20px;color:var(--gray);cursor:pointer}
-.modal-body{padding:24px}
-.modal-footer{padding:16px 24px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:10px}
-.checklist-item{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:1.5px solid #e8eaed;border-radius:var(--radius-sm);margin-bottom:10px;transition:all .2s;cursor:pointer}
-.checklist-item:hover{border-color:var(--primary)}
-.checklist-item.checked{background:#f8f9fa;border-color:var(--success)}
-.checklist-item .checkbox{width:22px;height:22px;border:2px solid #dadce0;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:all .2s}
-.checklist-item.checked .checkbox{background:var(--success);border-color:var(--success);color:white}
-.checklist-item .item-text{flex:1}
-.checklist-item .item-text h4{font-size:14px;font-weight:500;margin-bottom:2px}
-.checklist-item.checked .item-text h4{text-decoration:line-through;color:var(--gray)}
-.checklist-item .item-text p{font-size:12px;color:var(--gray)}
-.progress-bar{height:8px;background:#e8eaed;border-radius:4px;overflow:hidden}
-.progress-bar .progress-fill{height:100%;border-radius:4px;transition:width .5s ease}
-.progress-fill.green{background:var(--success)}
-.progress-fill.yellow{background:var(--warning)}
-.progress-fill.red{background:var(--danger)}
-.toolbar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
-.search-box{position:relative;flex:1;min-width:240px}
-.search-box input{width:100%;padding:10px 14px 10px 38px;border:1.5px solid #dadce0;border-radius:var(--radius-sm);font-size:14px}
-.search-box i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gray)}
-@media(max-width:768px){.main-content{padding:16px}.form-row{grid-template-columns:1fr}.nav-tabs{overflow-x:auto;padding:0 12px}.nav-tab{padding:12px 14px;font-size:13px;white-space:nowrap}.stats-row{grid-template-columns:1fr 1fr}.card-header{flex-direction:column;gap:12px;align-items:flex-start}}
-.section{display:none}
-.section.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.animate-in{animation:fadeIn .3s ease}
-.empty-state{text-align:center;padding:60px 20px}
-.empty-state i{font-size:48px;color:#dadce0;margin-bottom:16px}
-.empty-state h4{font-size:16px;margin-bottom:8px}
-.empty-state p{font-size:14px;color:var(--gray)}
-.toast-container{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:10px}
-.toast{background:var(--dark);color:white;padding:14px 20px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);font-size:14px;display:flex;align-items:center;gap:10px;animation:slideIn .3s ease}
-@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
-.toast.success{background:var(--success)}
-.toast.error{background:var(--danger)}
-.toast.warning{background:#e37400}
-</style>
-</head>
-<body>
-
-<!-- LOGIN -->
-<div class="login-overlay" id="loginOverlay">
-<div class="login-card">
-<div class="logo"><i class="fas fa-clipboard-check"></i></div>
-<h1>Checklist Industrial</h1>
-<p>Sistema de gestão de checklists e inspeções</p>
-<input type="text" id="loginUser" placeholder="Usuário" value="ADMIN">
-<input type="password" id="loginPass" placeholder="Senha" value="1234">
-<button onclick="doLogin()">Entrar</button>
-<div class="login-error" id="loginError">Usuário ou senha incorretos</div>
-</div>
-</div>
-
-<!-- APP -->
-<div id="app" style="display:none">
-<header class="app-header">
-<div class="brand">
-<div class="logo-icon"><i class="fas fa-clipboard-check"></i></div>
-<div><h2>Checklist Industrial</h2><span>Gestão de Inspeções</span></div>
-</div>
-<div class="header-actions">
-<div class="user-badge"><i class="fas fa-user-circle"></i><span id="currentUserName">ADMIN</span></div>
-<button class="btn-icon" onclick="logout()" title="Sair"><i class="fas fa-sign-out-alt"></i></button>
-</div>
-</header>
-
-<nav class="nav-tabs">
-<button class="nav-tab active" onclick="showSection('dashboard',this)"><i class="fas fa-chart-pie"></i> Dashboard</button>
-<button class="nav-tab" onclick="showSection('checklists',this)"><i class="fas fa-clipboard-list"></i> Checklists</button>
-<button class="nav-tab" onclick="showSection('inspections',this)"><i class="fas fa-search"></i> Inspeções</button>
-<button class="nav-tab" onclick="showSection('equipment',this)"><i class="fas fa-cogs"></i> Equipamentos</button>
-<button class="nav-tab" onclick="showSection('reports',this)"><i class="fas fa-file-alt"></i> Relatórios</button>
-</nav>
-
-<main class="main-content">
-<!-- DASHBOARD -->
-<section id="dashboard" class="section active">
-<div class="stats-row">
-<div class="stat-card"><div class="stat-icon blue"><i class="fas fa-clipboard-list"></i></div><div><div class="stat-value" id="statTotalChecklists">0</div><div class="stat-label">Total de Checklists</div></div></div>
-<div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div><div class="stat-value" id="statCompleted">0</div><div class="stat-label">Concluídos</div></div></div>
-<div class="stat-card"><div class="stat-icon orange"><i class="fas fa-clock"></i></div><div><div class="stat-value" id="statPending">0</div><div class="stat-label">Pendentes</div></div></div>
-<div class="stat-card"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div><div class="stat-value" id="statIssues">0</div><div class="stat-label">Problemas</div></div></div>
-</div>
-<div class="card">
-<div class="card-header"><h3><i class="fas fa-list-check"></i> Últimas Inspeções</h3><button class="btn btn-primary btn-sm" onclick="openModal('newInspectionModal')"><i class="fas fa-plus"></i> Nova Inspeção</button></div>
-<div class="card-body">
-<table class="data-table" id="recentInspectionsTable">
-<thead><tr><th>Equipamento</th><th>Checklist</th><th>Status</th><th>Data</th><th>Responsável</th><th>Progresso</th></tr></thead>
-<tbody></tbody>
-</table>
-</div>
-</div>
-</section>
-
-<!-- CHECKLISTS -->
-<section id="checklists" class="section">
-<div class="toolbar">
-<div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchChecklists" placeholder="Buscar checklists..." oninput="filterChecklists()"></div>
-<button class="btn btn-primary" onclick="openModal('newChecklistModal')"><i class="fas fa-plus"></i> Novo Checklist</button>
-</div>
-<div class="card"><div class="card-body" id="checklistsList"></div></div>
-</section>
-
-<!-- INSPECTIONS -->
-<section id="inspections" class="section">
-<div class="toolbar">
-<div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchInspections" placeholder="Buscar inspeções..." oninput="filterInspections()"></div>
-<select id="filterStatus" onchange="filterInspections()" style="padding:10px 14px;border:1.5px solid #dadce0;border-radius:8px;font-size:14px"><option value="">Todos os Status</option><option value="concluido">Concluído</option><option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option></select>
-<button class="btn btn-primary" onclick="openModal('newInspectionModal')"><i class="fas fa-plus"></i> Nova Inspeção</button>
-</div>
-<div class="card">
-<div class="card-body">
-<table class="data-table" id="inspectionsTable">
-<thead><tr><th>ID</th><th>Equipamento</th><th>Checklist</th><th>Status</th><th>Data</th><th>Responsável</th><th>Progresso</th><th>Ações</th></tr></thead>
-<tbody></tbody>
-</table>
-</div>
-</div>
-</section>
-
-<!-- EQUIPMENT -->
-<section id="equipment" class="section">
-<div class="toolbar">
-<div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchEquipment" placeholder="Buscar equipamentos..." oninput="filterEquipment()"></div>
-<button class="btn btn-primary" onclick="openModal('newEquipmentModal')"><i class="fas fa-plus"></i> Novo Equipamento</button>
-</div>
-<div class="card">
-<div class="card-body">
-<table class="data-table" id="equipmentTable">
-<thead><tr><th>Código</th><th>Nome</th><th>Tipo</th><th>Localização</th><th>Status</th><th>Última Inspeção</th><th>Ações</th></tr></thead>
-<tbody></tbody>
-</table>
-</div>
-</div>
-</section>
-
-<!-- REPORTS -->
-<section id="reports" class="section">
-<div class="card">
-<div class="card-header"><h3><i class="fas fa-chart-bar"></i> Relatórios</h3></div>
-<div class="card-body">
-<div class="form-row" style="margin-bottom:20px">
-<div class="form-group"><label>Data Inicial</label><input type="date" id="reportDateFrom"></div>
-<div class="form-group"><label>Data Final</label><input type="date" id="reportDateTo"></div>
-<div class="form-group"><label>Equipamento</label><select id="reportEquipment"><option value="">Todos</option></select></div>
-</div>
-<div style="display:flex;gap:10px;margin-bottom:24px">
-<button class="btn btn-primary" onclick="generateReport()"><i class="fas fa-sync"></i> Gerar Relatório</button>
-<button class="btn btn-outline" onclick="exportReport('csv')"><i class="fas fa-file-csv"></i> Exportar CSV</button>
-<button class="btn btn-outline" onclick="exportReport('pdf')"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-</div>
-<div id="reportResults">
-<div class="empty-state"><i class="fas fa-chart-bar"></i><h4>Selecione os filtros</h4><p>Escolha o período e clique em "Gerar Relatório"</p></div>
-</div>
-</div>
-</div>
-</section>
-</main>
-</div>
-
-<!-- MODALS -->
-<div class="modal-overlay" id="newChecklistModal">
-<div class="modal">
-<div class="modal-header"><h3><i class="fas fa-plus-circle"></i> Novo Checklist</h3><button class="modal-close" onclick="closeModal('newChecklistModal')"><i class="fas fa-times"></i></button></div>
-<div class="modal-body">
-<div class="form-group"><label>Nome do Checklist</label><input type="text" id="newChecklistName" placeholder="Ex: Inspeção Diária de Segurança"></div>
-<div class="form-group"><label>Descrição</label><textarea id="newChecklistDesc" rows="3" placeholder="Descrição do checklist..."></textarea></div>
-<div class="form-group"><label>Categoria</label><select id="newChecklistCategory"><option value="seguranca">Segurança</option><option value="manutencao">Manutenção</option><option value="qualidade">Qualidade</option><option value="ambiental">Ambiental</option></select></div>
-<div class="form-group">
-<label>Itens do Checklist</label>
-<div id="checklistItemsContainer">
-<div class="form-row" style="margin-bottom:8px"><input type="text" placeholder="Descrição do item" class="checklist-item-input" style="flex:1"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="width:36px"><i class="fas fa-trash"></i></button></div>
-</div>
-<button class="btn btn-outline btn-sm" onclick="addChecklistItemField()" style="margin-top:8px"><i class="fas fa-plus"></i> Adicionar Item</button>
-</div>
-</div>
-<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('newChecklistModal')">Cancelar</button><button class="btn btn-primary" onclick="saveChecklist()">Salvar</button></div>
-</div>
-</div>
-
-<div class="modal-overlay" id="newInspectionModal">
-<div class="modal">
-<div class="modal-header"><h3><i class="fas fa-search-plus"></i> Nova Inspeção</h3><button class="modal-close" onclick="closeModal('newInspectionModal')"><i class="fas fa-times"></i></button></div>
-<div class="modal-body">
-<div class="form-row">
-<div class="form-group"><label>Equipamento</label><select id="inspectionEquipment"></select></div>
-<div class="form-group"><label>Checklist</label><select id="inspectionChecklist" onchange="loadChecklistItems()"></select></div>
-</div>
-<div class="form-row">
-<div class="form-group"><label>Responsável</label><input type="text" id="inspectionResponsible" placeholder="Nome do responsável"></div>
-<div class="form-group"><label>Data</label><input type="date" id="inspectionDate"></div>
-</div>
-<div class="form-group"><label>Observações</label><textarea id="inspectionNotes" rows="2" placeholder="Observações gerais..."></textarea></div>
-<div id="inspectionItemsArea" style="display:none">
-<h4 style="margin:16px 0 12px;font-size:14px">Itens a Verificar</h4>
-<div id="inspectionItemsList"></div>
-</div>
-</div>
-<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('newInspectionModal')">Cancelar</button><button class="btn btn-primary" onclick="saveInspection()">Iniciar Inspeção</button></div>
-</div>
-</div>
-
-<div class="modal-overlay" id="newEquipmentModal">
-<div class="modal">
-<div class="modal-header"><h3><i class="fas fa-cog"></i> Novo Equipamento</h3><button class="modal-close" onclick="closeModal('newEquipmentModal')"><i class="fas fa-times"></i></button></div>
-<div class="modal-body">
-<div class="form-row">
-<div class="form-group"><label>Código</label><input type="text" id="equipCode" placeholder="EQ-001"></div>
-<div class="form-group"><label>Nome</label><input type="text" id="equipName" placeholder="Nome do equipamento"></div>
-</div>
-<div class="form-row">
-<div class="form-group"><label>Tipo</label><select id="equipType"><option value="maquina">Máquina</option><option value="ferramenta">Ferramenta</option><option value="veiculo">Veículo</option><option value="eletrico">Elétrico</option><option value="hidraulico">Hidráulico</option></select></div>
-<div class="form-group"><label>Localização</label><input type="text" id="equipLocation" placeholder="Setor/Área"></div>
-</div>
-<div class="form-group"><label>Descrição</label><textarea id="equipDesc" rows="2" placeholder="Descrição do equipamento..."></textarea></div>
-</div>
-<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('newEquipmentModal')">Cancelar</button><button class="btn btn-primary" onclick="saveEquipment()">Salvar</button></div>
-</div>
-</div>
-
-<div class="toast-container" id="toastContainer"></div>
-
-<script>
-// ===== CONFIG =====
-var SUPABASE_URL='https://jrcyhnonjzyhtztrxfhx.supabase.co';
-var SUPABASE_KEY='sb_publishable_26sS-4aR4t-NMFVZ3asmvQ_Dgz6xH0x';
-var supabaseOnline=false;
-var data={checklists:[],inspections:[],equipment:[]};
-var currentUser=null;
-
-// ===== STATUS BAR =====
-function setStatus(type,message){
-  var bar=document.getElementById('statusBar');
-  bar.className='status-bar '+type;
-  if(type==='online'){bar.innerHTML='<i class="fas fa-check-circle"></i> <span>'+message+'</span>';}
-  else if(type==='offline'){bar.innerHTML='<i class="fas fa-wifi-slash"></i> <span>'+message+'</span>';}
-  else{bar.innerHTML='<i class="fas fa-circle-notch fa-spin"></i> <span>'+message+'</span>';}
-  setTimeout(function(){bar.classList.add('hidden');},4000);
-}
-function setSyncStatus(online){
-  var badge=document.getElementById('syncBadge');
-  var icon=document.getElementById('syncIcon');
-  var text=document.getElementById('syncText');
-  if(online){
-    badge.style.background='#e6f4ea';badge.style.color='#1e8e3e';
-    icon.className='fas fa-wifi';text.textContent='Sincronizado';
-  }else{
-    badge.style.background='#fce8e6';badge.style.color='#c53929';
-    icon.className='fas fa-wifi-slash';text.textContent='Modo Offline';
-  }
-}
-
-// ===== CHECK SUPABASE =====
-function checkSupabaseConnection(){
-  return new Promise(function(resolve){
-    var xhr=new XMLHttpRequest();
-    xhr.timeout=5000;
-    xhr.onreadystatechange=function(){
-      if(xhr.readyState===4){
-        if(xhr.status===200||xhr.status===401){
-          try{var resp=JSON.parse(xhr.responseText);}
-          catch(e){var resp={};}
-          if(resp.code==='42501'){
-            supabaseOnline=true;
-            setStatus('offline','Supabase online mas sem permissao. Rode o SQL de permissoes.');
-            setSyncStatus(false);
-            resolve(true);
-          }else{
-            supabaseOnline=true;
-            setStatus('online','Conectado ao Supabase!');
-            setSyncStatus(true);
-            resolve(true);
-          }
-        }else{
-          supabaseOnline=false;
-          setStatus('offline','Sem conexao com Supabase. Usando dados locais.');
-          setSyncStatus(false);
-          resolve(false);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DJ BROW - Gestão de Propostas e Contratos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #10b981;
+            --bg-dark: #090d16;
+            --card-dark: #111827;
         }
-      }
-    };
-    xhr.onerror=function(){
-      supabaseOnline=false;
-      setStatus('offline','Sem conexao com Supabase. Usando dados locais.');
-      setSyncStatus(false);
-      resolve(false);
-    };
-    xhr.ontimeout=function(){
-      supabaseOnline=false;
-      setStatus('offline','Timeout na conexao. Usando dados locais.');
-      setSyncStatus(false);
-      resolve(false);
-    };
-    xhr.open('GET',SUPABASE_URL+'/rest/v1/checklists?select=id&limit=1',true);
-    xhr.setRequestHeader('apikey',SUPABASE_KEY);
-    xhr.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
-    xhr.send();
-  });
-}
+        body {
+            background-color: var(--bg-dark);
+            color: #f3f4f6;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        .canvas-container {
+            border: 2px dashed #374151;
+            border-radius: 8px;
+            background: #030712;
+            position: relative;
+        }
+        .tab-btn.active {
+            background-color: #1e293b;
+            color: #10b981;
+            border-left: 4px solid #10b981;
+        }
+        @media print {
+            aside, nav, button, .no-print {
+                display: none !important;
+            }
+            body, main {
+                background: white !important;
+                color: black !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .print-card {
+                border: none !important;
+                box-shadow: none !important;
+                background: white !important;
+                color: black !important;
+                padding: 0 !important;
+            }
+            .contract-text {
+                color: black !important;
+                white-space: pre-wrap;
+                font-family: 'Times New Roman', Times, serif;
+                font-size: 11pt;
+                line-height: 1.5;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col md:flex-row">
 
-// ===== INIT =====
-(function init(){
-  loadLocalData();
-  checkSupabaseConnection().then(function(){
-    if(supabaseOnline)loadFromSupabase();
-  });
-  var savedUser=localStorage.getItem('checklist_user');
-  if(savedUser){
-    try{currentUser=JSON.parse(savedUser);showApp();}
-    catch(e){localStorage.removeItem('checklist_user');}
-  }
-  var today=new Date().toISOString().split('T')[0];
-  var firstDay=new Date(new Date().setDate(1)).toISOString().split('T')[0];
-  var de=document.getElementById('inspectionDate');
-  var dfrom=document.getElementById('reportDateFrom');
-  var dto=document.getElementById('reportDateTo');
-  if(de)de.value=today;
-  if(dfrom)dfrom.value=firstDay;
-  if(dto)dto.value=today;
-})();
+    <!-- MENU LATERAL -->
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col justify-between no-print shrink-0">
+        <div>
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-slate-950 text-xl shadow-lg shadow-emerald-500/20">
+                    DJ
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-none tracking-wide" id="sidebar-app-name">DJ BROW</h1>
+                    <span class="text-xs text-slate-400">Propostas & Contratos</span>
+                </div>
+            </div>
 
-// ===== SUPABASE LOAD =====
-function loadFromSupabase(){
-  var xhr1=new XMLHttpRequest();
-  xhr1.open('GET',SUPABASE_URL+'/rest/v1/checklists?select=*',true);
-  xhr1.setRequestHeader('apikey',SUPABASE_KEY);
-  xhr1.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
-  xhr1.onload=function(){
-    if(xhr1.status===200){
-      try{
-        var checklists=JSON.parse(xhr1.responseText);
-        if(checklists&&checklists.length>0){data.checklists=checklists;saveLocalData();updateAllViews();showToast('Dados carregados do Supabase!','success');}
-      }catch(e){}
-    }
-  };
-  xhr1.send();
-  var xhr2=new XMLHttpRequest();
-  xhr2.open('GET',SUPABASE_URL+'/rest/v1/equipment?select=*',true);
-  xhr2.setRequestHeader('apikey',SUPABASE_KEY);
-  xhr2.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
-  xhr2.onload=function(){
-    if(xhr2.status===200){
-      try{var equipment=JSON.parse(xhr2.responseText);if(equipment&&equipment.length>0){data.equipment=equipment;saveLocalData();updateAllViews();}}catch(e){}
-    }
-  };
-  xhr2.send();
-  var xhr3=new XMLHttpRequest();
-  xhr3.open('GET',SUPABASE_URL+'/rest/v1/inspections?select=*',true);
-  xhr3.setRequestHeader('apikey',SUPABASE_KEY);
-  xhr3.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
-  xhr3.onload=function(){
-    if(xhr3.status===200){
-      try{var inspections=JSON.parse(xhr3.responseText);if(inspections&&inspections.length>0){data.inspections=inspections;saveLocalData();updateAllViews();}}catch(e){}
-    }
-  };
-  xhr3.send();
-}
+            <nav class="space-y-1" id="nav-container">
+                <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="tab-btn active w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition">
+                    <i class="fa-solid fa-chart-pie w-5 text-emerald-400"></i> Dashboard
+                </button>
+                <button onclick="switchTab('eventos')" id="btn-tab-eventos" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition">
+                    <i class="fa-solid fa-calendar-days w-5 text-emerald-400"></i> Meus Eventos
+                </button>
+                <button onclick="switchTab('proposta')" id="btn-tab-proposta" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition">
+                    <i class="fa-solid fa-plus-circle w-5 text-emerald-400"></i> Novo / Editar Evento
+                </button>
+                <button onclick="switchTab('contratos')" id="btn-tab-contratos" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition">
+                    <i class="fa-solid fa-file-contract w-5 text-emerald-400"></i> Visualizar Contrato
+                </button>
+                <button onclick="switchTab('perfil')" id="btn-tab-perfil" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition">
+                    <i class="fa-solid fa-user-gear w-5 text-emerald-400"></i> Perfil & Empresa
+                </button>
+                <button onclick="switchTab('modelo-contrato')" id="btn-tab-modelo-contrato" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition">
+                    <i class="fa-solid fa-file-lines w-5 text-emerald-400"></i> Modelo Padrão
+                </button>
+                <button onclick="switchTab('backup')" id="btn-tab-backup" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition">
+                    <i class="fa-solid fa-database w-5 text-emerald-400"></i> Backup & Segurança
+                </button>
+            </nav>
+        </div>
 
-// ===== SUPABASE SAVE =====
-function saveToSupabase(table,record){
-  if(!supabaseOnline)return Promise.resolve(false);
-  return new Promise(function(resolve){
-    var xhr=new XMLHttpRequest();
-    xhr.open('POST',SUPABASE_URL+'/rest/v1/'+table,true);
-    xhr.setRequestHeader('apikey',SUPABASE_KEY);
-    xhr.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
-    xhr.setRequestHeader('Content-Type','application/json');
-    xhr.setRequestHeader('Prefer','return=minimal');
-    xhr.onload=function(){resolve(xhr.status===201||xhr.status===200);};
-    xhr.onerror=function(){resolve(false);};
-    xhr.send(JSON.stringify(record));
-  });
-}
-function deleteFromSupabase(table,id){
-  if(!supabaseOnline)return Promise.resolve(false);
-  return new Promise(function(resolve){
-    var xhr=new XMLHttpRequest();
-    xhr.open('DELETE',SUPABASE_URL+'/rest/v1/'+table+'?id=eq.'+id,true);
-    xhr.setRequestHeader('apikey',SUPABASE_KEY);
-    xhr.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
-    xhr.onload=function(){resolve(xhr.status===204||xhr.status===200);};
-    xhr.onerror=function(){resolve(false);};
-    xhr.send();
-  });
-}
+        <div class="pt-4 border-t border-slate-800 mt-6">
+            <div class="flex items-center gap-3 p-2 bg-slate-800/50 rounded-lg">
+                <div class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-slate-950 text-xs" id="sidebar-initials">DJ</div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-semibold truncate" id="sidebar-user-name">Marcelo da Cruz</p>
+                    <p class="text-xs text-slate-400 truncate" id="sidebar-company-name">DJ BROW Eventos</p>
+                </div>
+            </div>
+        </div>
+    </aside>
 
-// ===== LOGIN =====
-function doLogin(){
-  var user=document.getElementById('loginUser').value.trim();
-  var pass=document.getElementById('loginPass').value;
-  var errorEl=document.getElementById('loginError');
-  var btn=document.getElementById('loginBtn');
-  btn.textContent='Entrando...';
-  btn.disabled=true;
-  setTimeout(function(){
-    if(user==='ADMIN'&&pass==='1234'){
-      currentUser={id:1,name:'ADMIN',role:'admin'};
-      localStorage.setItem('checklist_user',JSON.stringify(currentUser));
-      errorEl.style.display='none';
-      showApp();
-      showToast('Bem-vindo, ADMIN!','success');
-    }else{
-      errorEl.style.display='block';
-      btn.textContent='Entrar';
-      btn.disabled=false;
-    }
-  },300);
-}
-function showApp(){
-  document.getElementById('loginOverlay').classList.add('hidden');
-  document.getElementById('app').style.display='block';
-  document.getElementById('currentUserName').textContent=currentUser?currentUser.name:'ADMIN';
-  updateDashboard();renderChecklists();renderInspections();renderEquipment();populateSelects();
-}
-function logout(){
-  localStorage.removeItem('checklist_user');currentUser=null;
-  document.getElementById('loginOverlay').classList.remove('hidden');
-  document.getElementById('app').style.display='none';
-  document.getElementById('loginUser').value='ADMIN';
-  document.getElementById('loginPass').value='1234';
-  document.getElementById('loginBtn').textContent='Entrar';
-  document.getElementById('loginBtn').disabled=false;
-  document.getElementById('loginError').style.display='none';
-}
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
 
-// ===== NAVIGATION =====
-function showSection(sectionId,btn){
-  document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
-  document.getElementById(sectionId).classList.add('active');
-  document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active');});
-  if(btn)btn.classList.add('active');
-}
+        <!-- DASHBOARD -->
+        <section id="tab-dashboard" class="space-y-6">
+            <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight text-white">Painel Geral</h2>
+                    <p class="text-slate-400 text-sm">Resumo financeiro e próximos compromissos da agenda</p>
+                </div>
+                <button onclick="prepareNewEvent()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-5 py-2.5 rounded-lg transition flex items-center gap-2 self-start md:self-auto shadow-lg shadow-emerald-500/10">
+                    <i class="fa-solid fa-plus"></i> Novo Evento
+                </button>
+            </div>
 
-// ===== DATA =====
-function loadLocalData(){
-  var saved=localStorage.getItem('checklist_data');
-  if(saved){try{data=JSON.parse(saved);}catch(e){data=getDefaultData();}}
-  else{data=getDefaultData();saveLocalData();}
-}
-function getDefaultData(){
-  return{
-    checklists:[
-      {id:1,name:'Inspecao Diaria de Seguranca',category:'seguranca',description:'Verificacao diaria dos EPIs e condicoes de seguranca',items:['EPI completo','Area limpa','Sinalizacao visivel','Extintores ok'],created_at:new Date().toISOString()},
-      {id:2,name:'Manutencao Preventiva - Maquina A',category:'manutencao',description:'Checklist mensal de manutencao',items:['Lubrificacao','Aperto de parafusos','Verificacao de correias','Teste de emergencia'],created_at:new Date().toISOString()},
-      {id:3,name:'Controle de Qualidade - Lote B',category:'qualidade',description:'Verificacao de qualidade do produto',items:['Dimensoes','Acabamento','Embalagem','Etiquetagem'],created_at:new Date().toISOString()}
-    ],
-    equipment:[
-      {id:1,code:'EQ-001',name:'Prensa Hidraulica 50T',type:'maquina',location:'Setor A - Linha 1',status:'ativo',last_inspection:'2026-07-01',description:'Prensa hidraulica de 50 toneladas'},
-      {id:2,code:'EQ-002',name:'Torno CNC',type:'maquina',location:'Setor B - Usinagem',status:'ativo',last_inspection:'2026-06-28',description:'Torno CNC controlado por computador'},
-      {id:3,code:'EQ-003',name:'Empilhadeira Toyota',type:'veiculo',location:'Patio',status:'manutencao',last_inspection:'2026-06-15',description:'Empilhadeira para movimentacao de cargas'}
-    ],
-    inspections:[
-      {id:1,equipment_id:1,checklist_id:1,status:'concluido',date:'2026-07-01',responsible:'Joao Silva',progress:100,items:[{item:'EPI completo',ok:true},{item:'Area limpa',ok:true},{item:'Sinalizacao visivel',ok:true},{item:'Extintores ok',ok:true}],notes:''},
-      {id:2,equipment_id:2,checklist_id:2,status:'em_andamento',date:'2026-07-05',responsible:'Maria Santos',progress:50,items:[{item:'Lubrificacao',ok:true},{item:'Aperto de parafusos',ok:true},{item:'Verificacao de correias',ok:false},{item:'Teste de emergencia',ok:false}],notes:'Aguardando pecas'},
-      {id:3,equipment_id:3,checklist_id:1,status:'pendente',date:'2026-07-06',responsible:'Pedro Costa',progress:0,items:[],notes:''}
-    ]
-  };
-}
-function saveLocalData(){localStorage.setItem('checklist_data',JSON.stringify(data));}
-function updateAllViews(){updateDashboard();renderChecklists();renderInspections();renderEquipment();populateSelects();}
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+                <div class="bg-slate-900 p-5 md:p-6 rounded-xl border border-slate-800 shadow-sm">
+                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Eventos Cadastrados</span>
+                    <p class="text-3xl font-extrabold text-white mt-2" id="dash-total-events">0</p>
+                </div>
+                <div class="bg-slate-900 p-5 md:p-6 rounded-xl border border-slate-800 shadow-sm">
+                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Valor Total Contratado</span>
+                    <p class="text-3xl font-extrabold text-emerald-400 mt-2" id="dash-total-value">R$ 0,00</p>
+                </div>
+                <div class="bg-slate-900 p-5 md:p-6 rounded-xl border border-slate-800 shadow-sm">
+                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Saldo a Receber</span>
+                    <p class="text-3xl font-extrabold text-amber-400 mt-2" id="dash-pending-value">R$ 0,00</p>
+                </div>
+            </div>
 
-// ===== DASHBOARD =====
-function updateDashboard(){
-  var total=data.checklists.length;
-  var completed=data.inspections.filter(function(i){return i.status==='concluido';}).length;
-  var pending=data.inspections.filter(function(i){return i.status==='pendente';}).length;
-  var issues=data.inspections.filter(function(i){return i.items&&i.items.some(function(item){return item.ok===false;});}).length;
-  document.getElementById('statTotalChecklists').textContent=total;
-  document.getElementById('statCompleted').textContent=completed;
-  document.getElementById('statPending').textContent=pending;
-  document.getElementById('statIssues').textContent=issues;
-  var tbody=document.querySelector('#recentInspectionsTable tbody');
-  var recent=data.inspections.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).slice(0,5);
-  tbody.innerHTML=recent.map(function(ins){
-    var equip=data.equipment.find(function(e){return e.id==ins.equipment_id;});
-    var checklist=data.checklists.find(function(c){return c.id==ins.checklist_id;});
-    var sc=ins.status==='concluido'?'green':ins.status==='em_andamento'?'yellow':'red';
-    var st=ins.status==='concluido'?'Concluido':ins.status==='em_andamento'?'Em Andamento':'Pendente';
-    return '<tr><td>'+(equip?equip.name:'N/A')+'</td><td>'+(checklist?checklist.name:'N/A')+'</td><td><span class="badge '+sc+'">'+st+'</span></td><td>'+formatDate(ins.date)+'</td><td>'+ins.responsible+'</td><td><div class="progress-bar" style="width:120px"><div class="progress-fill '+(ins.progress>=80?'green':ins.progress>=40?'yellow':'red')+'" style="width:'+ins.progress+'%"></div></div><span style="font-size:12px;color:var(--gray)">'+ins.progress+'%</span></td></tr>';
-  }).join('');
-}
+            <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 md:p-6 space-y-4">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-day text-emerald-400"></i> Próximos Eventos
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-800/60 text-slate-400 uppercase text-xs">
+                            <tr>
+                                <th class="p-3 rounded-l-lg">Data</th>
+                                <th class="p-3">Cliente</th>
+                                <th class="p-3">Local</th>
+                                <th class="p-3">Valor Total</th>
+                                <th class="p-3">Saldo</th>
+                                <th class="p-3 text-right rounded-r-lg">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dash-events-list" class="divide-y divide-slate-800">
+                            <!-- Preenchido dinamicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
-// ===== CHECKLISTS =====
-function renderChecklists(){
-  var container=document.getElementById('checklistsList');
-  var search=(document.getElementById('searchChecklists')?document.getElementById('searchChecklists').value:'').toLowerCase();
-  var filtered=data.checklists.filter(function(c){return c.name.toLowerCase().includes(search)||(c.description&&c.description.toLowerCase().includes(search));});
-  if(filtered.length===0){container.innerHTML='<div class="empty-state"><i class="fas fa-clipboard-list"></i><h4>Nenhum checklist encontrado</h4><p>Crie um novo checklist para comecar</p></div>';return;}
-  var catLabels={seguranca:'Seguranca',manutencao:'Manutencao',qualidade:'Qualidade',ambiental:'Ambiental'};
-  var catColors={seguranca:'blue',manutencao:'orange',qualidade:'green',ambiental:'gray'};
-  container.innerHTML=filtered.map(function(c){
-    return '<div class="card" style="margin-bottom:16px"><div class="card-header"><div><h3 style="font-size:15px">'+c.name+'</h3><span class="badge '+(catColors[c.category]||'gray')+'" style="margin-top:6px">'+(catLabels[c.category]||c.category)+'</span></div><div style="display:flex;gap:8px"><button class="btn btn-danger btn-sm" onclick="deleteChecklist('+c.id+')"><i class="fas fa-trash"></i></button></div></div><div class="card-body"><p style="color:var(--gray);font-size:14px;margin-bottom:12px">'+(c.description||'Sem descricao')+'</p><div style="font-size:13px;color:var(--gray)"><i class="fas fa-list-ul"></i> '+(c.items?c.items.length:0)+' itens <span style="margin:0 8px">|</span> <i class="fas fa-calendar"></i> '+formatDate(c.created_at)+'</div></div></div>';
-  }).join('');
-}
-function filterChecklists(){renderChecklists();}
-function addChecklistItemField(){
-  var container=document.getElementById('checklistItemsContainer');
-  var div=document.createElement('div');div.className='form-row';div.style.marginBottom='8px';
-  div.innerHTML='<input type="text" placeholder="Descricao do item" class="checklist-item-input" style="flex:1"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="width:36px"><i class="fas fa-trash"></i></button>';
-  container.appendChild(div);
-}
-function saveChecklist(){
-  var name=document.getElementById('newChecklistName').value.trim();
-  var desc=document.getElementById('newChecklistDesc').value.trim();
-  var category=document.getElementById('newChecklistCategory').value;
-  var itemInputs=document.querySelectorAll('.checklist-item-input');
-  var items=Array.from(itemInputs).map(function(i){return i.value.trim();}).filter(function(v){return v;});
-  if(!name){showToast('Informe o nome do checklist','error');return;}
-  if(items.length===0){showToast('Adicione pelo menos um item','error');return;}
-  var newChecklist={id:Date.now(),name:name,description:desc,category:category,items:items,created_at:new Date().toISOString()};
-  data.checklists.push(newChecklist);
-  saveLocalData();
-  saveToSupabase('checklists',newChecklist).then(function(ok){if(ok)showToast('Sincronizado com Supabase!','success');});
-  renderChecklists();populateSelects();closeModal('newChecklistModal');showToast('Checklist criado com sucesso!','success');
-  document.getElementById('newChecklistName').value='';
-  document.getElementById('newChecklistDesc').value='';
-  document.getElementById('checklistItemsContainer').innerHTML='<div class="form-row" style="margin-bottom:8px"><input type="text" placeholder="Descricao do item" class="checklist-item-input" style="flex:1"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="width:36px"><i class="fas fa-trash"></i></button></div>';
-}
-function deleteChecklist(id){
-  if(!confirm('Deseja excluir este checklist?'))return;
-  data.checklists=data.checklists.filter(function(c){return c.id!==id;});
-  saveLocalData();deleteFromSupabase('checklists',id);
-  renderChecklists();showToast('Checklist excluido','success');
-}
+        <!-- LISTA DE EVENTOS -->
+        <section id="tab-eventos" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Meus Eventos & Propostas</h2>
+                    <p class="text-slate-400 text-sm">Gerencie todos os contratos e propostas cadastradas</p>
+                </div>
+                <button onclick="prepareNewEvent()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2.5 rounded-lg transition text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Novo Evento
+                </button>
+            </div>
 
-// ===== INSPECTIONS =====
-function renderInspections(){
-  var tbody=document.querySelector('#inspectionsTable tbody');
-  var search=(document.getElementById('searchInspections')?document.getElementById('searchInspections').value:'').toLowerCase();
-  var statusFilter=document.getElementById('filterStatus')?document.getElementById('filterStatus').value:'';
-  var filtered=data.inspections;
-  if(search)filtered=filtered.filter(function(i){
-    var e=data.equipment.find(function(x){return x.id==i.equipment_id;});
-    var c=data.checklists.find(function(x){return x.id==i.checklist_id;});
-    return(e&&e.name&&e.name.toLowerCase().includes(search))||(c&&c.name&&c.name.toLowerCase().includes(search))||(i.responsible&&i.responsible.toLowerCase().includes(search));
-  });
-  if(statusFilter)filtered=filtered.filter(function(i){return i.status===statusFilter;});
-  if(filtered.length===0){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray)">Nenhuma inspecao encontrada</td></tr>';return;}
-  tbody.innerHTML=filtered.map(function(ins){
-    var equip=data.equipment.find(function(e){return e.id==ins.equipment_id;});
-    var checklist=data.checklists.find(function(c){return c.id==ins.checklist_id;});
-    var sc=ins.status==='concluido'?'green':ins.status==='em_andamento'?'yellow':'red';
-    var st=ins.status==='concluido'?'Concluido':ins.status==='em_andamento'?'Em Andamento':'Pendente';
-    return '<tr><td>#'+ins.id+'</td><td>'+(equip?equip.name:'N/A')+'</td><td>'+(checklist?checklist.name:'N/A')+'</td><td><span class="badge '+sc+'">'+st+'</span></td><td>'+formatDate(ins.date)+'</td><td>'+ins.responsible+'</td><td><div class="progress-bar" style="width:80px;display:inline-block;vertical-align:middle;margin-right:8px"><div class="progress-fill '+(ins.progress>=80?'green':ins.progress>=40?'yellow':'red')+'" style="width:'+ins.progress+'%"></div></div><span style="font-size:12px">'+ins.progress+'%</span></td><td><button class="btn btn-outline btn-sm" onclick="viewInspection('+ins.id+')"><i class="fas fa-eye"></i></button> <button class="btn btn-danger btn-sm" onclick="deleteInspection('+ins.id+')"><i class="fas fa-trash"></i></button></td></tr>';
-  }).join('');
-}
-function filterInspections(){renderInspections();}
-function loadChecklistItems(){
-  var checklistId=document.getElementById('inspectionChecklist').value;
-  var area=document.getElementById('inspectionItemsArea');
-  var list=document.getElementById('inspectionItemsList');
-  if(!checklistId){area.style.display='none';return;}
-  var checklist=data.checklists.find(function(c){return c.id==checklistId;});
-  if(!checklist||!checklist.items){area.style.display='none';return;}
-  area.style.display='block';
-  list.innerHTML=checklist.items.map(function(item,idx){
-    return '<div class="checklist-item" onclick="toggleInspectionItem(this)" data-idx="'+idx+'"><div class="checkbox"><i class="fas fa-check" style="display:none"></i></div><div class="item-text"><h4>'+item+'</h4></div></div>';
-  }).join('');
-}
-function toggleInspectionItem(el){
-  el.classList.toggle('checked');
-  el.querySelector('.checkbox i').style.display=el.classList.contains('checked')?'block':'none';
-}
-function saveInspection(){
-  var equipmentId=document.getElementById('inspectionEquipment').value;
-  var checklistId=document.getElementById('inspectionChecklist').value;
-  var responsible=document.getElementById('inspectionResponsible').value.trim();
-  var date=document.getElementById('inspectionDate').value;
-  var notes=document.getElementById('inspectionNotes').value.trim();
-  if(!equipmentId){showToast('Selecione um equipamento','error');return;}
-  if(!checklistId){showToast('Selecione um checklist','error');return;}
-  if(!responsible){showToast('Informe o responsavel','error');return;}
-  var checklist=data.checklists.find(function(c){return c.id==checklistId;});
-  var items=[];
-  if(checklist&&checklist.items){
-    document.querySelectorAll('#inspectionItemsList .checklist-item').forEach(function(el,idx){
-      items.push({item:checklist.items[idx],ok:el.classList.contains('checked')});
-    });
-  }
-  var checkedCount=items.filter(function(i){return i.ok;}).length;
-  var progress=checklist&&checklist.items&&checklist.items.length?Math.round((checkedCount/checklist.items.length)*100):0;
-  var status=progress===100?'concluido':progress>0?'em_andamento':'pendente';
-  var newInspection={id:Date.now(),equipment_id:parseInt(equipmentId),checklist_id:parseInt(checklistId),status:status,date:date,responsible:responsible,notes:notes,items:items,progress:progress};
-  data.inspections.push(newInspection);
-  var equip=data.equipment.find(function(e){return e.id==equipmentId;});
-  if(equip)equip.last_inspection=date;
-  saveLocalData();
-  saveToSupabase('inspections',newInspection).then(function(ok){if(ok)showToast('Sincronizado com Supabase!','success');});
-  renderInspections();updateDashboard();closeModal('newInspectionModal');showToast('Inspecao criada com sucesso!','success');
-}
-function viewInspection(id){
-  var ins=data.inspections.find(function(i){return i.id===id;});if(!ins)return;
-  var equip=data.equipment.find(function(e){return e.id==ins.equipment_id;});
-  var checklist=data.checklists.find(function(c){return c.id==ins.checklist_id;});
-  var itemsHtml='';
-  if(ins.items&&ins.items.length){
-    itemsHtml=ins.items.map(function(item){
-      return '<div class="checklist-item '+(item.ok?'checked':'')+'" style="cursor:default"><div class="checkbox" style="background:'+(item.ok?'var(--success)':'transparent')+';border-color:'+(item.ok?'var(--success)':'#dadce0')+';color:white"><i class="fas fa-check" style="display:'+(item.ok?'block':'none')+'"></i></div><div class="item-text"><h4 style="text-decoration:'+(item.ok?'line-through':'none')+';color:'+(item.ok?'var(--gray)':'var(--dark)')+'">'+item.item+'</h4></div><span class="badge '+(item.ok?'green':'red')+'">'+(item.ok?'OK':'Pendente')+'</span></div>';
-    }).join('');
-  }
-  var modal=document.createElement('div');modal.className='modal-overlay active';
-  modal.innerHTML='<div class="modal" style="max-width:600px"><div class="modal-header"><h3><i class="fas fa-eye"></i> Detalhes da Inspecao #'+ins.id+'</h3><button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="form-row" style="margin-bottom:16px"><div><strong>Equipamento:</strong> '+(equip?equip.name:'N/A')+'</div><div><strong>Checklist:</strong> '+(checklist?checklist.name:'N/A')+'</div></div><div class="form-row" style="margin-bottom:16px"><div><strong>Responsavel:</strong> '+ins.responsible+'</div><div><strong>Data:</strong> '+formatDate(ins.date)+'</div></div><div style="margin-bottom:16px"><strong>Status:</strong> <span class="badge '+(ins.status==='concluido'?'green':ins.status==='em_andamento'?'yellow':'red')+'">'+(ins.status==='concluido'?'Concluido':ins.status==='em_andamento'?'Em Andamento':'Pendente')+'</span><span style="margin-left:16px"><strong>Progresso:</strong> '+ins.progress+'%</span></div>'+(ins.notes?'<div style="margin-bottom:16px;padding:12px;background:#f8f9fa;border-radius:8px"><strong>Observacoes:</strong> '+ins.notes+'</div>':'')+'<h4 style="margin-bottom:12px;font-size:14px">Itens Verificados</h4>'+(itemsHtml||'<p style="color:var(--gray)">Nenhum item verificado</p>')+'</div><div class="modal-footer"><button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Fechar</button></div></div>';
-  document.body.appendChild(modal);
-}
-function deleteInspection(id){
-  if(!confirm('Deseja excluir esta inspecao?'))return;
-  data.inspections=data.inspections.filter(function(i){return i.id!==id;});
-  saveLocalData();deleteFromSupabase('inspections',id);
-  renderInspections();updateDashboard();showToast('Inspecao excluida','success');
-}
+            <div class="bg-slate-900 rounded-xl border border-slate-800 p-4 md:p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-800 text-slate-400 uppercase text-xs">
+                            <tr>
+                                <th class="p-3 rounded-l-lg">Cliente</th>
+                                <th class="p-3">Data</th>
+                                <th class="p-3">Telefone</th>
+                                <th class="p-3">Valor Total</th>
+                                <th class="p-3">Status Assinatura</th>
+                                <th class="p-3 text-right rounded-r-lg">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="full-events-list" class="divide-y divide-slate-800">
+                            <!-- Preenchido dinamicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
-// ===== EQUIPMENT =====
-function renderEquipment(){
-  var tbody=document.querySelector('#equipmentTable tbody');
-  var search=(document.getElementById('searchEquipment')?document.getElementById('searchEquipment').value:'').toLowerCase();
-  var filtered=data.equipment;
-  if(search)filtered=filtered.filter(function(e){return e.name.toLowerCase().includes(search)||e.code.toLowerCase().includes(search)||e.location.toLowerCase().includes(search);});
-  if(filtered.length===0){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--gray)">Nenhum equipamento encontrado</td></tr>';return;}
-  var typeLabels={maquina:'Maquina',ferramenta:'Ferramenta',veiculo:'Veiculo',eletrico:'Eletrico',hidraulico:'Hidraulico'};
-  tbody.innerHTML=filtered.map(function(e){
-    var sc=e.status==='ativo'?'green':e.status==='manutencao'?'yellow':'red';
-    var st=e.status==='ativo'?'Ativo':e.status==='manutencao'?'Em Manutencao':'Inativo';
-    return '<tr><td><strong>'+e.code+'</strong></td><td>'+e.name+'</td><td>'+(typeLabels[e.type]||e.type)+'</td><td>'+e.location+'</td><td><span class="badge '+sc+'">'+st+'</span></td><td>'+(e.last_inspection?formatDate(e.last_inspection):'Nunca')+'</td><td><button class="btn btn-danger btn-sm" onclick="deleteEquipment('+e.id+')"><i class="fas fa-trash"></i></button></td></tr>';
-  }).join('');
-}
-function filterEquipment(){renderEquipment();}
-function saveEquipment(){
-  var code=document.getElementById('equipCode').value.trim();
-  var name=document.getElementById('equipName').value.trim();
-  var type=document.getElementById('equipType').value;
-  var location=document.getElementById('equipLocation').value.trim();
-  var desc=document.getElementById('equipDesc').value.trim();
-  if(!code){showToast('Informe o codigo do equipamento','error');return;}
-  if(!name){showToast('Informe o nome do equipamento','error');return;}
-  var newEquip={id:Date.now(),code:code,name:name,type:type,location:location,description:desc,status:'ativo',last_inspection:null};
-  data.equipment.push(newEquip);
-  saveLocalData();
-  saveToSupabase('equipment',newEquip).then(function(ok){if(ok)showToast('Sincronizado com Supabase!','success');});
-  renderEquipment();populateSelects();closeModal('newEquipmentModal');showToast('Equipamento cadastrado!','success');
-  document.getElementById('equipCode').value='';
-  document.getElementById('equipName').value='';
-  document.getElementById('equipLocation').value='';
-  document.getElementById('equipDesc').value='';
-}
-function deleteEquipment(id){
-  if(!confirm('Deseja excluir este equipamento?'))return;
-  data.equipment=data.equipment.filter(function(e){return e.id!==id;});
-  saveLocalData();deleteFromSupabase('equipment',id);
-  renderEquipment();populateSelects();showToast('Equipamento excluido','success');
-}
+        <!-- CRIAR / EDITAR PROPOSTA -->
+        <section id="tab-proposta" class="space-y-6 hidden">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-white" id="form-title">Cadastrar Novo Evento</h2>
+                    <p class="text-slate-400 text-sm">Preencha os dados do cliente e do evento para gerar o contrato</p>
+                </div>
+                <button onclick="switchTab('eventos')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-sm transition">
+                    <i class="fa-solid fa-arrow-left"></i> Voltar à Lista
+                </button>
+            </div>
 
-// ===== REPORTS =====
-function generateReport(){
-  var from=document.getElementById('reportDateFrom').value;
-  var to=document.getElementById('reportDateTo').value;
-  var equipFilter=document.getElementById('reportEquipment').value;
-  var filtered=data.inspections.filter(function(i){
-    var d=new Date(i.date);
-    var fromOk=!from||d>=new Date(from);
-    var toOk=!to||d<=new Date(to+'T23:59:59');
-    var equipOk=!equipFilter||i.equipment_id==equipFilter;
-    return fromOk&&toOk&&equipOk;
-  });
-  var container=document.getElementById('reportResults');
-  if(filtered.length===0){container.innerHTML='<div class="empty-state"><i class="fas fa-search"></i><h4>Nenhum resultado encontrado</h4><p>Tente ajustar os filtros</p></div>';return;}
-  var completed=filtered.filter(function(i){return i.status==='concluido';}).length;
-  var pending=filtered.filter(function(i){return i.status==='pendente';}).length;
-  var inProgress=filtered.filter(function(i){return i.status==='em_andamento';}).length;
-  var totalItems=filtered.reduce(function(sum,i){return sum+(i.items?i.items.length:0);},0);
-  var okItems=filtered.reduce(function(sum,i){return sum+(i.items?i.items.filter(function(x){return x.ok;}).length:0);},0);
-  var issueRate=totalItems?Math.round(((totalItems-okItems)/totalItems)*100):0;
-  container.innerHTML='<div class="stats-row" style="margin-bottom:20px"><div class="stat-card"><div class="stat-icon blue"><i class="fas fa-clipboard-list"></i></div><div><div class="stat-value">'+filtered.length+'</div><div class="stat-label">Total Inspecoes</div></div></div><div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div><div class="stat-value">'+completed+'</div><div class="stat-label">Concluidas</div></div></div><div class="stat-card"><div class="stat-icon orange"><i class="fas fa-clock"></i></div><div><div class="stat-value">'+inProgress+'</div><div class="stat-label">Em Andamento</div></div></div><div class="stat-card"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div><div class="stat-value">'+issueRate+'%</div><div class="stat-label">Taxa de Problemas</div></div></div></div><div class="card"><div class="card-header"><h3>Detalhamento</h3></div><div class="card-body"><table class="data-table"><thead><tr><th>ID</th><th>Equipamento</th><th>Checklist</th><th>Status</th><th>Data</th><th>Responsavel</th><th>Itens OK</th></tr></thead><tbody>'+filtered.map(function(ins){
-    var equip=data.equipment.find(function(e){return e.id==ins.equipment_id;});
-    var checklist=data.checklists.find(function(c){return c.id==ins.checklist_id;});
-    var okCount=ins.items?ins.items.filter(function(x){return x.ok;}).length:0;
-    var totalCount=ins.items?ins.items.length:0;
-    var sc=ins.status==='concluido'?'green':ins.status==='em_andamento'?'yellow':'red';
-    var st=ins.status==='concluido'?'Concluido':ins.status==='em_andamento'?'Em Andamento':'Pendente';
-    return '<tr><td>#'+ins.id+'</td><td>'+(equip?equip.name:'')+'</td><td>'+(checklist?checklist.name:'')+'</td><td><span class="badge '+sc+'">'+st+'</span></td><td>'+formatDate(ins.date)+'</td><td>'+ins.responsible+'</td><td>'+okCount+'/'+totalCount+'</td></tr>';
-  }).join('')+'</tbody></table></div></div>';
-}
-function exportReport(format){
-  var from=document.getElementById('reportDateFrom').value;
-  var to=document.getElementById('reportDateTo').value;
-  var equipFilter=document.getElementById('reportEquipment').value;
-  var filtered=data.inspections.filter(function(i){
-    var d=new Date(i.date);
-    return(!from||d>=new Date(from))&&(!to||d<=new Date(to+'T23:59:59'))&&(!equipFilter||i.equipment_id==equipFilter);
-  });
-  if(format==='csv'){
-    var csv='ID,Equipamento,Checklist,Status,Data,Responsavel,Progresso,Observacoes
-';
-    filtered.forEach(function(ins){
-      var equip=data.equipment.find(function(e){return e.id==ins.equipment_id;});
-      var checklist=data.checklists.find(function(c){return c.id==ins.checklist_id;});
-      csv+=ins.id+',"'+(equip?equip.name:'')+'","'+(checklist?checklist.name:'')+'",'+ins.status+','+ins.date+','+ins.responsible+','+ins.progress+'%,"'+((ins.notes||'').replace(/"/g,'""'))+'"
-';
-    });
-    var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-    var link=document.createElement('a');
-    link.href=URL.createObjectURL(blob);
-    link.download='relatorio_checklist_'+new Date().toISOString().split('T')[0]+'.csv';
-    link.click();
-    showToast('CSV exportado!','success');
-  }else{
-    var pw=window.open('','_blank');
-    pw.document.write('<html><head><title>Relatorio Checklist Industrial</title><style>body{font-family:Arial;padding:40px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{padding:10px;border:1px solid #ccc;text-align:left}th{background:#f0f0f0}</style></head><body><h1>Relatorio Checklist Industrial</h1><p>Periodo: '+(from||'Inicio')+' a '+(to||'Hoje')+'</p><table><thead><tr><th>ID</th><th>Equipamento</th><th>Checklist</th><th>Status</th><th>Data</th><th>Responsavel</th><th>Progresso</th></tr></thead><tbody>'+filtered.map(function(ins){var equip=data.equipment.find(function(e){return e.id==ins.equipment_id;});var checklist=data.checklists.find(function(c){return c.id==ins.checklist_id;});return '<tr><td>'+ins.id+'</td><td>'+(equip?equip.name:'')+'</td><td>'+(checklist?checklist.name:'')+'</td><td>'+ins.status+'</td><td>'+ins.date+'</td><td>'+ins.responsible+'</td><td>'+ins.progress+'%</td></tr>';}).join('')+'</tbody></table></body></html>');
-    pw.document.close();pw.print();
-    showToast('PDF gerado!','success');
-  }
-}
+            <form id="event-form" onsubmit="handleSaveEvent(event)" class="bg-slate-900 p-5 md:p-8 rounded-xl border border-slate-800 space-y-6">
+                <input type="hidden" id="event-id" value="">
 
-// ===== HELPERS =====
-function populateSelects(){
-  var equipSelect=document.getElementById('inspectionEquipment');
-  var checklistSelect=document.getElementById('inspectionChecklist');
-  var reportEquip=document.getElementById('reportEquipment');
-  if(equipSelect){equipSelect.innerHTML='<option value="">Selecione...</option>'+data.equipment.map(function(e){return '<option value="'+e.id+'">'+e.code+' - '+e.name+'</option>';}).join('');}
-  if(checklistSelect){checklistSelect.innerHTML='<option value="">Selecione...</option>'+data.checklists.map(function(c){return '<option value="'+c.id+'">'+c.name+'</option>';}).join('');}
-  if(reportEquip){reportEquip.innerHTML='<option value="">Todos</option>'+data.equipment.map(function(e){return '<option value="'+e.id+'">'+e.code+' - '+e.name+'</option>';}).join('');}
-}
-function formatDate(dateStr){
-  if(!dateStr)return'-';
-  var d=new Date(dateStr);
-  if(isNaN(d))return dateStr;
-  return d.toLocaleDateString('pt-BR');
-}
-function openModal(id){document.getElementById(id).classList.add('active');}
-function closeModal(id){document.getElementById(id).classList.remove('active');}
-function showToast(message,type){
-  var container=document.getElementById('toastContainer');
-  var toast=document.createElement('div');
-  toast.className='toast '+(type||'');
-  var icon=type==='success'?'check-circle':type==='error'?'times-circle':'info-circle';
-  toast.innerHTML='<i class="fas fa-'+icon+'"></i> '+message;
-  container.appendChild(toast);
-  setTimeout(function(){toast.remove();},3000);
-}
-document.querySelectorAll('.modal-overlay').forEach(function(overlay){
-  overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.classList.remove('active');});
-});
-document.getElementById('loginPass').addEventListener('keypress',function(e){if(e.key==='Enter')doLogin();});
-</script>
+                <div class="border-b border-slate-800 pb-4">
+                    <h3 class="text-md font-semibold text-emerald-400 uppercase tracking-wider mb-4"><i class="fa-solid fa-user me-2"></i>Dados do Contratante (Cliente)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Nome Completo do Cliente *</label>
+                            <input type="text" id="inp-client-name" required placeholder="Ex: Bruna Nabais" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">CPF ou CNPJ *</label>
+                            <input type="text" id="inp-client-cpf" required placeholder="000.000.000-00" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Telefone / WhatsApp *</label>
+                            <input type="text" id="inp-client-phone" required placeholder="(14) 99999-9999" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">CEP (Busca Automática)</label>
+                            <div class="relative">
+                                <input type="text" id="inp-client-cep" placeholder="00000-000" onblur="fetchAddressByCEP()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
+                                <span id="cep-loading" class="hidden absolute right-3 top-3 text-xs text-emerald-400"><i class="fa-solid fa-spinner fa-spin"></i></span>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Endereço Residencial do Cliente</label>
+                            <input type="text" id="inp-client-address" placeholder="Rua, número, complemento, bairro, cidade - UF" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-b border-slate-800 pb-4">
+                    <h3 class="text-md font-semibold text-emerald-400 uppercase tracking-wider mb-4"><i class="fa-solid fa-calendar-check me-2"></i>Dados do Evento & Valores</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Data do Evento *</label>
+                            <input type="date" id="inp-event-date" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Local e Endereço do Evento *</label>
+                            <input type="text" id="inp-event-location" required placeholder="Ex: Spazio Vigonza, Marília - SP" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Duração Padrão (Horas)</label>
+                            <input type="number" id="inp-event-duration" value="6" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Hora Adicional (R$)</label>
+                            <input type="number" id="inp-event-extra-hour" value="150" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Valor Total (R$) *</label>
+                            <input type="number" step="0.01" id="inp-event-price" required placeholder="2100.00" oninput="autoCalculateDeposit()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Sinal / Entrada (20%)</label>
+                            <input type="number" step="0.01" id="inp-event-deposit" required placeholder="420.00" oninput="autoCalculateSaldo()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Saldo a Pagar (R$)</label>
+                            <input type="number" step="0.01" id="inp-event-saldo" readonly class="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-amber-400 font-bold text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-md font-semibold text-emerald-400 uppercase tracking-wider mb-4"><i class="fa-solid fa-sliders me-2"></i>Equipamentos, Serviços e Observações</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Equipamentos e Serviços Incluídos</label>
+                            <textarea id="inp-event-equipments" rows="3" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">Iluminação com PAR LED, 2 moving, 2 spider, máquina de fumaça, TV de LED 43, Pista de LED (preto com dourado), Microfone, Repertório personalizado, Montagem e desmontagem, Estrutura cerimônia, Som e suporte técnico.</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Observações Específicas / Cláusulas Especiais</label>
+                            <textarea id="inp-event-notes" rows="2" placeholder="Observações particulares deste evento..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-4 border-t border-slate-800">
+                    <button type="button" onclick="switchTab('eventos')" class="w-1/3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3 rounded-lg transition text-sm">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="w-2/3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-lg transition text-sm shadow-lg shadow-emerald-500/10">
+                        Salvar Evento e Ver Contrato
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- VISUALIZAR CONTRATO E ASSINATURAS -->
+        <section id="tab-contratos" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Visualização de Contrato & Assinaturas</h2>
+                    <p class="text-slate-400 text-sm">Confira os termos e recolha as assinaturas do Contratante e do DJ</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="editCurrentEventFromContract()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square"></i> Editar Evento
+                    </button>
+                    <button onclick="window.print()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-4 py-2.5 rounded-lg text-sm font-bold transition flex items-center gap-2">
+                        <i class="fa-solid fa-print"></i> Imprimir / Salvar PDF
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 p-6 md:p-10 rounded-xl border border-slate-800 print-card space-y-6">
+                <div id="contract-render-view" class="contract-text text-slate-200 text-sm leading-relaxed">
+                    <p class="text-slate-500 text-center italic py-8">Nenhum evento selecionado para visualização de contrato.</p>
+                </div>
+
+                <!-- ASSINATURAS LADO A LADO -->
+                <div class="mt-8 pt-6 border-t border-slate-800 space-y-4">
+                    <h3 class="text-md font-bold text-emerald-400 uppercase tracking-wider">Assinaturas Digitais (Contratante & DJ)</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- PAINEL ASSINATURA CLIENTE -->
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                            <h4 class="text-xs font-semibold text-slate-300 uppercase">1. Assinatura do Contratante (Cliente)</h4>
+                            
+                            <div id="client-existing-sig-box" class="hidden space-y-2">
+                                <div class="border border-slate-700 rounded bg-slate-900 p-3 text-center">
+                                    <img id="img-client-signature" src="" alt="Assinatura Contratante" class="max-h-24 mx-auto">
+                                    <div class="border-t border-slate-700 pt-1 mt-2 text-xs text-slate-300 font-semibold" id="sig-client-printed-name"></div>
+                                </div>
+                                <button onclick="reopenSignaturePad('client')" class="no-print text-xs text-amber-400 hover:underline">Refazer Assinatura</button>
+                            </div>
+
+                            <div id="client-new-sig-box" class="no-print space-y-2">
+                                <div class="canvas-container">
+                                    <canvas id="signature-pad-client" width="400" height="130" class="w-full touch-none cursor-crosshair rounded-lg"></canvas>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button type="button" onclick="clearSignaturePad('client')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-3 py-1.5 rounded">Limpar</button>
+                                    <button type="button" onclick="saveSignature('client')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold px-3 py-1.5 rounded">Salvar Assinatura Cliente</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PAINEL ASSINATURA DJ -->
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                            <h4 class="text-xs font-semibold text-slate-300 uppercase">2. Assinatura do Contratado (DJ BROW)</h4>
+                            
+                            <div id="dj-existing-sig-box" class="hidden space-y-2">
+                                <div class="border border-slate-700 rounded bg-slate-900 p-3 text-center">
+                                    <img id="img-dj-signature" src="" alt="Assinatura DJ" class="max-h-24 mx-auto">
+                                    <div class="border-t border-slate-700 pt-1 mt-2 text-xs text-slate-300 font-semibold" id="sig-dj-printed-name"></div>
+                                </div>
+                                <button onclick="reopenSignaturePad('dj')" class="no-print text-xs text-amber-400 hover:underline">Refazer Assinatura</button>
+                            </div>
+
+                            <div id="dj-new-sig-box" class="no-print space-y-2">
+                                <div class="canvas-container">
+                                    <canvas id="signature-pad-dj" width="400" height="130" class="w-full touch-none cursor-crosshair rounded-lg"></canvas>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button type="button" onclick="clearSignaturePad('dj')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-3 py-1.5 rounded">Limpar</button>
+                                    <button type="button" onclick="saveSignature('dj')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold px-3 py-1.5 rounded">Salvar Assinatura DJ</button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Aviso legal de segurança da assinatura -->
+                    <p class="text-[11px] text-slate-500 italic mt-4 no-print">
+                        * Nota de Transparência: As assinaturas digitais desenhadas nesta aplicação representam a manifestação de concordância entre as partes para este orçamento, porém não substituem por si só plataformas de assinatura eletrônica corporativa com validação de certificados digitais.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PERFIL & EMPRESA -->
+        <section id="tab-perfil" class="space-y-6 hidden">
+            <div>
+                <h2 class="text-2xl font-bold text-white">Dados do DJ & Empresa</h2>
+                <p class="text-slate-400 text-sm">Configure seus dados padrão para os contratos</p>
+            </div>
+
+            <form onsubmit="handleSaveProfile(event)" class="bg-slate-900 p-6 md:p-8 rounded-xl border border-slate-800 max-w-2xl space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Nome Artístico / Empresa *</label>
+                    <input type="text" id="cfg-company-name" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Nome Completo do Responsável *</label>
+                    <input type="text" id="cfg-user-name" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">CPF do Responsável *</label>
+                        <input type="text" id="cfg-user-cpf" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Telefone / WhatsApp *</label>
+                        <input type="text" id="cfg-user-phone" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Endereço Comercial / Residencial</label>
+                    <input type="text" id="cfg-user-address" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm">
+                </div>
+                <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-6 py-3 rounded-lg transition text-sm">
+                    Salvar Dados do Perfil
+                </button>
+            </form>
+        </section>
+
+        <!-- MODELO DE CONTRATO EDITÁVEL -->
+        <section id="tab-modelo-contrato" class="space-y-6 hidden">
+            <div>
+                <h2 class="text-2xl font-bold text-white">Modelo Padrão de Contrato</h2>
+                <p class="text-slate-400 text-sm">Edite o texto base utilizado para gerar os novos contratos</p>
+            </div>
+
+            <div class="bg-slate-900 p-6 md:p-8 rounded-xl border border-slate-800 space-y-4">
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs text-slate-400 space-y-1">
+                    <p class="font-bold text-emerald-400">Variáveis Automáticas Disponíveis:</p>
+                    <p><code class="text-emerald-300">{{NOME_CLIENTE}}</code>, <code class="text-emerald-300">{{CPF_CLIENTE}}</code>, <code class="text-emerald-300">{{FONE_CLIENTE}}</code>, <code class="text-emerald-300">{{CEP_CLIENTE}}</code>, <code class="text-emerald-300">{{ENDERECO_CLIENTE}}</code>, <code class="text-emerald-300">{{DATA_EVENTO}}</code>, <code class="text-emerald-300">{{LOCAL_EVENTO}}</code>, <code class="text-emerald-300">{{DURACAO}}</code>, <code class="text-emerald-300">{{VALOR_EXTRA}}</code>, <code class="text-emerald-300">{{VALOR_TOTAL}}</code>, <code class="text-emerald-300">{{ENTRADA}}</code>, <code class="text-emerald-300">{{SALDO}}</code>, <code class="text-emerald-300">{{EQUIPAMENTOS}}</code>, <code class="text-emerald-300">{{OBSERVACOES}}</code>, <code class="text-emerald-300">{{NOME_DJ}}</code>, <code class="text-emerald-300">{{CPF_DJ}}</code>, <code class="text-emerald-300">{{FONE_DJ}}</code>, <code class="text-emerald-300">{{ENDERECO_DJ}}</code></p>
+                </div>
+
+                <textarea id="contract-template" rows="18" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-4 text-slate-200 font-mono text-xs leading-relaxed focus:border-emerald-500 focus:outline-none"></textarea>
+
+                <div class="flex gap-4">
+                    <button onclick="restoreDefaultContractTemplate()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2.5 rounded-lg transition text-sm">
+                        Restaurar Padrão DJ BROW
+                    </button>
+                    <button onclick="handleSaveContractTemplate()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-6 py-2.5 rounded-lg transition text-sm">
+                        Salvar Novo Modelo Padrão
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- BACKUP & SEGURANÇA -->
+        <section id="tab-backup" class="space-y-6 hidden">
+            <div>
+                <h2 class="text-2xl font-bold text-white">Backup e Segurança dos Dados</h2>
+                <p class="text-slate-400 text-sm">Exporte cópias de segurança ou restaure seus eventos salvos</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- EXPORTAR -->
+                <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-download text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white">Exportar Backup Completo</h3>
+                            <p class="text-xs text-slate-400">Gere um arquivo JSON com todos los eventos, perfil e modelo de contrato</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Recomendamos exportar o backup regularmente para salvar em seu computador, celular ou enviar por e-mail/WhatsApp.
+                    </p>
+                    <button onclick="exportBackupData()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-lg transition text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-export"></i> Baixar Arquivo de Backup (.json)
+                    </button>
+                </div>
+
+                <!-- IMPORTAR -->
+                <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-upload text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white">Restaurar Backup</h3>
+                            <p class="text-xs text-slate-400">Importe um arquivo JSON salvo anteriormente</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-amber-300/80 leading-relaxed bg-amber-950/30 p-2.5 rounded border border-amber-800/30">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i> Atenção: A importação irá substituir todos os dados atuais do aplicativo pelos dados do arquivo selecionado.
+                    </p>
+                    <input type="file" id="backup-file-input" accept=".json" class="hidden" onchange="processImportBackup(event)">
+                    <button onclick="document.getElementById('backup-file-input').click()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-lg transition text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-import"></i> Selecionar Arquivo para Importar
+                    </button>
+                </div>
+            </div>
+
+            <!-- INFORMAÇÃO IMPORTANTE DE ARMAZENAMENTO LOCAL -->
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1">
+                <p class="font-bold text-slate-300"><i class="fa-solid fa-shield-halved text-emerald-400 me-1"></i> Informação Importante sobre Armazenamento Local:</p>
+                <p>Este aplicativo armazena todas as informações diretamente na memória local do seu navegador (LocalStorage). Não há sincronização automática em nuvem nem servidor externo acessando seus dados. Para utilizar em outro aparelho ou manter os dados seguros contra limpeza de dados do navegador, utilize sempre a função de <strong>Exportar Backup</strong>.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- SCRIPT DO APLICATIVO -->
+    <script>
+        // --- TEXTO PADRÃO DO CONTRATO DJ BROW ---
+        const defaultContractText = `CONTRATO DJ BROW
+PRESTAÇÃO DE SERVIÇOS ARTÍSTICOS DE DJ - CASAMENTOS E ANIVERSÁRIOS
+
+CONTRATANTE: {{NOME_CLIENTE}}, CPF/CNPJ nº {{CPF_CLIENTE}}, residente e domiciliado à {{ENDERECO_CLIENTE}}, CEP {{CEP_CLIENTE}}, telefone/WhatsApp {{FONE_CLIENTE}}.
+
+CONTRATADO: {{NOME_DJ}}, CPF nº {{CPF_DJ}}, residente e domiciliado à {{ENDERECO_DJ}}, Telefone/WhatsApp {{FONE_DJ}}.
+
+CLÁUSULA 1ª - DO EVENTO E DO SERVIÇO
+O CONTRATADO prestará serviços profissionais de DJ no evento do CONTRATANTE, em {{DATA_EVENTO}}, no local {{LOCAL_EVENTO}}, com duração de até {{DURACAO}} horas. O CONTRATADO terá autonomia profissional para selecionar e organizar o repertório durante a festa, podendo adaptá-lo ao perfil e à reação dos convidados.
+
+CLÁUSULA 2ª - DOS EQUIPAMENTOS E SERVIÇOS INCLUÍDOS
+Fazem parte desta contratação somente os itens discriminados:
+{{EQUIPAMENTOS}}
+
+CLÁUSULA 3ª - DO VALOR E PAGAMENTO
+O valor total da contratação será de R$ {{VALOR_TOTAL}}. No ato da assinatura, o CONTRATANTE pagará 20%, correspondente a R$ {{ENTRADA}}, confirmando a contratação e a reserva da data. O saldo de R$ {{SALDO}} deverá ser pago até 07 dias antes do evento. Forma de pagamento: PIX (Chave PIX: {{CPF_DJ}}).
+
+CLÁUSULA 4ª - DO CANCELAMENTO E DO SINAL
+Em caso de cancelamento por iniciativa do CONTRATANTE, sem culpa do CONTRATADO, o valor pago para reserva da data poderá ser retido, observadas a legislação aplicável e as circunstâncias do cancelamento. O CONTRATADO poderá considerar os custos já assumidos e a indisponibilidade da data.
+
+CLÁUSULA 5ª - DA REMARCAÇÃO
+O CONTRATANTE poderá solicitar a remarcação do evento, preferencialmente com antecedência mínima de 30 dias. A remarcação estará condicionada à disponibilidade do CONTRATADO.
+
+CLÁUSULA 6ª - DOS ATRASOS E DAS HORAS EXTRAS
+O período contratado é de {{DURACAO}} horas. Permanência após o horário contratado dependerá da disponibilidade do DJ e será cobrada à parte no valor de R$ {{VALOR_EXTRA}} por hora adicional.
+
+CLÁUSULA 7ª - DA ESTRUTURA, ENERGIA E SEGURANÇA
+O CONTRATANTE deverá disponibilizar local adequado e seguro para instalação dos equipamentos, bem como energia elétrica compatível. Danos causados aos equipamentos por convidados ou terceiros serão de responsabilidade de quem os causar.
+
+CLÁUSULA 8ª - DE EVENTOS AO AR LIVRE E FORÇA MAIOR
+Em áreas externas, o CONTRATANTE deverá disponibilizar cobertura adequada contra chuva e sol excessivo. Em situações de força maior ou caso fortuito, as partes deverão priorizar a remarcação.
+
+CLÁUSULA 9ª - DA ALIMENTAÇÃO
+O CONTRATANTE deverá fornecer alimentação e água ao CONTRATADO durante o período de trabalho.
+
+CLÁUSULA 10ª - DA ASSINATURA DIGITAL E DISPOSIÇÕES FINAIS
+As partes reconhecem como válida a assinatura eletrônica ou digital deste contrato.
+
+OBSERVAÇÕES ADICIONAIS:
+{{OBSERVACOES}}`;
+
+        // --- ESTADO GLOBAL DA APLICAÇÃO ---
+        let eventsState = [];
+        let profileState = {
+            companyName: 'DJ BROW Eventos',
+            userName: 'Marcelo da Cruz',
+            userCpf: '20005063809',
+            userPhone: '14997504876',
+            userAddress: 'Avenida São João 195'
+        };
+        let contractTemplateState = defaultContractText;
+        let activeEventId = null;
+
+        // --- PREVENÇÃO DE XSS ---
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // --- INICIALIZAÇÃO ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            setupSignaturePads();
+            renderDashboard();
+            renderEventsList();
+        });
+
+        // --- CONSULTA VIA CEP ---
+        async function fetchAddressByCEP() {
+            const cepInput = document.getElementById('inp-client-cep');
+            const addressInput = document.getElementById('inp-client-address');
+            const loadingSpan = document.getElementById('cep-loading');
+            const cep = cepInput.value.replace(/\D/g, '');
+
+            if (cep.length !== 8) return;
+
+            loadingSpan.classList.remove('hidden');
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const data = await response.json();
+
+                if (!data.erro) {
+                    addressInput.value = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
+                }
+            } catch (err) {
+                console.log("Erro ao buscar CEP:", err);
+            } finally {
+                loadingSpan.classList.add('hidden');
+            }
+        }
+
+        // --- GERENCIAMENTO DE STORAGE ---
+        function loadFromLocalStorage() {
+            try {
+                const storedEvents = localStorage.getItem('djbrow_events');
+                if (storedEvents) eventsState = JSON.parse(storedEvents);
+
+                const storedProfile = localStorage.getItem('djbrow_profile');
+                if (storedProfile) profileState = JSON.parse(storedProfile);
+
+                const storedTemplate = localStorage.getItem('djbrow_template');
+                if (storedTemplate) contractTemplateState = storedTemplate;
+
+                document.getElementById('cfg-company-name').value = profileState.companyName || '';
+                document.getElementById('cfg-user-name').value = profileState.userName || '';
+                document.getElementById('cfg-user-cpf').value = profileState.userCpf || '';
+                document.getElementById('cfg-user-phone').value = profileState.userPhone || '';
+                document.getElementById('cfg-user-address').value = profileState.userAddress || '';
+
+                document.getElementById('contract-template').value = contractTemplateState;
+                updateSidebarProfile();
+            } catch (err) {
+                console.error("Erro ao carregar do LocalStorage:", err);
+            }
+        }
+
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('djbrow_events', JSON.stringify(eventsState));
+                localStorage.setItem('djbrow_profile', JSON.stringify(profileState));
+                localStorage.setItem('djbrow_template', contractTemplateState);
+            } catch (err) {
+                console.error("Erro ao salvar no LocalStorage:", err);
+            }
+        }
+
+        function updateSidebarProfile() {
+            document.getElementById('sidebar-company-name').innerText = profileState.companyName || 'DJ BROW Eventos';
+            document.getElementById('sidebar-user-name').innerText = profileState.userName || 'Marcelo da Cruz';
+            const initials = (profileState.userName || 'DJ').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            document.getElementById('sidebar-initials').innerText = initials;
+        }
+
+        function switchTab(tabId) {
+            const tabs = ['dashboard', 'eventos', 'proposta', 'contratos', 'perfil', 'modelo-contrato', 'backup'];
+            tabs.forEach(id => {
+                const sec = document.getElementById(`tab-${id}`);
+                const btn = document.getElementById(`btn-tab-${id}`);
+                if (sec) sec.classList.add('hidden');
+                if (btn) btn.classList.remove('active');
+            });
+
+            const targetSec = document.getElementById(`tab-${tabId}`);
+            const targetBtn = document.getElementById(`btn-tab-${tabId}`);
+            if (targetSec) targetSec.classList.remove('hidden');
+            if (targetBtn) targetBtn.classList.add('active');
+
+            if (tabId === 'dashboard') renderDashboard();
+            if (tabId === 'eventos') renderEventsList();
+        }
+
+        function formatCurrency(val) {
+            const num = parseFloat(val) || 0;
+            return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function formatDateBR(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            return dateStr;
+        }
+
+        function autoCalculateDeposit() {
+            const price = parseFloat(document.getElementById('inp-event-price').value) || 0;
+            const deposit = price * 0.20;
+            document.getElementById('inp-event-deposit').value = deposit.toFixed(2);
+            autoCalculateSaldo();
+        }
+
+        function autoCalculateSaldo() {
+            const price = parseFloat(document.getElementById('inp-event-price').value) || 0;
+            const deposit = parseFloat(document.getElementById('inp-event-deposit').value) || 0;
+            const saldo = Math.max(0, price - deposit);
+            document.getElementById('inp-event-saldo').value = saldo.toFixed(2);
+        }
+
+        function renderDashboard() {
+            document.getElementById('dash-total-events').innerText = eventsState.length;
+            const totalVal = eventsState.reduce((acc, ev) => acc + (parseFloat(ev.price) || 0), 0);
+            const pendingVal = eventsState.reduce((acc, ev) => acc + (parseFloat(ev.saldo) || 0), 0);
+
+            document.getElementById('dash-total-value').innerText = formatCurrency(totalVal);
+            document.getElementById('dash-pending-value').innerText = formatCurrency(pendingVal);
+
+            const listEl = document.getElementById('dash-events-list');
+            listEl.innerHTML = '';
+
+            if (eventsState.length === 0) {
+                listEl.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-500 italic">Nenhum evento cadastrado até o momento.</td></tr>`;
+                return;
+            }
+
+            const sorted = [...eventsState].sort((a, b) => new Date(a.date) - new Date(b.date));
+            sorted.slice(0, 5).forEach(ev => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/40 transition';
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-white">${escapeHTML(formatDateBR(ev.date))}</td>
+                    <td class="p-3 font-medium text-slate-200">${escapeHTML(ev.clientName)}</td>
+                    <td class="p-3 text-slate-400 truncate max-w-xs">${escapeHTML(ev.location)}</td>
+                    <td class="p-3 text-emerald-400 font-semibold">${formatCurrency(ev.price)}</td>
+                    <td class="p-3 text-amber-400 font-semibold">${formatCurrency(ev.saldo)}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="viewEventContract('${ev.id}')" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded text-xs font-semibold">Ver Contrato</button>
+                    </td>
+                `;
+                listEl.appendChild(tr);
+            });
+        }
+
+        function renderEventsList() {
+            const listEl = document.getElementById('full-events-list');
+            listEl.innerHTML = '';
+
+            if (eventsState.length === 0) {
+                listEl.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500 italic">Nenhum evento encontrado. Clique em "Novo Evento" para cadastrar.</td></tr>`;
+                return;
+            }
+
+            eventsState.forEach(ev => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/40 transition';
+                const hasSig = !!ev.signatureClient && !!ev.signatureDj;
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-white">${escapeHTML(ev.clientName)}</td>
+                    <td class="p-3 text-slate-300">${escapeHTML(formatDateBR(ev.date))}</td>
+                    <td class="p-3 text-slate-400">${escapeHTML(ev.clientPhone)}</td>
+                    <td class="p-3 text-emerald-400 font-semibold">${formatCurrency(ev.price)}</td>
+                    <td class="p-3">
+                        ${hasSig ? '<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-semibold"><i class="fa-solid fa-check me-1"></i> Assinado (Ambos)</span>' : '<span class="bg-amber-500/20 text-amber-400 text-xs px-2.5 py-1 rounded-full font-semibold">Pendente Assinatura</span>'}
+                    </td>
+                    <td class="p-3 text-right space-x-2">
+                        <button onclick="viewEventContract('${ev.id}')" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 p-2 rounded transition" title="Ver/Imprimir Contrato"><i class="fa-solid fa-file-contract"></i></button>
+                        <button onclick="editEvent('${ev.id}')" class="bg-slate-800 hover:bg-slate-700 text-blue-400 p-2 rounded transition" title="Editar Evento"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteEvent('${ev.id}')" class="bg-slate-800 hover:bg-slate-700 text-rose-400 p-2 rounded transition" title="Excluir Evento"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                listEl.appendChild(tr);
+            });
+        }
+
+        function prepareNewEvent() {
+            activeEventId = null;
+            document.getElementById('form-title').innerText = 'Cadastrar Novo Evento';
+            document.getElementById('event-id').value = '';
+            document.getElementById('event-form').reset();
+            document.getElementById('inp-event-duration').value = '6';
+            document.getElementById('inp-event-extra-hour').value = '150';
+            document.getElementById('inp-event-equipments').value = 'Iluminação com PAR LED, 2 moving, 2 spider, máquina de fumaça, TV de LED 43, Pista de LED (preto com dourado), Microfone, Repertório personalizado, Montagem e desmontagem, Estrutura cerimônia, Som e suporte técnico.';
+            switchTab('proposta');
+        }
+
+        function handleSaveEvent(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('inp-client-name').value.trim();
+            const cpf = document.getElementById('inp-client-cpf').value.trim();
+            const phone = document.getElementById('inp-client-phone').value.trim();
+            const cep = document.getElementById('inp-client-cep').value.trim();
+            const clientAddress = document.getElementById('inp-client-address').value.trim();
+            const date = document.getElementById('inp-event-date').value;
+            const location = document.getElementById('inp-event-location').value.trim();
+            const duration = document.getElementById('inp-event-duration').value;
+            const extraHour = document.getElementById('inp-event-extra-hour').value;
+            const price = parseFloat(document.getElementById('inp-event-price').value) || 0;
+            const deposit = parseFloat(document.getElementById('inp-event-deposit').value) || 0;
+            const saldo = Math.max(0, price - deposit);
+            const equipments = document.getElementById('inp-event-equipments').value.trim();
+            const notes = document.getElementById('inp-event-notes').value.trim();
+            const existingId = document.getElementById('event-id').value;
+
+            if (!name || !cpf || !phone || !date || !location || price <= 0) {
+                alert("Por favor, preencha todos os campos obrigatórios corretamente.");
+                return;
+            }
+
+            if (existingId) {
+                const idx = eventsState.findIndex(ev => ev.id === existingId);
+                if (idx !== -1) {
+                    eventsState[idx] = {
+                        ...eventsState[idx],
+                        clientName: name,
+                        clientCpf: cpf,
+                        clientPhone: phone,
+                        clientCep: cep,
+                        clientAddress: clientAddress,
+                        date: date,
+                        location: location,
+                        duration: duration,
+                        extraHour: extraHour,
+                        price: price,
+                        deposit: deposit,
+                        saldo: saldo,
+                        equipments: equipments,
+                        notes: notes
+                    };
+                    activeEventId = existingId;
+                }
+            } else {
+                const newId = 'ev_' + Date.now();
+                const newEvent = {
+                    id: newId,
+                    clientName: name,
+                    clientCpf: cpf,
+                    clientPhone: phone,
+                    clientCep: cep,
+                    clientAddress: clientAddress,
+                    date: date,
+                    location: location,
+                    duration: duration,
+                    extraHour: extraHour,
+                    price: price,
+                    deposit: deposit,
+                    saldo: saldo,
+                    equipments: equipments,
+                    notes: notes,
+                    signatureClient: null,
+                    signatureDj: null
+                };
+                eventsState.push(newEvent);
+                activeEventId = newId;
+            }
+
+            saveToLocalStorage();
+            viewEventContract(activeEventId);
+        }
+
+        function editEvent(id) {
+            const ev = eventsState.find(e => e.id === id);
+            if (!ev) return;
+
+            activeEventId = id;
+            document.getElementById('form-title').innerText = 'Editar Evento';
+            document.getElementById('event-id').value = ev.id;
+            document.getElementById('inp-client-name').value = ev.clientName;
+            document.getElementById('inp-client-cpf').value = ev.clientCpf;
+            document.getElementById('inp-client-phone').value = ev.clientPhone;
+            document.getElementById('inp-client-cep').value = ev.clientCep || '';
+            document.getElementById('inp-client-address').value = ev.clientAddress || '';
+            document.getElementById('inp-event-date').value = ev.date;
+            document.getElementById('inp-event-location').value = ev.location;
+            document.getElementById('inp-event-duration').value = ev.duration || '6';
+            document.getElementById('inp-event-extra-hour').value = ev.extraHour || '150';
+            document.getElementById('inp-event-price').value = ev.price;
+            document.getElementById('inp-event-deposit').value = ev.deposit;
+            document.getElementById('inp-event-saldo').value = ev.saldo;
+            document.getElementById('inp-event-equipments').value = ev.equipments || '';
+            document.getElementById('inp-event-notes').value = ev.notes || '';
+
+            switchTab('proposta');
+        }
+
+        function editCurrentEventFromContract() {
+            if (activeEventId) editEvent(activeEventId);
+        }
+
+        function deleteEvent(id) {
+            const ev = eventsState.find(e => e.id === id);
+            if (!ev) return;
+
+            if (confirm(`Tem certeza que deseja excluir permanentemente o evento do cliente "${ev.clientName}"?`)) {
+                eventsState = eventsState.filter(e => e.id !== id);
+                if (activeEventId === id) activeEventId = null;
+                saveToLocalStorage();
+                renderDashboard();
+                renderEventsList();
+            }
+        }
+
+        function viewEventContract(id) {
+            const ev = eventsState.find(e => e.id === id);
+            if (!ev) {
+                alert("Evento não encontrado.");
+                return;
+            }
+            activeEventId = id;
+
+            let text = contractTemplateState;
+            text = text.replace(/{{NOME_CLIENTE}}/g, escapeHTML(ev.clientName))
+                       .replace(/{{CPF_CLIENTE}}/g, escapeHTML(ev.clientCpf))
+                       .replace(/{{FONE_CLIENTE}}/g, escapeHTML(ev.clientPhone))
+                       .replace(/{{CEP_CLIENTE}}/g, escapeHTML(ev.clientCep || 'Não informado'))
+                       .replace(/{{ENDERECO_CLIENTE}}/g, escapeHTML(ev.clientAddress || 'Não informado'))
+                       .replace(/{{DATA_EVENTO}}/g, escapeHTML(formatDateBR(ev.date)))
+                       .replace(/{{LOCAL_EVENTO}}/g, escapeHTML(ev.location))
+                       .replace(/{{DURACAO}}/g, escapeHTML(ev.duration || '6'))
+                       .replace(/{{VALOR_EXTRA}}/g, escapeHTML(ev.extraHour || '150'))
+                       .replace(/{{VALOR_TOTAL}}/g, formatCurrency(ev.price))
+                       .replace(/{{ENTRADA}}/g, formatCurrency(ev.deposit))
+                       .replace(/{{SALDO}}/g, formatCurrency(ev.saldo))
+                       .replace(/{{EQUIPAMENTOS}}/g, escapeHTML(ev.equipments))
+                       .replace(/{{OBSERVACOES}}/g, escapeHTML(ev.notes || 'Nenhuma.'))
+                       .replace(/{{NOME_DJ}}/g, escapeHTML(profileState.userName))
+                       .replace(/{{CPF_DJ}}/g, escapeHTML(profileState.userCpf))
+                       .replace(/{{FONE_DJ}}/g, escapeHTML(profileState.userPhone))
+                       .replace(/{{ENDERECO_DJ}}/g, escapeHTML(profileState.userAddress || ''));
+
+            document.getElementById('contract-render-view').innerText = text;
+
+            // Gerencia assinaturas
+            const clientExisting = document.getElementById('client-existing-sig-box');
+            const clientNew = document.getElementById('client-new-sig-box');
+            const clientImg = document.getElementById('img-client-signature');
+            const clientPrinted = document.getElementById('sig-client-printed-name');
+
+            if (ev.signatureClient) {
+                clientImg.src = ev.signatureClient;
+                clientPrinted.innerText = `${ev.clientName} (${ev.clientCpf})`;
+                clientExisting.classList.remove('hidden');
+                clientNew.classList.add('hidden');
+            } else {
+                clientExisting.classList.add('hidden');
+                clientNew.classList.remove('hidden');
+                clearSignaturePad('client');
+            }
+
+            const djExisting = document.getElementById('dj-existing-sig-box');
+            const djNew = document.getElementById('dj-new-sig-box');
+            const djImg = document.getElementById('img-dj-signature');
+            const djPrinted = document.getElementById('sig-dj-printed-name');
+
+            if (ev.signatureDj) {
+                djImg.src = ev.signatureDj;
+                djPrinted.innerText = `${profileState.userName} (DJ BROW)`;
+                djExisting.classList.remove('hidden');
+                djNew.classList.add('hidden');
+            } else {
+                djExisting.classList.add('hidden');
+                djNew.classList.remove('hidden');
+                clearSignaturePad('dj');
+            }
+
+            switchTab('contratos');
+        }
+
+        // --- ASSINATURAS CANVAS DUPLAS ---
+        let canvases = {};
+        let ctxs = {};
+        let isDrawingState = {};
+
+        function setupSignaturePads() {
+            ['client', 'dj'].forEach(role => {
+                const canvas = document.getElementById(`signature-pad-${role}`);
+                if (!canvas) return;
+                canvases[role] = canvas;
+                ctxs[role] = canvas.getContext('2d');
+                isDrawingState[role] = false;
+
+                function getPos(e) {
+                    const rect = canvas.getBoundingClientRect();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    return {
+                        x: (clientX - rect.left) * (canvas.width / rect.width),
+                        y: (clientY - rect.top) * (canvas.height / rect.height)
+                    };
+                }
+
+                function start(e) { isDrawingState[role] = true; draw(e); }
+                function stop() { isDrawingState[role] = false; ctxs[role].beginPath(); }
+                function draw(e) {
+                    if (!isDrawingState[role]) return;
+                    e.preventDefault();
+                    const pos = getPos(e);
+                    ctxs[role].lineWidth = 2.5;
+                    ctxs[role].lineCap = 'round';
+                    ctxs[role].strokeStyle = role === 'client' ? '#10b981' : '#3b82f6';
+                    ctxs[role].lineTo(pos.x, pos.y);
+                    ctxs[role].stroke();
+                    ctxs[role].beginPath();
+                    ctxs[role].moveTo(pos.x, pos.y);
+                }
+
+                canvas.addEventListener('mousedown', start);
+                canvas.addEventListener('mouseup', stop);
+                canvas.addEventListener('mousemove', draw);
+                canvas.addEventListener('mouseleave', stop);
+
+                canvas.addEventListener('touchstart', start, { passive: false });
+                canvas.addEventListener('touchend', stop);
+                canvas.addEventListener('touchmove', draw, { passive: false });
+            });
+        }
+
+        function clearSignaturePad(role) {
+            if (ctxs[role] && canvases[role]) {
+                ctxs[role].clearRect(0, 0, canvases[role].width, canvases[role].height);
+            }
+        }
+
+        function saveSignature(role) {
+            if (!activeEventId) {
+                alert("Selecione ou crie um evento antes de assinar.");
+                return;
+            }
+
+            const dataUrl = canvases[role].toDataURL('image/png');
+            const idx = eventsState.findIndex(e => e.id === activeEventId);
+            if (idx !== -1) {
+                if (role === 'client') {
+                    eventsState[idx].signatureClient = dataUrl;
+                } else {
+                    eventsState[idx].signatureDj = dataUrl;
+                }
+                saveToLocalStorage();
+                alert(`Assinatura do ${role === 'client' ? 'Contratante' : 'DJ'} salva com sucesso!`);
+                viewEventContract(activeEventId);
+                renderEventsList();
+            }
+        }
+
+        function reopenSignaturePad(role) {
+            if (role === 'client') {
+                document.getElementById('client-existing-sig-box').classList.add('hidden');
+                document.getElementById('client-new-sig-box').classList.remove('hidden');
+                clearSignaturePad('client');
+            } else {
+                document.getElementById('dj-existing-sig-box').classList.add('hidden');
+                document.getElementById('dj-new-sig-box').classList.remove('hidden');
+                clearSignaturePad('dj');
+            }
+        }
+
+        function handleSaveProfile(e) {
+            e.preventDefault();
+            profileState.companyName = document.getElementById('cfg-company-name').value.trim();
+            profileState.userName = document.getElementById('cfg-user-name').value.trim();
+            profileState.userCpf = document.getElementById('cfg-user-cpf').value.trim();
+            profileState.userPhone = document.getElementById('cfg-user-phone').value.trim();
+            profileState.userAddress = document.getElementById('cfg-user-address').value.trim();
+
+            saveToLocalStorage();
+            updateSidebarProfile();
+            alert("Dados do perfil atualizados com sucesso!");
+        }
+
+        function handleSaveContractTemplate() {
+            contractTemplateState = document.getElementById('contract-template').value;
+            saveToLocalStorage();
+            alert("Modelo padrão de contrato atualizado!");
+        }
+
+        function restoreDefaultContractTemplate() {
+            if (confirm("Deseja restaurar o modelo de contrato padrão original do DJ BROW?")) {
+                contractTemplateState = defaultContractText;
+                document.getElementById('contract-template').value = defaultContractText;
+                saveToLocalStorage();
+                alert("Modelo restaurado para o padrão oficial.");
+            }
+        }
+
+        function exportBackupData() {
+            const dataStr = JSON.stringify({
+                version: "1.3",
+                exportDate: new Date().toISOString(),
+                events: eventsState,
+                profile: profileState,
+                contractTemplate: contractTemplateState
+            }, null, 2);
+
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `DJ_BROW_Backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function processImportBackup(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const imported = JSON.parse(evt.target.result);
+                    if (!imported || typeof imported !== 'object' || !Array.isArray(imported.events)) {
+                        alert("Erro: O arquivo selecionado não é um backup válido do aplicativo DJ BROW.");
+                        return;
+                    }
+
+                    if (confirm(`Atenção: Este backup contém ${imported.events.length} evento(s). Deseja substituir os dados atuais pelos dados deste arquivo?`)) {
+                        eventsState = imported.events || [];
+                        profileState = imported.profile || profileState;
+                        contractTemplateState = imported.contractTemplate || defaultContractText;
+
+                        saveToLocalStorage();
+                        loadFromLocalStorage();
+                        renderDashboard();
+                        renderEventsList();
+                        alert("Backup restaurado com sucesso!");
+                    }
+                } catch (err) {
+                    alert("Erro ao ler o arquivo de backup.");
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
 </body>
 </html>
