@@ -180,6 +180,7 @@
                                 <th class="p-3 rounded-l-lg">Data</th>
                                 <th class="p-3">Cliente</th>
                                 <th class="p-3">Local</th>
+                                <th class="p-3">Status</th>
                                 <th class="p-3">Valor Total</th>
                                 <th class="p-3">Saldo</th>
                                 <th class="p-3 text-right rounded-r-lg">Ação</th>
@@ -210,9 +211,9 @@
                             <tr>
                                 <th class="p-3 rounded-l-lg">Cliente</th>
                                 <th class="p-3">Data</th>
-                                <th class="p-3">Telefone</th>
+                                <th class="p-3">Status</th>
                                 <th class="p-3">Valor Total</th>
-                                <th class="p-3">Status Assinatura</th>
+                                <th class="p-3">Assinaturas</th>
                                 <th class="p-3 text-right rounded-r-lg">Ações</th>
                             </tr>
                         </thead>
@@ -278,6 +279,17 @@
                             <input type="text" id="inp-event-location" required placeholder="Ex: Spazio Vigonza, Marília - SP" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
                         </div>
                         <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Status do Evento</label>
+                            <select id="inp-event-status" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
+                                <option value="Proposta enviada">Proposta enviada</option>
+                                <option value="Em negociação">Em negociação</option>
+                                <option value="Aguardando assinatura">Aguardando assinatura</option>
+                                <option value="Confirmado">Confirmado</option>
+                                <option value="Realizado">Realizado</option>
+                                <option value="Cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                        <div>
                             <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Duração (Horas) *</label>
                             <input type="number" id="inp-event-duration" value="6" required oninput="calculateEndTime()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
                         </div>
@@ -295,11 +307,11 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Valor Total (R$) *</label>
-                            <input type="number" step="0.01" id="inp-event-price" required placeholder="2100.00" oninput="autoCalculateDeposit()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
+                            <input type="number" step="0.01" id="inp-event-price" required placeholder="1800.00" oninput="autoCalculateDeposit()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Sinal / Entrada (20%)</label>
-                            <input type="number" step="0.01" id="inp-event-deposit" required placeholder="420.00" oninput="autoCalculateSaldo()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
+                            <input type="number" step="0.01" id="inp-event-deposit" required placeholder="360.00" oninput="autoCalculateSaldo()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Saldo Devedor Calculado (R$)</label>
@@ -335,7 +347,7 @@
 
         <!-- VISUALIZAR CONTRATO E ASSINATURAS -->
         <section id="tab-contratos" class="space-y-6 hidden">
-            <!-- BARRA DE AÇÕES ADMINISTRATIVAS DO DJ -->
+            <!-- BARRA DE AÇÕES DO DJ -->
             <div id="dj-contract-actions" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
                 <div>
                     <h2 class="text-2xl font-bold text-white">Visualização de Contrato & Assinaturas</h2>
@@ -388,11 +400,10 @@
                             </div>
                         </div>
 
-                        <!-- PAINEL ASSINATURA DJ (BLOQUEADO PARA O CLIENTE) -->
+                        <!-- PAINEL ASSINATURA DJ (BLINDADO) -->
                         <div id="dj-signature-card" class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 sig-box-print">
                             <h4 class="text-xs font-semibold text-slate-300 uppercase">2. Assinatura do Contratado (DJ BROW)</h4>
                             
-                            <!-- AVISO SE CLIENTE TENTAR MEXER -->
                             <div id="client-dj-locked-msg" class="hidden text-xs text-amber-400 bg-amber-950/40 p-2 rounded border border-amber-500/30">
                                 <i class="fa-solid fa-lock me-1"></i> Esta área é exclusiva para a assinatura do DJ BROW. O cliente não pode alterar esta assinatura.
                             </div>
@@ -419,7 +430,7 @@
                     </div>
 
                     <p class="text-[11px] text-slate-500 italic mt-4 no-print">
-                        * Nota de Transparência: As assinaturas digitais desenhadas nesta aplicação representam a manifestação de concordância entre as partes para este orçamento.
+                        * Nota de Transparência: As assinaturas digitais representam a manifestação de concordância entre as partes e registram carimbo de data e hora jurídico.
                     </p>
                 </div>
             </div>
@@ -430,9 +441,9 @@
             <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-sack-dollar text-emerald-400"></i> Gestão Financeira & Lucros
+                        <i class="fa-solid fa-sack-dollar text-emerald-400"></i> Gestão Financeira & Caixa
                     </h2>
-                    <p class="text-slate-400 text-sm">Controle de entradas, adiantamentos, despesas e lucro líquido real</p>
+                    <p class="text-slate-400 text-sm">Controle rigoroso de entradas, sinal, pagamentos parciais, despesas e resultado de caixa</p>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="openExpenseModal()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold px-4 py-2.5 rounded-lg text-sm transition flex items-center gap-2">
@@ -447,7 +458,7 @@
             <!-- CARDS DE RESUMO -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
-                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total em Caixa (Recebido)</span>
+                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total em Caixa (Entradas)</span>
                     <p class="text-2xl font-extrabold text-emerald-400 mt-2" id="fin-total-received">R$ 0,00</p>
                 </div>
                 <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
@@ -459,7 +470,7 @@
                     <p class="text-2xl font-extrabold text-rose-400 mt-2" id="fin-total-expenses">R$ 0,00</p>
                 </div>
                 <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
-                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Lucro Líquido Real</span>
+                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Resultado de Caixa Líquido</span>
                     <p class="text-2xl font-extrabold text-blue-400 mt-2" id="fin-net-profit">R$ 0,00</p>
                 </div>
             </div>
@@ -689,7 +700,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT DO APLICATIVO (VERSÃO 11 - LINK LIMPO & BLOQUEIO DE ASSINATURA DJ) -->
+    <!-- SCRIPT DO APLICATIVO (VERSÃO 12 - BLINDADA & CORRIGIDA) -->
     <script>
         const defaultContractText = `CONTRATO DJ BROW
 PRESTAÇÃO DE SERVIÇOS ARTÍSTICOS DE DJ - CASAMENTOS E ANIVERSÁRIOS
@@ -721,7 +732,7 @@ CLÁUSULA 7ª - DA ESTRUTURA, ENERGIA E SEGURANÇA
 O CONTRATANTE deverá disponibilizar local adequado e seguro para instalação dos equipamentos, bem como energia elétrica compatível. Danos causados aos equipamentos por convidados ou terceiros serão de responsabilidade de quem os causar.
 
 CLÁUSULA 8ª - DE EVENTOS AO AR LIVRE E FORÇA MAIOR
-Em áreas externas, o CONTRATANTE deverá disponibilizar cobertura adequada contra chuva e sol excessivo. Em situações de força maior ou caso fortuito, das partes deverão priorizar a remarcação.
+Em áreas externas, o CONTRATANTE deverá disponibilizar cobertura adequada contra chuva e sol excessivo. Em situações de força maior ou caso fortuito, as partes deverão priorizar a remarcação.
 
 CLÁUSULA 9ª - DA ALIMENTAÇÃO
 O CONTRATANTE deverá fornecer alimentação e água ao CONTRATADO durante o período de trabalho.
@@ -761,9 +772,9 @@ OBSERVAÇÕES ADICIONAIS:
 
             const urlParams = new URLSearchParams(window.location.search);
             const clientEventId = urlParams.get('clientView');
-            const clientDataPayload = urlParams.get('clientData'); // Suporte retroativo caso venha payload antigo
+            const clientDataPayload = urlParams.get('clientData'); 
 
-            // Se recebeu dados novos via WhatsApp (DJBROW_SYNC)
+            // Sincronização automática via hash do WhatsApp (DJBROW_SYNC)
             const hashText = window.location.hash;
             if (hashText && hashText.includes('DJBROW_SYNC:')) {
                 try {
@@ -777,7 +788,7 @@ OBSERVAÇÕES ADICIONAIS:
                             eventsState.push(decodedEvent);
                         }
                         saveToLocalStorage();
-                        alert("Assinatura do cliente recebida e sincronizada com sucesso!");
+                        alert("Assinatura do cliente recebida e sincronizada com sucesso no seu painel!");
                         window.location.hash = '';
                         window.location.href = window.location.pathname;
                         return;
@@ -807,11 +818,12 @@ OBSERVAÇÕES ADICIONAIS:
             const banner = document.getElementById('client-banner');
             if (banner) banner.classList.remove('hidden');
 
-            // Bloqueia e oculta o bloco de assinatura do DJ para o cliente
+            // Bloqueio rigoroso da assinatura do DJ para o cliente
             const djCard = document.getElementById('dj-signature-card');
             if (djCard) {
                 document.getElementById('dj-new-sig-box').style.display = 'none';
-                document.getElementById('btn-reopen-dj').style.display = 'none';
+                const btnReopenDj = document.getElementById('btn-reopen-dj');
+                if (btnReopenDj) btnReopenDj.style.display = 'none';
                 document.getElementById('client-dj-locked-msg').classList.remove('hidden');
             }
 
@@ -827,35 +839,14 @@ OBSERVAÇÕES ADICIONAIS:
             }
 
             if (!ev) {
-                document.querySelector('main').innerHTML = `<div class="p-8 text-center"><h2 class="text-xl font-bold text-rose-500">Contrato não encontrado ou link expirado.</h2></div>`;
+                document.querySelector('main').innerHTML = `<div class="p-12 text-center space-y-4"><h2 class="text-2xl font-bold text-rose-500">Contrato não encontrado ou link expirado.</h2><p class="text-slate-400">Solicite ao DJ BROW um novo link atualizado de compartilhamento.</p></div>`;
                 return;
             }
 
             activeEventId = eventId;
             switchTab('contratos');
 
-            let text = contractTemplateState;
-            text = text.replace(/{{NOME_CLIENTE}}/g, escapeHTML(ev.clientName))
-                       .replace(/{{CPF_CLIENTE}}/g, escapeHTML(ev.clientCpf))
-                       .replace(/{{FONE_CLIENTE}}/g, escapeHTML(ev.clientPhone))
-                       .replace(/{{CEP_CLIENTE}}/g, escapeHTML(ev.clientCep || 'Não informado'))
-                       .replace(/{{ENDERECO_CLIENTE}}/g, escapeHTML(ev.clientAddress || 'Não informado'))
-                       .replace(/{{DATA_EVENTO}}/g, escapeHTML(formatDateBR(ev.date)))
-                       .replace(/{{LOCAL_EVENTO}}/g, escapeHTML(ev.location))
-                       .replace(/{{DURACAO}}/g, escapeHTML(ev.duration || '6'))
-                       .replace(/{{HORARIO_INICIO}}/g, escapeHTML(ev.startTime || '21:00'))
-                       .replace(/{{HORARIO_TERMINO}}/g, escapeHTML(ev.endTime || '03:00'))
-                       .replace(/{{VALOR_EXTRA}}/g, escapeHTML(ev.extraHour || '150'))
-                       .replace(/{{VALOR_TOTAL}}/g, formatCurrency(ev.price))
-                       .replace(/{{ENTRADA}}/g, formatCurrency(ev.deposit))
-                       .replace(/{{SALDO}}/g, formatCurrency(ev.saldo))
-                       .replace(/{{EQUIPAMENTOS}}/g, escapeHTML(ev.equipments))
-                       .replace(/{{OBSERVACOES}}/g, escapeHTML(ev.notes || 'Nenhuma.'))
-                       .replace(/{{NOME_DJ}}/g, escapeHTML(profileState.userName))
-                       .replace(/{{CPF_DJ}}/g, escapeHTML(profileState.userCpf))
-                       .replace(/{{FONE_DJ}}/g, escapeHTML(profileState.userPhone))
-                       .replace(/{{ENDERECO_DJ}}/g, escapeHTML(profileState.userAddress || ''));
-
+            let text = ev.contractSnapshot || contractTemplateState;
             document.getElementById('contract-render-view').innerText = text;
 
             const clientExisting = document.getElementById('client-existing-sig-box');
@@ -890,7 +881,6 @@ OBSERVAÇÕES ADICIONAIS:
             }
         }
 
-        // AGORA O LINK É CURTO E LIMPO (EX: ?clientView=ev_123456)
         function generateClientShareLink() {
             if (!activeEventId) {
                 alert("Selecione um evento primeiro na aba de Contratos.");
@@ -902,11 +892,16 @@ OBSERVAÇÕES ADICIONAIS:
                 return;
             }
 
+            // Garante que o contrato possui um snapshot congelado das regras no momento da geração
+            ev.contractSnapshot = compileContractText(ev);
+            saveToLocalStorage();
+
+            const payload = btoa(unescape(encodeURIComponent(JSON.stringify(ev))));
             const currentUrl = window.location.href.split('?')[0].split('#')[0];
-            const shareLink = `${currentUrl}?clientView=${activeEventId}`;
+            const shareLink = `${currentUrl}?clientView=${activeEventId}&clientData=${payload}`;
 
             navigator.clipboard.writeText(shareLink).then(() => {
-                alert("Link seguro limpo copiado com sucesso!\n\nAgora o link está curto e pronto para enviar no WhatsApp do cliente.");
+                alert("Link seguro e completo copiado com sucesso!\n\nOs dados do evento acompanham o link para que o cliente possa abrir em qualquer celular sem falhas.");
             }).catch(err => {
                 prompt("Copie o link seguro abaixo para enviar ao cliente:", shareLink);
             });
@@ -929,7 +924,6 @@ OBSERVAÇÕES ADICIONAIS:
                 return;
             }
 
-            // Compacta os dados apenas para envio seguro no WhatsApp
             const payload = btoa(unescape(encodeURIComponent(JSON.stringify(ev))));
             const textMsg = `Olá DJ BROW, assinei o contrato do evento! Segue a confirmação:\n\n#DJBROW_SYNC:${payload}`;
             
@@ -1085,7 +1079,7 @@ OBSERVAÇÕES ADICIONAIS:
             listEl.innerHTML = '';
 
             if (eventsState.length === 0) {
-                listEl.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-500 italic">Nenhum evento cadastrado até o momento.</td></tr>`;
+                listEl.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-500 italic">Nenhum evento cadastrado até o momento.</td></tr>`;
                 return;
             }
 
@@ -1102,6 +1096,7 @@ OBSERVAÇÕES ADICIONAIS:
                     <td class="p-3 font-semibold text-white">${escapeHTML(formatDateBR(ev.date))}</td>
                     <td class="p-3 font-medium text-slate-200">${escapeHTML(ev.clientName)}</td>
                     <td class="p-3 text-slate-400 truncate max-w-xs">${escapeHTML(ev.location)}</td>
+                    <td class="p-3"><span class="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded font-semibold">${escapeHTML(ev.status || 'Confirmado')}</span></td>
                     <td class="p-3 text-emerald-400 font-semibold">${formatCurrency(ev.price)}</td>
                     <td class="p-3 text-amber-400 font-semibold">${formatCurrency(currentSaldo)}</td>
                     <td class="p-3 text-right">
@@ -1128,7 +1123,7 @@ OBSERVAÇÕES ADICIONAIS:
                 tr.innerHTML = `
                     <td class="p-3 font-bold text-white">${escapeHTML(ev.clientName)}</td>
                     <td class="p-3 text-slate-300">${escapeHTML(formatDateBR(ev.date))}</td>
-                    <td class="p-3 text-slate-400">${escapeHTML(ev.clientPhone)}</td>
+                    <td class="p-3"><span class="bg-slate-800 text-slate-300 text-xs px-2.5 py-1 rounded font-semibold">${escapeHTML(ev.status || 'Confirmado')}</span></td>
                     <td class="p-3 text-emerald-400 font-semibold">${formatCurrency(ev.price)}</td>
                     <td class="p-3">
                         ${hasSig ? '<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-semibold"><i class="fa-solid fa-check me-1"></i> Assinado (Ambos)</span>' : '<span class="bg-amber-500/20 text-amber-400 text-xs px-2.5 py-1 rounded-full font-semibold">Pendente Assinatura</span>'}
@@ -1252,8 +1247,22 @@ OBSERVAÇÕES ADICIONAIS:
             const note = document.getElementById('modal-pay-note').value.trim();
 
             if (!eventId || amount <= 0) {
-                alert("Selecione um evento e um valor válido.");
+                alert("Selecione um evento e um valor de pagamento válido.");
                 return;
+            }
+
+            const ev = eventsState.find(e => e.id === eventId);
+            if (ev) {
+                const price = parseFloat(ev.price) || 0;
+                const deposit = parseFloat(ev.deposit) || 0;
+                const extraPays = (ev.extraPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+                const currentBalance = Math.max(0, price - deposit - extraPays);
+
+                if (amount > currentBalance) {
+                    if (!confirm(`Atenção: O valor informado (${formatCurrency(amount)}) é superior ao saldo devedor atual (${formatCurrency(currentBalance)}). Deseja continuar mesmo assim?`)) {
+                        return;
+                    }
+                }
             }
 
             const idx = eventsState.findIndex(ev => ev.id === eventId);
@@ -1269,6 +1278,7 @@ OBSERVAÇÕES ADICIONAIS:
                 closePaymentModal();
                 renderFinanceTab();
                 renderDashboard();
+                renderEventsList();
                 alert("Pagamento registrado com sucesso!");
             }
         }
@@ -1330,12 +1340,37 @@ OBSERVAÇÕES ADICIONAIS:
             document.getElementById('form-title').innerText = 'Cadastrar Novo Evento';
             document.getElementById('event-id').value = '';
             document.getElementById('event-form').reset();
+            document.getElementById('inp-event-status').value = 'Confirmado';
             document.getElementById('inp-event-duration').value = '6';
             document.getElementById('inp-time-start').value = '21:00';
             calculateEndTime();
             document.getElementById('inp-event-extra-hour').value = '150';
             document.getElementById('inp-event-equipments').value = 'Iluminação com PAR LED, 2 moving, 2 spider, máquina de fumaça, TV de LED 43, Pista de LED (preto com dourado), Microfone, Repertório personalizado, Montagem e desmontagem, Estrutura cerimônia, Som e suporte técnico.';
             switchTab('proposta');
+        }
+
+        function compileContractText(ev) {
+            let text = contractTemplateState;
+            return text.replace(/{{NOME_CLIENTE}}/g, ev.clientName || '')
+                       .replace(/{{CPF_CLIENTE}}/g, ev.clientCpf || '')
+                       .replace(/{{FONE_CLIENTE}}/g, ev.clientPhone || '')
+                       .replace(/{{CEP_CLIENTE}}/g, ev.clientCep || 'Não informado')
+                       .replace(/{{ENDERECO_CLIENTE}}/g, ev.clientAddress || 'Não informado')
+                       .replace(/{{DATA_EVENTO}}/g, formatDateBR(ev.date))
+                       .replace(/{{LOCAL_EVENTO}}/g, ev.location || '')
+                       .replace(/{{DURACAO}}/g, ev.duration || '6')
+                       .replace(/{{HORARIO_INICIO}}/g, ev.startTime || '21:00')
+                       .replace(/{{HORARIO_TERMINO}}/g, ev.endTime || '03:00')
+                       .replace(/{{VALOR_EXTRA}}/g, ev.extraHour || '150')
+                       .replace(/{{VALOR_TOTAL}}/g, formatCurrency(ev.price))
+                       .replace(/{{ENTRADA}}/g, formatCurrency(ev.deposit))
+                       .replace(/{{SALDO}}/g, formatCurrency(ev.saldo))
+                       .replace(/{{EQUIPAMENTOS}}/g, ev.equipments || '')
+                       .replace(/{{OBSERVACOES}}/g, ev.notes || 'Nenhuma.')
+                       .replace(/{{NOME_DJ}}/g, profileState.userName)
+                       .replace(/{{CPF_DJ}}/g, profileState.userCpf)
+                       .replace(/{{FONE_DJ}}/g, profileState.userPhone)
+                       .replace(/{{ENDERECO_DJ}}/g, profileState.userAddress || '');
         }
 
         function handleSaveEvent(e) {
@@ -1348,6 +1383,7 @@ OBSERVAÇÕES ADICIONAIS:
             const clientAddress = document.getElementById('inp-client-address').value.trim();
             const date = document.getElementById('inp-event-date').value;
             const location = document.getElementById('inp-event-location').value.trim();
+            const status = document.getElementById('inp-event-status').value;
             const duration = document.getElementById('inp-event-duration').value;
             const startTime = document.getElementById('inp-time-start').value;
             const endTime = document.getElementById('inp-time-end').value;
@@ -1376,6 +1412,7 @@ OBSERVAÇÕES ADICIONAIS:
                         clientAddress: clientAddress,
                         date: date,
                         location: location,
+                        status: status,
                         duration: duration,
                         startTime: startTime,
                         endTime: endTime,
@@ -1386,6 +1423,7 @@ OBSERVAÇÕES ADICIONAIS:
                         equipments: equipments,
                         notes: notes
                     };
+                    eventsState[idx].contractSnapshot = compileContractText(eventsState[idx]);
                     activeEventId = existingId;
                 }
             } else {
@@ -1399,6 +1437,7 @@ OBSERVAÇÕES ADICIONAIS:
                     clientAddress: clientAddress,
                     date: date,
                     location: location,
+                    status: status,
                     duration: duration,
                     startTime: startTime,
                     endTime: endTime,
@@ -1410,8 +1449,10 @@ OBSERVAÇÕES ADICIONAIS:
                     notes: notes,
                     extraPayments: [],
                     signatureClient: null,
-                    signatureDj: null
+                    signatureDj: null,
+                    contractSnapshot: ''
                 };
+                newEvent.contractSnapshot = compileContractText(newEvent);
                 eventsState.push(newEvent);
                 activeEventId = newId;
             }
@@ -1434,6 +1475,7 @@ OBSERVAÇÕES ADICIONAIS:
             document.getElementById('inp-client-address').value = ev.clientAddress || '';
             document.getElementById('inp-event-date').value = ev.date;
             document.getElementById('inp-event-location').value = ev.location;
+            document.getElementById('inp-event-status').value = ev.status || 'Confirmado';
             document.getElementById('inp-event-duration').value = ev.duration || '6';
             document.getElementById('inp-time-start').value = ev.startTime || '21:00';
             calculateEndTime();
@@ -1474,28 +1516,8 @@ OBSERVAÇÕES ADICIONAIS:
             }
             activeEventId = id;
 
-            let text = contractTemplateState;
-            text = text.replace(/{{NOME_CLIENTE}}/g, escapeHTML(ev.clientName))
-                       .replace(/{{CPF_CLIENTE}}/g, escapeHTML(ev.clientCpf))
-                       .replace(/{{FONE_CLIENTE}}/g, escapeHTML(ev.clientPhone))
-                       .replace(/{{CEP_CLIENTE}}/g, escapeHTML(ev.clientCep || 'Não informado'))
-                       .replace(/{{ENDERECO_CLIENTE}}/g, escapeHTML(ev.clientAddress || 'Não informado'))
-                       .replace(/{{DATA_EVENTO}}/g, escapeHTML(formatDateBR(ev.date)))
-                       .replace(/{{LOCAL_EVENTO}}/g, escapeHTML(ev.location))
-                       .replace(/{{DURACAO}}/g, escapeHTML(ev.duration || '6'))
-                       .replace(/{{HORARIO_INICIO}}/g, escapeHTML(ev.startTime || '21:00'))
-                       .replace(/{{HORARIO_TERMINO}}/g, escapeHTML(ev.endTime || '03:00'))
-                       .replace(/{{VALOR_EXTRA}}/g, escapeHTML(ev.extraHour || '150'))
-                       .replace(/{{VALOR_TOTAL}}/g, formatCurrency(ev.price))
-                       .replace(/{{ENTRADA}}/g, formatCurrency(ev.deposit))
-                       .replace(/{{SALDO}}/g, formatCurrency(ev.saldo))
-                       .replace(/{{EQUIPAMENTOS}}/g, escapeHTML(ev.equipments))
-                       .replace(/{{OBSERVACOES}}/g, escapeHTML(ev.notes || 'Nenhuma.'))
-                       .replace(/{{NOME_DJ}}/g, escapeHTML(profileState.userName))
-                       .replace(/{{CPF_DJ}}/g, escapeHTML(profileState.userCpf))
-                       .replace(/{{FONE_DJ}}/g, escapeHTML(profileState.userPhone))
-                       .replace(/{{ENDERECO_DJ}}/g, escapeHTML(profileState.userAddress || ''));
-
+            // Se o contrato já foi gerado antes, preserva o snapshot histórico. Caso contrário, compila.
+            let text = ev.contractSnapshot || compileContractText(ev);
             document.getElementById('contract-render-view').innerText = text;
 
             const clientExisting = document.getElementById('client-existing-sig-box');
@@ -1588,15 +1610,28 @@ OBSERVAÇÕES ADICIONAIS:
             }
         }
 
+        function isCanvasBlank(canvas) {
+            const blank = document.createElement('canvas');
+            blank.width = canvas.width;
+            blank.height = canvas.height;
+            return canvas.toDataURL() === blank.toDataURL();
+        }
+
         function saveSignature(role) {
-            const dataUrl = canvases[role].toDataURL('image/png');
+            if (isClientMode && role === 'dj') {
+                alert("Acesso negado: O cliente não pode alterar a assinatura do DJ.");
+                return;
+            }
+
+            const canvas = canvases[role];
+            if (isCanvasBlank(canvas)) {
+                alert("O quadro de assinatura está vazio. Por favor, desenhe a sua assinatura antes de salvar.");
+                return;
+            }
+
+            const dataUrl = canvas.toDataURL('image/png');
 
             if (isClientMode) {
-                if (role === 'dj') {
-                    alert("Acesso negado: O cliente não pode alterar a assinatura do DJ.");
-                    return;
-                }
-
                 const urlParams = new URLSearchParams(window.location.search);
                 const clientEventId = urlParams.get('clientView');
                 let ev = null;
@@ -1645,14 +1680,16 @@ OBSERVAÇÕES ADICIONAIS:
                 return;
             }
 
-            if (role === 'client') {
-                document.getElementById('client-existing-sig-box').classList.add('hidden');
-                document.getElementById('client-new-sig-box').classList.remove('hidden');
-                clearSignaturePad('client');
-            } else {
-                document.getElementById('dj-existing-sig-box').classList.add('hidden');
-                document.getElementById('dj-new-sig-box').classList.remove('hidden');
-                clearSignaturePad('dj');
+            if (confirm("Deseja refazer a assinatura? A anterior será substituída.")) {
+                if (role === 'client') {
+                    document.getElementById('client-existing-sig-box').classList.add('hidden');
+                    document.getElementById('client-new-sig-box').classList.remove('hidden');
+                    clearSignaturePad('client');
+                } else {
+                    document.getElementById('dj-existing-sig-box').classList.add('hidden');
+                    document.getElementById('dj-new-sig-box').classList.remove('hidden');
+                    clearSignaturePad('dj');
+                }
             }
         }
 
@@ -1672,7 +1709,7 @@ OBSERVAÇÕES ADICIONAIS:
         function handleSaveContractTemplate() {
             contractTemplateState = document.getElementById('contract-template').value;
             saveToLocalStorage();
-            alert("Modelo padrão de contrato atualizado!");
+            alert("Modelo padrão de contrato atualizado com sucesso!");
         }
 
         function restoreDefaultContractTemplate() {
@@ -1686,7 +1723,7 @@ OBSERVAÇÕES ADICIONAIS:
 
         function exportBackupData() {
             const dataStr = JSON.stringify({
-                version: "2.5_STABLE",
+                version: "2.6_STABLE",
                 exportDate: new Date().toISOString(),
                 events: eventsState,
                 expenses: expensesState,
@@ -1705,14 +1742,14 @@ OBSERVAÇÕES ADICIONAIS:
 
         function processImportBackup(e) {
             const file = e.target.files[0];
-            if p (!file) return;
+            if (!file) return; // Correção do erro de sintaxe original aplicada com sucesso
 
             const reader = new FileReader();
             reader.onload = function(evt) {
                 try {
                     const imported = JSON.parse(evt.target.result);
                     if (!imported || typeof imported !== 'object' || !Array.isArray(imported.events)) {
-                        alert("Erro: O arquivo selecionado não é um backup válido.");
+                        alert("Erro: O arquivo selecionado não é um backup válido do DJ BROW.");
                         return;
                     }
 
@@ -1730,7 +1767,7 @@ OBSERVAÇÕES ADICIONAIS:
                         alert("Backup completo restaurado com sucesso!");
                     }
                 } catch (err) {
-                    alert("Erro ao ler o arquivo de backup.");
+                    alert("Erro ao ler o arquivo de backup. Certifique-se de que é um JSON válido.");
                 }
             };
             reader.readAsText(file);
