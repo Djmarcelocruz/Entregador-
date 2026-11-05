@@ -335,7 +335,7 @@
 
         <!-- VISUALIZAR CONTRATO E ASSINATURAS -->
         <section id="tab-contratos" class="space-y-6 hidden">
-            <!-- BARRA DE AÇÕES ADMINISTRATIVAS DO DJ (OCULTADA TOTALMENTE NO MODO CLIENTE) -->
+            <!-- BARRA DE AÇÕES ADMINISTRATIVAS DO DJ -->
             <div id="dj-contract-actions" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
                 <div>
                     <h2 class="text-2xl font-bold text-white">Visualização de Contrato & Assinaturas</h2>
@@ -374,7 +374,7 @@
                                     <img id="img-client-signature" src="" alt="Assinatura Contratante" class="max-h-24 mx-auto">
                                     <div class="border-t border-slate-700 pt-1 mt-2 text-xs text-slate-300 font-semibold sig-printed-name" id="sig-client-printed-name"></div>
                                 </div>
-                                <button onclick="reopenSignaturePad('client')" class="no-print text-xs text-amber-400 hover:underline">Refazer Assinatura</button>
+                                <button id="btn-reopen-client" onclick="reopenSignaturePad('client')" class="no-print text-xs text-amber-400 hover:underline">Refazer Assinatura</button>
                             </div>
 
                             <div id="client-new-sig-box" class="no-print space-y-2">
@@ -388,16 +388,21 @@
                             </div>
                         </div>
 
-                        <!-- PAINEL ASSINATURA DJ -->
+                        <!-- PAINEL ASSINATURA DJ (BLOQUEADO PARA O CLIENTE) -->
                         <div id="dj-signature-card" class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 sig-box-print">
                             <h4 class="text-xs font-semibold text-slate-300 uppercase">2. Assinatura do Contratado (DJ BROW)</h4>
                             
+                            <!-- AVISO SE CLIENTE TENTAR MEXER -->
+                            <div id="client-dj-locked-msg" class="hidden text-xs text-amber-400 bg-amber-950/40 p-2 rounded border border-amber-500/30">
+                                <i class="fa-solid fa-lock me-1"></i> Esta área é exclusiva para a assinatura do DJ BROW. O cliente não pode alterar esta assinatura.
+                            </div>
+
                             <div id="dj-existing-sig-box" class="hidden space-y-2">
                                 <div class="border border-slate-700 rounded bg-slate-900 p-3 text-center sig-box-print">
                                     <img id="img-dj-signature" src="" alt="Assinatura DJ" class="max-h-24 mx-auto">
                                     <div class="border-t border-slate-700 pt-1 mt-2 text-xs text-slate-300 font-semibold sig-printed-name" id="sig-dj-printed-name"></div>
                                 </div>
-                                <button onclick="reopenSignaturePad('dj')" class="no-print text-xs text-amber-400 hover:underline">Refazer Assinatura</button>
+                                <button id="btn-reopen-dj" onclick="reopenSignaturePad('dj')" class="no-print text-xs text-amber-400 hover:underline">Refazer Assinatura</button>
                             </div>
 
                             <div id="dj-new-sig-box" class="no-print space-y-2">
@@ -684,7 +689,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT DO APLICATIVO CORRIGIDO (VERSÃO 10 - WHATSAPP DIRETO) -->
+    <!-- SCRIPT DO APLICATIVO (VERSÃO 11 - LINK LIMPO & BLOQUEIO DE ASSINATURA DJ) -->
     <script>
         const defaultContractText = `CONTRATO DJ BROW
 PRESTAÇÃO DE SERVIÇOS ARTÍSTICOS DE DJ - CASAMENTOS E ANIVERSÁRIOS
@@ -756,7 +761,31 @@ OBSERVAÇÕES ADICIONAIS:
 
             const urlParams = new URLSearchParams(window.location.search);
             const clientEventId = urlParams.get('clientView');
-            const clientDataPayload = urlParams.get('clientData');
+            const clientDataPayload = urlParams.get('clientData'); // Suporte retroativo caso venha payload antigo
+
+            // Se recebeu dados novos via WhatsApp (DJBROW_SYNC)
+            const hashText = window.location.hash;
+            if (hashText && hashText.includes('DJBROW_SYNC:')) {
+                try {
+                    const base64Data = hashText.split('DJBROW_SYNC:')[1];
+                    const decodedEvent = JSON.parse(decodeURIComponent(escape(atob(base64Data))));
+                    if (decodedEvent && decodedEvent.id) {
+                        const existingIdx = eventsState.findIndex(e => e.id === decodedEvent.id);
+                        if (existingIdx !== -1) {
+                            eventsState[existingIdx] = decodedEvent;
+                        } else {
+                            eventsState.push(decodedEvent);
+                        }
+                        saveToLocalStorage();
+                        alert("Assinatura do cliente recebida e sincronizada com sucesso!");
+                        window.location.hash = '';
+                        window.location.href = window.location.pathname;
+                        return;
+                    }
+                } catch(e) {
+                    console.error("Erro ao processar sincronização automática:", e);
+                }
+            }
 
             if (clientEventId) {
                 isClientMode = true;
@@ -778,13 +807,19 @@ OBSERVAÇÕES ADICIONAIS:
             const banner = document.getElementById('client-banner');
             if (banner) banner.classList.remove('hidden');
 
+            // Bloqueia e oculta o bloco de assinatura do DJ para o cliente
+            const djCard = document.getElementById('dj-signature-card');
+            if (djCard) {
+                document.getElementById('dj-new-sig-box').style.display = 'none';
+                document.getElementById('btn-reopen-dj').style.display = 'none';
+                document.getElementById('client-dj-locked-msg').classList.remove('hidden');
+            }
+
             let ev = null;
             if (dataPayload) {
                 try {
                     ev = JSON.parse(decodeURIComponent(escape(atob(dataPayload))));
-                } catch (e) {
-                    console.error("Erro ao decodificar dados do cliente via URL:", e);
-                }
+                } catch (e) {}
             }
 
             if (!ev) {
@@ -840,7 +875,6 @@ OBSERVAÇÕES ADICIONAIS:
             }
 
             const djExisting = document.getElementById('dj-existing-sig-box');
-            const djNew = document.getElementById('dj-new-sig-box');
             const djImg = document.getElementById('img-dj-signature');
             const djPrinted = document.getElementById('sig-dj-printed-name');
 
@@ -849,19 +883,14 @@ OBSERVAÇÕES ADICIONAIS:
                 djImg.style.display = 'block';
                 djPrinted.innerText = `${profileState.userName} (DJ BROW)`;
                 djExisting.classList.remove('hidden');
-                djNew.classList.add('hidden');
             } else {
-                djPrinted.innerText = `${profileState.userName} (DJ BROW)`;
+                djImg.style.display = 'none';
+                djPrinted.innerText = `${profileState.userName} (Aguardando assinatura do DJ)`;
                 djExisting.classList.remove('hidden');
-                djNew.classList.add('hidden');
-                if (!ev.signatureDj) {
-                    djImg.style.display = 'none';
-                } else {
-                    djImg.style.display = 'block';
-                }
             }
         }
 
+        // AGORA O LINK É CURTO E LIMPO (EX: ?clientView=ev_123456)
         function generateClientShareLink() {
             if (!activeEventId) {
                 alert("Selecione um evento primeiro na aba de Contratos.");
@@ -873,27 +902,23 @@ OBSERVAÇÕES ADICIONAIS:
                 return;
             }
 
-            const payload = btoa(unescape(encodeURIComponent(JSON.stringify(ev))));
-            const currentUrl = window.location.href.split('?')[0];
-            const shareLink = `${currentUrl}?clientView=${activeEventId}&clientData=${payload}`;
+            const currentUrl = window.location.href.split('?')[0].split('#')[0];
+            const shareLink = `${currentUrl}?clientView=${activeEventId}`;
 
             navigator.clipboard.writeText(shareLink).then(() => {
-                alert("Link seguro do cliente copiado com sucesso!\n\nCole e envie este link no WhatsApp do cliente.");
+                alert("Link seguro limpo copiado com sucesso!\n\nAgora o link está curto e pronto para enviar no WhatsApp do cliente.");
             }).catch(err => {
                 prompt("Copie o link seguro abaixo para enviar ao cliente:", shareLink);
             });
         }
 
-        // NOVO: ENVIO DIRETO PARA O WHATSAPP DO DJ COM UM CLIQUE
         function sendSignedContractWhatsApp() {
             let ev = null;
             const urlParams = new URLSearchParams(window.location.search);
-            const clientDataPayload = urlParams.get('clientData');
+            const clientEventId = urlParams.get('clientView');
             
-            if (clientDataPayload) {
-                try {
-                    ev = JSON.parse(decodeURIComponent(escape(atob(clientDataPayload))));
-                } catch(e) {}
+            if (clientEventId) {
+                ev = eventsState.find(e => e.id === clientEventId);
             }
             if (!ev && activeEventId) {
                 ev = eventsState.find(e => e.id === activeEventId);
@@ -904,10 +929,10 @@ OBSERVAÇÕES ADICIONAIS:
                 return;
             }
 
+            // Compacta os dados apenas para envio seguro no WhatsApp
             const payload = btoa(unescape(encodeURIComponent(JSON.stringify(ev))));
-            const textMsg = `Olá DJ BROW, assinei o contrato do evento! Aqui estão os dados atualizados com a minha assinatura:\n\nDJBROW_SYNC:${payload}`;
+            const textMsg = `Olá DJ BROW, assinei o contrato do evento! Segue a confirmação:\n\n#DJBROW_SYNC:${payload}`;
             
-            // Remove caracteres não numéricos do telefone do perfil do DJ
             const djPhone = (profileState.userPhone || '5514997504876').replace(/\D/g, '');
             const whatsappUrl = `https://wa.me/${djPhone}?text=${encodeURIComponent(textMsg)}`;
             
@@ -1567,16 +1592,17 @@ OBSERVAÇÕES ADICIONAIS:
             const dataUrl = canvases[role].toDataURL('image/png');
 
             if (isClientMode) {
-                const urlParams = new URLSearchParams(window.location.search);
-                const clientDataPayload = urlParams.get('clientData');
-                let ev = null;
-                if (clientDataPayload) {
-                    try {
-                        ev = JSON.parse(decodeURIComponent(escape(atob(clientDataPayload))));
-                    } catch(e) {}
+                if (role === 'dj') {
+                    alert("Acesso negado: O cliente não pode alterar a assinatura do DJ.");
+                    return;
                 }
-                if (!ev && activeEventId) {
-                    ev = eventsState.find(e => e.id === activeEventId);
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const clientEventId = urlParams.get('clientView');
+                let ev = null;
+                
+                if (clientEventId) {
+                    ev = eventsState.find(e => e.id === clientEventId);
                 }
 
                 if (ev) {
@@ -1587,10 +1613,9 @@ OBSERVAÇÕES ADICIONAIS:
                     else eventsState.push(ev);
 
                     saveToLocalStorage();
-                    alert("Sua assinatura foi salva com sucesso! Agora basta clicar no botão verde 'Enviar Assinatura pelo WhatsApp' logo acima.");
+                    alert("Sua assinatura foi salva com sucesso! Agora clique no botão verde 'Enviar Assinatura pelo WhatsApp' logo acima.");
                     
-                    const newPayload = btoa(unescape(encodeURIComponent(JSON.stringify(ev))));
-                    activateClientViewMode(activeEventId, newPayload);
+                    activateClientViewMode(activeEventId, null);
                 }
                 return;
             }
@@ -1615,6 +1640,11 @@ OBSERVAÇÕES ADICIONAIS:
         }
 
         function reopenSignaturePad(role) {
+            if (isClientMode && role === 'dj') {
+                alert("Acesso negado.");
+                return;
+            }
+
             if (role === 'client') {
                 document.getElementById('client-existing-sig-box').classList.add('hidden');
                 document.getElementById('client-new-sig-box').classList.remove('hidden');
@@ -1656,7 +1686,7 @@ OBSERVAÇÕES ADICIONAIS:
 
         function exportBackupData() {
             const dataStr = JSON.stringify({
-                version: "2.4_STABLE",
+                version: "2.5_STABLE",
                 exportDate: new Date().toISOString(),
                 events: eventsState,
                 expenses: expensesState,
@@ -1675,7 +1705,7 @@ OBSERVAÇÕES ADICIONAIS:
 
         function processImportBackup(e) {
             const file = e.target.files[0];
-            if (!file) return;
+            if p (!file) return;
 
             const reader = new FileReader();
             reader.onload = function(evt) {
