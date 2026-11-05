@@ -66,7 +66,7 @@
 </head>
 <body class="min-h-screen flex flex-col md:flex-row">
 
-    <!-- MENU LATERAL -->
+    <!-- MENU LATERAL (EXCLUSIVO DO DJ) -->
     <aside id="app-sidebar" class="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col justify-between no-print shrink-0">
         <div>
             <div class="flex items-center gap-3 mb-8">
@@ -129,15 +129,15 @@
                 </div>
                 <div>
                     <h3 class="font-bold text-white text-base">Portal do Cliente - Assinatura Digital</h3>
-                    <p class="text-xs text-slate-300">Confira os termos do contrato do seu evento abaixo e assine no campo indicado.</p>
+                    <p class="text-xs text-slate-300">Confira os termos do contrato, desenhe sua assinatura abaixo e envie direto para o DJ BROW.</p>
                 </div>
             </div>
-            <div class="flex gap-2 shrink-0">
+            <div class="flex flex-wrap gap-2 shrink-0">
                 <button onclick="sendSignedContractWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2">
-                    <i class="fa-brands fa-whatsapp text-base"></i> Enviar Assinatura pelo WhatsApp
+                    <i class="fa-brands fa-whatsapp text-base"></i> Enviar Assinatura ao DJ
                 </button>
                 <button onclick="window.print()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2">
-                    <i class="fa-solid fa-print"></i> Salvar / Imprimir PDF
+                    <i class="fa-solid fa-print"></i> Baixar / Imprimir PDF
                 </button>
             </div>
         </div>
@@ -171,7 +171,7 @@
 
             <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 md:p-6 space-y-4">
                 <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-calendar-day text-emerald-400"></i> Próximos Eventos
+                    <i class="fa-solid fa-calendar-day text-emerald-400"></i> Próximos Eventos (A Realizar)
                 </h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-slate-300">
@@ -192,15 +192,28 @@
             </div>
         </section>
 
-        <!-- LISTA DE EVENTOS -->
+        <!-- LISTA DE EVENTOS (COM SEPARAÇÃO DE FESTAS A REALIZAR E REALIZADAS) -->
         <section id="tab-eventos" class="space-y-6 hidden">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-white">Meus Eventos & Propostas</h2>
-                    <p class="text-slate-400 text-sm">Gerencie todos os contratos e propostas cadastradas</p>
+                    <p class="text-slate-400 text-sm">Gerencie festas a realizar e consulte o histórico de eventos finalizados</p>
                 </div>
                 <button onclick="prepareNewEvent()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2.5 rounded-lg transition text-sm flex items-center gap-2">
                     <i class="fa-solid fa-plus"></i> Novo Evento
+                </button>
+            </div>
+
+            <!-- ABAS DE FILTRO DE EVENTOS -->
+            <div class="flex flex-wrap gap-2 border-b border-slate-800 pb-3">
+                <button onclick="setEventFilter('pending')" id="filter-btn-pending" class="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white transition">
+                    <i class="fa-solid fa-clock me-1"></i> Festas a Realizar (Pendentes)
+                </button>
+                <button onclick="setEventFilter('completed')" id="filter-btn-completed" class="px-4 py-2 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-check-circle me-1"></i> Festas Realizadas (Finalizados)
+                </button>
+                <button onclick="setEventFilter('all')" id="filter-btn-all" class="px-4 py-2 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-list me-1"></i> Todos os Eventos
                 </button>
             </div>
 
@@ -285,7 +298,7 @@
                                 <option value="Em negociação">Em negociação</option>
                                 <option value="Aguardando assinatura">Aguardando assinatura</option>
                                 <option value="Confirmado">Confirmado</option>
-                                <option value="Realizado">Realizado</option>
+                                <option value="Realizado">Realizado (Finalizado)</option>
                                 <option value="Cancelado">Cancelado</option>
                             </select>
                         </div>
@@ -400,12 +413,12 @@
                             </div>
                         </div>
 
-                        <!-- PAINEL ASSINATURA DJ (BLINDADO) -->
+                        <!-- PAINEL ASSINATURA DJ (BLINDADO - EXCLUSIVO DO DJ) -->
                         <div id="dj-signature-card" class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 sig-box-print">
                             <h4 class="text-xs font-semibold text-slate-300 uppercase">2. Assinatura do Contratado (DJ BROW)</h4>
                             
                             <div id="client-dj-locked-msg" class="hidden text-xs text-amber-400 bg-amber-950/40 p-2 rounded border border-amber-500/30">
-                                <i class="fa-solid fa-lock me-1"></i> Esta área é exclusiva para a assinatura do DJ BROW. O cliente não pode alterar esta assinatura.
+                                <i class="fa-solid fa-lock me-1"></i> Área protegida. O cliente não pode alterar a assinatura do DJ.
                             </div>
 
                             <div id="dj-existing-sig-box" class="hidden space-y-2">
@@ -436,23 +449,34 @@
             </div>
         </section>
 
-        <!-- GESTÃO FINANCEIRA -->
+        <!-- GESTÃO FINANCEIRA (COM FILTRO DE ANO EXCLUSIVO PARA O DJ) -->
         <section id="tab-financeiro" class="space-y-6 hidden">
             <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-sack-dollar text-emerald-400"></i> Gestão Financeira & Caixa
                     </h2>
-                    <p class="text-slate-400 text-sm">Controle rigoroso de entradas, sinal, pagamentos parciais, despesas e resultado de caixa</p>
+                    <p class="text-slate-400 text-sm">Controle rigoroso de entradas, sinal, pagamentos parciais, despesas e resultado de caixa por ano</p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                     <button onclick="openExpenseModal()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold px-4 py-2.5 rounded-lg text-sm transition flex items-center gap-2">
                         <i class="fa-solid fa-minus-circle"></i> Registrar Gasto / Despesa
                     </button>
                     <button onclick="openPaymentModal()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2.5 rounded-lg text-sm transition flex items-center gap-2">
-                        <i class="fa-solid fa-plus-circle"></i> Registrar Pagamento de Cliente
+                        <i class="fa-solid fa-plus-circle"></i> Registrar Pagamento
                     </button>
                 </div>
+            </div>
+
+            <!-- FILTRO DE ANO -->
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 flex items-center gap-3">
+                <label class="text-xs font-semibold text-slate-300 uppercase"><i class="fa-solid fa-filter me-1 text-emerald-400"></i> Filtrar Ano Financeiro:</label>
+                <select id="finance-year-select" onchange="setFinanceYearFilter(this.value)" class="bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-emerald-500">
+                    <option value="all">Todos os Anos</option>
+                    <option value="2025">Ano 2025</option>
+                    <option value="2026" selected>Ano 2026</option>
+                    <option value="2027">Ano 2027</option>
+                </select>
             </div>
 
             <!-- CARDS DE RESUMO -->
@@ -700,7 +724,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT DO APLICATIVO (VERSÃO 12 - BLINDADA & CORRIGIDA) -->
+    <!-- SCRIPT DO APLICATIVO (VERSÃO 14 - BLINDADA E OTIMIZADA) -->
     <script>
         const defaultContractText = `CONTRATO DJ BROW
 PRESTAÇÃO DE SERVIÇOS ARTÍSTICOS DE DJ - CASAMENTOS E ANIVERSÁRIOS
@@ -755,6 +779,8 @@ OBSERVAÇÕES ADICIONAIS:
         let contractTemplateState = defaultContractText;
         let activeEventId = null;
         let isClientMode = false;
+        let currentEventFilter = 'pending';
+        let selectedFinanceYear = '2026';
 
         function escapeHTML(str) {
             if (!str) return '';
@@ -774,7 +800,6 @@ OBSERVAÇÕES ADICIONAIS:
             const clientEventId = urlParams.get('clientView');
             const clientDataPayload = urlParams.get('clientData'); 
 
-            // Sincronização automática via hash do WhatsApp (DJBROW_SYNC)
             const hashText = window.location.hash;
             if (hashText && hashText.includes('DJBROW_SYNC:')) {
                 try {
@@ -818,7 +843,7 @@ OBSERVAÇÕES ADICIONAIS:
             const banner = document.getElementById('client-banner');
             if (banner) banner.classList.remove('hidden');
 
-            // Bloqueio rigoroso da assinatura do DJ para o cliente
+            // BLINDAGEM: O cliente não pode alterar a assinatura do DJ
             const djCard = document.getElementById('dj-signature-card');
             if (djCard) {
                 document.getElementById('dj-new-sig-box').style.display = 'none';
@@ -892,7 +917,6 @@ OBSERVAÇÕES ADICIONAIS:
                 return;
             }
 
-            // Garante que o contrato possui um snapshot congelado das regras no momento da geração
             ev.contractSnapshot = compileContractText(ev);
             saveToLocalStorage();
 
@@ -901,7 +925,7 @@ OBSERVAÇÕES ADICIONAIS:
             const shareLink = `${currentUrl}?clientView=${activeEventId}&clientData=${payload}`;
 
             navigator.clipboard.writeText(shareLink).then(() => {
-                alert("Link seguro e completo copiado com sucesso!\n\nOs dados do evento acompanham o link para que o cliente possa abrir em qualquer celular sem falhas.");
+                alert("Link seguro copiado com sucesso!\n\nEnvie este link no WhatsApp do cliente para que ele possa abrir em outro telemóvel e assinar.");
             }).catch(err => {
                 prompt("Copie o link seguro abaixo para enviar ao cliente:", shareLink);
             });
@@ -920,7 +944,7 @@ OBSERVAÇÕES ADICIONAIS:
             }
 
             if (!ev || !ev.signatureClient) {
-                alert("Por favor, faça a sua assinatura no quadro acima antes de enviar ao DJ.");
+                alert("Por favor, desenhe a sua assinatura no quadro acima antes de enviar ao DJ.");
                 return;
             }
 
@@ -1078,12 +1102,15 @@ OBSERVAÇÕES ADICIONAIS:
             const listEl = document.getElementById('dash-events-list');
             listEl.innerHTML = '';
 
-            if (eventsState.length === 0) {
-                listEl.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-500 italic">Nenhum evento cadastrado até o momento.</td></tr>`;
+            const today = new Date().toISOString().slice(0, 10);
+            const upcomingEvents = eventsState.filter(ev => ev.date >= today && ev.status !== 'Cancelado' && ev.status !== 'Realizado');
+
+            if (upcomingEvents.length === 0) {
+                listEl.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-500 italic">Nenhum evento pendente para os próximos dias.</td></tr>`;
                 return;
             }
 
-            const sorted = [...eventsState].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const sorted = [...upcomingEvents].sort((a, b) => new Date(a.date) - new Date(b.date));
             sorted.slice(0, 5).forEach(ev => {
                 const price = parseFloat(ev.price) || 0;
                 const deposit = parseFloat(ev.deposit) || 0;
@@ -1107,16 +1134,42 @@ OBSERVAÇÕES ADICIONAIS:
             });
         }
 
+        function setEventFilter(filterType) {
+            currentEventFilter = filterType;
+            ['pending', 'completed', 'all'].forEach(f => {
+                const btn = document.getElementById(`filter-btn-${f}`);
+                if (btn) {
+                    if (f === filterType) {
+                        btn.className = 'px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white transition';
+                    } else {
+                        btn.className = 'px-4 py-2 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:text-white transition';
+                    }
+                }
+            });
+            renderEventsList();
+        }
+
         function renderEventsList() {
             const listEl = document.getElementById('full-events-list');
             listEl.innerHTML = '';
 
-            if (eventsState.length === 0) {
-                listEl.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500 italic">Nenhum evento encontrado. Clique em "Novo Evento" para cadastrar.</td></tr>`;
+            const today = new Date().toISOString().slice(0, 10);
+            const filteredEvents = eventsState.filter(ev => {
+                const isRealizado = ev.status === 'Realizado' || ev.date < today;
+                if (currentEventFilter === 'pending') {
+                    return !isRealizado && ev.status !== 'Cancelado';
+                } else if (currentEventFilter === 'completed') {
+                    return isRealizado || ev.status === 'Realizado';
+                }
+                return true;
+            });
+
+            if (filteredEvents.length === 0) {
+                listEl.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500 italic">Nenhum evento encontrado nesta categoria.</td></tr>`;
                 return;
             }
 
-            eventsState.forEach(ev => {
+            filteredEvents.forEach(ev => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-800/40 transition';
                 const hasSig = !!ev.signatureClient && !!ev.signatureDj;
@@ -1138,11 +1191,22 @@ OBSERVAÇÕES ADICIONAIS:
             });
         }
 
+        function setFinanceYearFilter(year) {
+            selectedFinanceYear = year;
+            renderFinanceTab();
+        }
+
         function renderFinanceTab() {
             let totalReceived = 0;
             let totalPending = 0;
 
-            eventsState.forEach(ev => {
+            const filteredEvents = eventsState.filter(ev => {
+                if (selectedFinanceYear === 'all') return true;
+                if (!ev.date) return false;
+                return ev.date.split('-')[0] === selectedFinanceYear;
+            });
+
+            filteredEvents.forEach(ev => {
                 const price = parseFloat(ev.price) || 0;
                 const deposit = parseFloat(ev.deposit) || 0;
                 const extraPays = (ev.extraPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
@@ -1154,7 +1218,13 @@ OBSERVAÇÕES ADICIONAIS:
                 totalPending += pend;
             });
 
-            const totalExpenses = expensesState.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+            const filteredExpenses = expensesState.filter(exp => {
+                if (selectedFinanceYear === 'all') return true;
+                if (!exp.date) return false;
+                return exp.date.split('-')[0] === selectedFinanceYear;
+            });
+
+            const totalExpenses = filteredExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
             const netProfit = totalReceived - totalExpenses;
 
             document.getElementById('fin-total-received').innerText = formatCurrency(totalReceived);
@@ -1165,10 +1235,10 @@ OBSERVAÇÕES ADICIONAIS:
             const clientListEl = document.getElementById('fin-clients-list');
             clientListEl.innerHTML = '';
 
-            if (eventsState.length === 0) {
-                clientListEl.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-500 italic">Nenhum evento registrado para balanço financeiro.</td></tr>`;
+            if (filteredEvents.length === 0) {
+                clientListEl.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-500 italic">Nenhum evento encontrado para o ano selecionado.</td></tr>`;
             } else {
-                eventsState.forEach(ev => {
+                filteredEvents.forEach(ev => {
                     const price = parseFloat(ev.price) || 0;
                     const deposit = parseFloat(ev.deposit) || 0;
                     const extraPays = (ev.extraPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
@@ -1196,10 +1266,10 @@ OBSERVAÇÕES ADICIONAIS:
             const expListEl = document.getElementById('fin-expenses-list');
             expListEl.innerHTML = '';
 
-            if (expensesState.length === 0) {
-                expListEl.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-500 italic">Nenhuma despesa ou custo cadastrado.</td></tr>`;
+            if (filteredExpenses.length === 0) {
+                expListEl.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-500 italic">Nenhuma despesa encontrada para o ano selecionado.</td></tr>`;
             } else {
-                expensesState.forEach(exp => {
+                filteredExpenses.forEach(exp => {
                     const linkedEv = eventsState.find(e => e.id === exp.eventId);
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-slate-800/40 transition';
@@ -1516,7 +1586,6 @@ OBSERVAÇÕES ADICIONAIS:
             }
             activeEventId = id;
 
-            // Se o contrato já foi gerado antes, preserva o snapshot histórico. Caso contrário, compila.
             let text = ev.contractSnapshot || compileContractText(ev);
             document.getElementById('contract-render-view').innerText = text;
 
@@ -1648,7 +1717,7 @@ OBSERVAÇÕES ADICIONAIS:
                     else eventsState.push(ev);
 
                     saveToLocalStorage();
-                    alert("Sua assinatura foi salva com sucesso! Agora clique no botão verde 'Enviar Assinatura pelo WhatsApp' logo acima.");
+                    alert("Sua assinatura foi salva com sucesso! Agora clique no botão verde 'Enviar Assinatura ao DJ' para despachar o contrato.");
                     
                     activateClientViewMode(activeEventId, null);
                 }
@@ -1723,7 +1792,7 @@ OBSERVAÇÕES ADICIONAIS:
 
         function exportBackupData() {
             const dataStr = JSON.stringify({
-                version: "2.6_STABLE",
+                version: "2.8_STABLE",
                 exportDate: new Date().toISOString(),
                 events: eventsState,
                 expenses: expensesState,
@@ -1742,7 +1811,7 @@ OBSERVAÇÕES ADICIONAIS:
 
         function processImportBackup(e) {
             const file = e.target.files[0];
-            if (!file) return; // Correção do erro de sintaxe original aplicada com sucesso
+            if (!file) return;
 
             const reader = new FileReader();
             reader.onload = function(evt) {
