@@ -29,7 +29,7 @@
             border-left: 4px solid #10b981;
         }
         @media print {
-            aside, nav, button, .no-print {
+            aside, nav, button, .no-print, #client-banner {
                 display: none !important;
             }
             body, main {
@@ -51,6 +51,15 @@
                 font-family: 'Times New Roman', Times, serif;
                 font-size: 11pt;
                 line-height: 1.5;
+            }
+            .sig-box-print {
+                border: 1px solid #cbd5e1 !important;
+                background: white !important;
+                color: black !important;
+            }
+            .sig-printed-name {
+                color: black !important;
+                border-top: 1px solid #94a3b8 !important;
             }
         }
     </style>
@@ -124,8 +133,8 @@
                 </div>
             </div>
             <div class="flex gap-2 shrink-0">
-                <button onclick="exportSignedContractData()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2">
-                    <i class="fa-solid fa-paper-plane"></i> Enviar Assinatura ao DJ
+                <button onclick="sendSignedContractWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                    <i class="fa-brands fa-whatsapp text-base"></i> Enviar Assinatura pelo WhatsApp
                 </button>
                 <button onclick="window.print()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2">
                     <i class="fa-solid fa-print"></i> Salvar / Imprimir PDF
@@ -326,7 +335,8 @@
 
         <!-- VISUALIZAR CONTRATO E ASSINATURAS -->
         <section id="tab-contratos" class="space-y-6 hidden">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
+            <!-- BARRA DE AÇÕES ADMINISTRATIVAS DO DJ (OCULTADA TOTALMENTE NO MODO CLIENTE) -->
+            <div id="dj-contract-actions" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
                 <div>
                     <h2 class="text-2xl font-bold text-white">Visualização de Contrato & Assinaturas</h2>
                     <p class="text-slate-400 text-sm">Confira os termos e recolha as assinaturas do Contratante e do DJ</p>
@@ -351,18 +361,18 @@
 
                 <!-- ASSINATURAS LADO A LADO -->
                 <div class="mt-8 pt-6 border-t border-slate-800 space-y-4">
-                    <h3 class="text-md font-bold text-emerald-400 uppercase tracking-wider">Assinaturas Digitais (Contratante & DJ)</h3>
+                    <h3 class="text-md font-bold text-emerald-400 uppercase tracking-wider print-card text-slate-300">Assinaturas Digitais (Contratante & DJ)</h3>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
                         <!-- PAINEL ASSINATURA CLIENTE -->
-                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 sig-box-print">
                             <h4 class="text-xs font-semibold text-slate-300 uppercase">1. Assinatura do Contratante (Cliente)</h4>
                             
                             <div id="client-existing-sig-box" class="hidden space-y-2">
-                                <div class="border border-slate-700 rounded bg-slate-900 p-3 text-center">
+                                <div class="border border-slate-700 rounded bg-slate-900 p-3 text-center sig-box-print">
                                     <img id="img-client-signature" src="" alt="Assinatura Contratante" class="max-h-24 mx-auto">
-                                    <div class="border-t border-slate-700 pt-1 mt-2 text-xs text-slate-300 font-semibold" id="sig-client-printed-name"></div>
+                                    <div class="border-t border-slate-700 pt-1 mt-2 text-xs text-slate-300 font-semibold sig-printed-name" id="sig-client-printed-name"></div>
                                 </div>
                                 <button onclick="reopenSignaturePad('client')" class="no-print text-xs text-amber-400 hover:underline">Refazer Assinatura</button>
                             </div>
@@ -379,13 +389,13 @@
                         </div>
 
                         <!-- PAINEL ASSINATURA DJ -->
-                        <div id="dj-signature-card" class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                        <div id="dj-signature-card" class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 sig-box-print">
                             <h4 class="text-xs font-semibold text-slate-300 uppercase">2. Assinatura do Contratado (DJ BROW)</h4>
                             
                             <div id="dj-existing-sig-box" class="hidden space-y-2">
-                                <div class="border border-slate-700 rounded bg-slate-900 p-3 text-center">
+                                <div class="border border-slate-700 rounded bg-slate-900 p-3 text-center sig-box-print">
                                     <img id="img-dj-signature" src="" alt="Assinatura DJ" class="max-h-24 mx-auto">
-                                    <div class="border-t border-slate-700 pt-1 mt-2 text-xs text-slate-300 font-semibold" id="sig-dj-printed-name"></div>
+                                    <div class="border-t border-slate-700 pt-1 mt-2 text-xs text-slate-300 font-semibold sig-printed-name" id="sig-dj-printed-name"></div>
                                 </div>
                                 <button onclick="reopenSignaturePad('dj')" class="no-print text-xs text-amber-400 hover:underline">Refazer Assinatura</button>
                             </div>
@@ -674,7 +684,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT DO APLICATIVO CORRIGIDO -->
+    <!-- SCRIPT DO APLICATIVO CORRIGIDO (VERSÃO 10 - WHATSAPP DIRETO) -->
     <script>
         const defaultContractText = `CONTRATO DJ BROW
 PRESTAÇÃO DE SERVIÇOS ARTÍSTICOS DE DJ - CASAMENTOS E ANIVERSÁRIOS
@@ -728,6 +738,7 @@ OBSERVAÇÕES ADICIONAIS:
         };
         let contractTemplateState = defaultContractText;
         let activeEventId = null;
+        let isClientMode = false;
 
         function escapeHTML(str) {
             if (!str) return '';
@@ -743,12 +754,12 @@ OBSERVAÇÕES ADICIONAIS:
             loadFromLocalStorage();
             setupSignaturePads();
 
-            // VERIFICA SE O LINK VEIO COM PARÂMETRO DE MODO CLIENTE (?clientView=ID&clientData=...)
             const urlParams = new URLSearchParams(window.location.search);
             const clientEventId = urlParams.get('clientView');
             const clientDataPayload = urlParams.get('clientData');
 
             if (clientEventId) {
+                isClientMode = true;
                 activateClientViewMode(clientEventId, clientDataPayload);
             } else {
                 renderDashboard();
@@ -757,21 +768,20 @@ OBSERVAÇÕES ADICIONAIS:
             }
         });
 
-        // --- MODO VISÃO EXCLUSIVA DO CLIENTE (COM SUPORTE A CROSS-DEVICE VIA PAYLOAD URL) ---
         function activateClientViewMode(eventId, dataPayload) {
             const sidebar = document.getElementById('app-sidebar');
             if (sidebar) sidebar.style.display = 'none';
 
+            const djActions = document.getElementById('dj-contract-actions');
+            if (djActions) djActions.style.display = 'none';
+
             const banner = document.getElementById('client-banner');
             if (banner) banner.classList.remove('hidden');
-
-            const djCard = document.getElementById('dj-signature-card');
-            if (djCard) djCard.style.display = 'none';
 
             let ev = null;
             if (dataPayload) {
                 try {
-                    ev = JSON.parse(atob(dataPayload));
+                    ev = JSON.parse(decodeURIComponent(escape(atob(dataPayload))));
                 } catch (e) {
                     console.error("Erro ao decodificar dados do cliente via URL:", e);
                 }
@@ -828,9 +838,30 @@ OBSERVAÇÕES ADICIONAIS:
                 clientNew.classList.remove('hidden');
                 clearSignaturePad('client');
             }
+
+            const djExisting = document.getElementById('dj-existing-sig-box');
+            const djNew = document.getElementById('dj-new-sig-box');
+            const djImg = document.getElementById('img-dj-signature');
+            const djPrinted = document.getElementById('sig-dj-printed-name');
+
+            if (ev.signatureDj) {
+                djImg.src = ev.signatureDj;
+                djImg.style.display = 'block';
+                djPrinted.innerText = `${profileState.userName} (DJ BROW)`;
+                djExisting.classList.remove('hidden');
+                djNew.classList.add('hidden');
+            } else {
+                djPrinted.innerText = `${profileState.userName} (DJ BROW)`;
+                djExisting.classList.remove('hidden');
+                djNew.classList.add('hidden');
+                if (!ev.signatureDj) {
+                    djImg.style.display = 'none';
+                } else {
+                    djImg.style.display = 'block';
+                }
+            }
         }
 
-        // --- CORREÇÃO DO ERRO DE SINTAXE E COMPARTILHAMENTO SEGURO ---
         function generateClientShareLink() {
             if (!activeEventId) {
                 alert("Selecione um evento primeiro na aba de Contratos.");
@@ -842,34 +873,50 @@ OBSERVAÇÕES ADICIONAIS:
                 return;
             }
 
-            // Serializa e codifica os dados do evento em Base64 para cross-device perfeito sem banco externo
             const payload = btoa(unescape(encodeURIComponent(JSON.stringify(ev))));
             const currentUrl = window.location.href.split('?')[0];
             const shareLink = `${currentUrl}?clientView=${activeEventId}&clientData=${payload}`;
 
             navigator.clipboard.writeText(shareLink).then(() => {
-                alert("Link seguro do cliente copiado com sucesso!\n\nCole e envie este link no WhatsApp do cliente para que ele possa acessar e assinar o contrato em qualquer dispositivo.");
+                alert("Link seguro do cliente copiado com sucesso!\n\nCole e envie este link no WhatsApp do cliente.");
             }).catch(err => {
                 prompt("Copie o link seguro abaixo para enviar ao cliente:", shareLink);
             });
         }
 
-        function exportSignedContractData() {
-            if (!activeEventId) return;
-            const ev = eventsState.find(e => e.id === activeEventId);
+        // NOVO: ENVIO DIRETO PARA O WHATSAPP DO DJ COM UM CLIQUE
+        function sendSignedContractWhatsApp() {
+            let ev = null;
+            const urlParams = new URLSearchParams(window.location.search);
+            const clientDataPayload = urlParams.get('clientData');
+            
+            if (clientDataPayload) {
+                try {
+                    ev = JSON.parse(decodeURIComponent(escape(atob(clientDataPayload))));
+                } catch(e) {}
+            }
+            if (!ev && activeEventId) {
+                ev = eventsState.find(e => e.id === activeEventId);
+            }
+
             if (!ev || !ev.signatureClient) {
-                alert("Por favor, realize a assinatura antes de enviar ao DJ.");
+                alert("Por favor, faça a sua assinatura no quadro acima antes de enviar ao DJ.");
                 return;
             }
+
             const payload = btoa(unescape(encodeURIComponent(JSON.stringify(ev))));
-            const msg = `Olá DJ BROW, assinei o contrato do evento. Aqui estão os dados atualizados:\n\nDJBROW_SYNC:${payload}`;
-            prompt("Copie o texto abaixo e envie para o WhatsApp do DJ BROW:", msg);
+            const textMsg = `Olá DJ BROW, assinei o contrato do evento! Aqui estão os dados atualizados com a minha assinatura:\n\nDJBROW_SYNC:${payload}`;
+            
+            // Remove caracteres não numéricos do telefone do perfil do DJ
+            const djPhone = (profileState.userPhone || '5514997504876').replace(/\D/g, '');
+            const whatsappUrl = `https://wa.me/${djPhone}?text=${encodeURIComponent(textMsg)}`;
+            
+            window.open(whatsappUrl, '_blank');
         }
 
         function calculateEndTime() {
             const startVal = document.getElementById('inp-time-start').value;
             const durationVal = parseFloat(document.getElementById('inp-event-duration').value) || 0;
-
             if (!startVal) return;
 
             const [hours, minutes] = startVal.split(':').map(Number);
@@ -1071,7 +1118,6 @@ OBSERVAÇÕES ADICIONAIS:
             });
         }
 
-        // --- MÓDULO FINANCEIRO REVISADO (Sem duplicação, cálculos exatos) ---
         function renderFinanceTab() {
             let totalReceived = 0;
             let totalPending = 0;
@@ -1450,6 +1496,7 @@ OBSERVAÇÕES ADICIONAIS:
 
             if (ev.signatureDj) {
                 djImg.src = ev.signatureDj;
+                djImg.style.display = 'block';
                 djPrinted.innerText = `${profileState.userName} (DJ BROW)`;
                 djExisting.classList.remove('hidden');
                 djNew.classList.add('hidden');
@@ -1517,12 +1564,42 @@ OBSERVAÇÕES ADICIONAIS:
         }
 
         function saveSignature(role) {
+            const dataUrl = canvases[role].toDataURL('image/png');
+
+            if (isClientMode) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const clientDataPayload = urlParams.get('clientData');
+                let ev = null;
+                if (clientDataPayload) {
+                    try {
+                        ev = JSON.parse(decodeURIComponent(escape(atob(clientDataPayload))));
+                    } catch(e) {}
+                }
+                if (!ev && activeEventId) {
+                    ev = eventsState.find(e => e.id === activeEventId);
+                }
+
+                if (ev) {
+                    ev.signatureClient = dataUrl;
+                    activeEventId = ev.id;
+                    const idx = eventsState.findIndex(e => e.id === ev.id);
+                    if (idx !== -1) eventsState[idx] = ev;
+                    else eventsState.push(ev);
+
+                    saveToLocalStorage();
+                    alert("Sua assinatura foi salva com sucesso! Agora basta clicar no botão verde 'Enviar Assinatura pelo WhatsApp' logo acima.");
+                    
+                    const newPayload = btoa(unescape(encodeURIComponent(JSON.stringify(ev))));
+                    activateClientViewMode(activeEventId, newPayload);
+                }
+                return;
+            }
+
             if (!activeEventId) {
                 alert("Selecione ou crie um evento antes de assinar.");
                 return;
             }
 
-            const dataUrl = canvases[role].toDataURL('image/png');
             const idx = eventsState.findIndex(e => e.id === activeEventId);
             if (idx !== -1) {
                 if (role === 'client') {
@@ -1534,24 +1611,6 @@ OBSERVAÇÕES ADICIONAIS:
                 alert(`Assinatura do ${role === 'client' ? 'Contratante' : 'DJ'} salva com sucesso!`);
                 viewEventContract(activeEventId);
                 renderEventsList();
-            } else {
-                // Modo cliente sem registro prévio no array local
-                const urlParams = new URLSearchParams(window.location.search);
-                const clientEventId = urlParams.get('clientView');
-                const clientDataPayload = urlParams.get('clientData');
-                if (clientDataPayload) {
-                    try {
-                        let ev = JSON.parse(atob(clientDataPayload));
-                        ev.signatureClient = dataUrl;
-                        activeEventId = ev.id;
-                        eventsState.push(ev);
-                        saveToLocalStorage();
-                        alert("Assinatura salva com sucesso! Clique em 'Enviar Assinatura ao DJ' para repassar os dados.");
-                        activateClientViewMode(activeEventId, btoa(unescape(encodeURIComponent(JSON.stringify(ev)))));
-                    } catch(err) {
-                        alert("Erro ao salvar assinatura.");
-                    }
-                }
             }
         }
 
@@ -1597,7 +1656,7 @@ OBSERVAÇÕES ADICIONAIS:
 
         function exportBackupData() {
             const dataStr = JSON.stringify({
-                version: "2.2_STABLE",
+                version: "2.4_STABLE",
                 exportDate: new Date().toISOString(),
                 events: eventsState,
                 expenses: expensesState,
