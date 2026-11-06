@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DJ BROW - Gestão de Eventos, Contratos & Finanças v22</title>
+    <title>DJ BROW - Gestão de Eventos, Contratos & Finanças v22.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Biblioteca para geração do PDF -->
@@ -69,7 +69,7 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-lg leading-none tracking-wide" id="sidebar-app-name">DJ BROW</h1>
-                    <span class="text-xs text-slate-400">Contratos & Gestão Total v22</span>
+                    <span class="text-xs text-slate-400">Contratos & Gestão Total v22.1</span>
                 </div>
             </div>
 
@@ -439,7 +439,7 @@
                     </div>
 
                     <p class="text-[11px] text-slate-500 italic mt-4 no-print">
-                        * Nota de Transparência: As assinaturas digitais representam a manifestação de concordância entre as partes. Este aplicativo opera em arquitetura estática local (LocalStorage) com versionamento de integridade criptográfica SHA-256.
+                        * Nota de Transparência: As assinaturas digitais representam a manifestação de concordância entre as partes. Este aplicativo opera em arquitetura estática local (LocalStorage) com controle de versão por hash de integridade (v22).
                     </p>
                 </div>
             </div>
@@ -715,7 +715,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT DO APLICATIVO (VERSÃO 22 - AUDITORIA DE INTEGRIDADE E CAIXA REAL) -->
+    <!-- SCRIPT DO APLICATIVO (VERSÃO 22.1 - CORREÇÕES DOS 6 BUGS) -->
     <script>
         const defaultContractText = `CONTRATO DJ BROW
 PRESTAÇÃO DE SERVIÇOS ARTÍSTICOS DE DJ - CASAMENTOS E ANIVERSÁRIOS
@@ -813,16 +813,16 @@ OBSERVAÇÕES ADICIONAIS:
             }
         }
 
-        // Função para calcular hash de integridade do contrato
+        // CORREÇÃO BUG 4: Hash de integridade abrangendo todos os campos críticos
         function computeContractHash(ev) {
-            const rawString = `${ev.clientName}|${ev.clientCpf}|${ev.date}|${ev.location}|${ev.price}|${ev.deposit}|${ev.startTime}|${ev.endTime}|${ev.equipments}`;
+            const rawString = `${ev.clientName}|${ev.clientCpf}|${ev.clientPhone}|${ev.clientCep}|${ev.clientAddress}|${ev.date}|${ev.location}|${ev.duration}|${ev.startTime}|${ev.endTime}|${ev.extraHour}|${ev.price}|${ev.deposit}|${ev.equipments}|${ev.notes}`;
             let hash = 0;
             for (let i = 0; i < rawString.length; i++) {
                 const char = rawString.charCodeAt(i);
                 hash = ((hash << 5) - hash) + char;
                 hash |= 0; 
             }
-            return 'v22_' + Math.abs(hash).toString(16);
+            return 'v22.1_' + Math.abs(hash).toString(16);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -842,18 +842,27 @@ OBSERVAÇÕES ADICIONAIS:
                     if (syncObj && syncObj.id) {
                         const existingIdx = eventsState.findIndex(e => e.id === syncObj.id);
                         if (existingIdx !== -1) {
-                            // Valida se a versão do contrato confere antes de aceitar a sincronização
                             const currentHash = computeContractHash(eventsState[existingIdx]);
+                            
+                            // CORREÇÃO BUG 6: Preservação da assinatura sob revisão em vez de descarte silencioso
                             if (syncObj.contractHash && syncObj.contractHash !== currentHash) {
-                                alert("⚠️ Aviso de Segurança: O contrato foi modificado no painel do DJ após o envio do link. A assinatura anterior foi descontinuada por divergência de versão.");
+                                if (syncObj.signatureClient) eventsState[existingIdx].signatureClient = syncObj.signatureClient;
+                                if (syncObj.signedClientAt) eventsState[existingIdx].signedClientAt = syncObj.signedClientAt;
+                                eventsState[existingIdx].signatureUnderReview = true;
+                                eventsState[existingIdx].signatureReceivedHash = syncObj.contractHash;
+                                alert("⚠️ ATENÇÃO: A assinatura do cliente foi recebida, mas o contrato foi modificado após o envio do link. A assinatura foi salva mas está marcada para REVISÃO. Confira os dados e, se necessário, gere um novo link para o cliente re-assinar.");
                             } else {
                                 if (syncObj.signatureClient) eventsState[existingIdx].signatureClient = syncObj.signatureClient;
+                                if (syncObj.signedClientAt) eventsState[existingIdx].signedClientAt = syncObj.signedClientAt;
                                 if (syncObj.signatureDj) eventsState[existingIdx].signatureDj = syncObj.signatureDj;
+                                if (syncObj.signedDjAt) eventsState[existingIdx].signedDjAt = syncObj.signedDjAt;
                                 alert("Assinatura do cliente sincronizada com sucesso no seu painel!");
                             }
                         } else {
-                            eventsState.push(syncObj);
-                            alert("Evento sincronizado com sucesso!");
+                            // CORREÇÃO BUG 2: Mensagem clara de erro e prevenção de evento fantasma
+                            alert("A assinatura do cliente foi recebida, mas o evento correspondente não existe neste dispositivo. Para sincronizar corretamente, abra este link no mesmo aparelho/navegador onde o evento foi criado ou importe o backup completo primeiro.");
+                            window.location.hash = '';
+                            return;
                         }
                         saveToLocalStorage();
                         window.location.hash = '';
@@ -1030,7 +1039,9 @@ OBSERVAÇÕES ADICIONAIS:
             const syncPayload = {
                 id: ev.id,
                 signatureClient: ev.signatureClient,
+                signedClientAt: ev.signedClientAt,
                 signatureDj: ev.signatureDj,
+                signedDjAt: ev.signedDjAt,
                 status: ev.status,
                 contractHash: computeContractHash(ev)
             };
@@ -1079,7 +1090,6 @@ OBSERVAÇÕES ADICIONAIS:
             const element = document.getElementById('pdf-printable-area');
             element.classList.add('pdf-export-mode');
 
-            // Nome de arquivo organizado e rigoroso
             const cleanName = (ev.clientName || 'Cliente').replace(/[^a-zA-Z0-9]/g, '_');
             const opt = {
                 margin:       10,
@@ -1200,7 +1210,6 @@ OBSERVAÇÕES ADICIONAIS:
             }
         }
 
-        // SALVAMENTO BLINDADO CONTRA ESTOURO DE STORAGE (Requisito 8)
         function saveToLocalStorage() {
             try {
                 localStorage.setItem('djbrow_events', JSON.stringify(eventsState));
@@ -1356,8 +1365,9 @@ OBSERVAÇÕES ADICIONAIS:
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-800/40 transition';
                 const hasSig = !!ev.signatureClient && !!ev.signatureDj;
+                const underReviewWarning = ev.signatureUnderReview ? ' <span class="text-xs text-amber-400" title="Contrato modificado após assinatura">⚠️ Revisar</span>' : '';
                 tr.innerHTML = `
-                    <td class="p-3 font-bold text-white">${escapeHTML(ev.clientName)}</td>
+                    <td class="p-3 font-bold text-white">${escapeHTML(ev.clientName)} ${underReviewWarning}</td>
                     <td class="p-3 text-slate-300">${escapeHTML(formatDateBR(ev.date))}</td>
                     <td class="p-3"><span class="bg-slate-800 text-slate-300 text-xs px-2.5 py-1 rounded font-semibold">${escapeHTML(ev.status || 'Confirmado')}</span></td>
                     <td class="p-3 text-emerald-400 font-semibold">${formatCurrency(ev.price)}</td>
@@ -1379,7 +1389,6 @@ OBSERVAÇÕES ADICIONAIS:
             renderFinanceTab();
         }
 
-        // CONTROLE FINANCEIRO RIGOROSO BASEADO NA DATA REAL DO PAGAMENTO (Requisito 7)
         function renderFinanceTab() {
             let totalReceived = 0;
             let totalPending = 0;
@@ -1393,7 +1402,6 @@ OBSERVAÇÕES ADICIONAIS:
                 totalPending += pend;
             });
 
-            // Soma pagamentos que ocorreram no ano financeiro selecionado (Data real do caixa)
             eventsState.forEach(ev => {
                 if (ev.status === 'Cancelado') return;
                 if (ev.extraPayments) {
@@ -1662,7 +1670,6 @@ OBSERVAÇÕES ADICIONAIS:
                 return;
             }
 
-            // Validação de Conflito de Datas na Agenda
             const conflict = eventsState.find(ev => ev.date === date && ev.id !== existingId && ev.status !== 'Cancelado');
             if (conflict) {
                 if (!confirm(`⚠️ ATENÇÃO: Já existe o evento de "${conflict.clientName}" agendado para esta mesma data (${formatDateBR(date)}). Deseja cadastrar mesmo assim?`)) {
@@ -1675,16 +1682,20 @@ OBSERVAÇÕES ADICIONAIS:
                 if (idx !== -1) {
                     const oldEv = eventsState[idx];
                     
-                    // CONTROLE DE VERSÃO E VALIDADE DE ASSINATURA (Requisito 3)
                     let sigClient = oldEv.signatureClient;
                     let sigDj = oldEv.signatureDj;
-                    const tempEvCheck = { ...oldEv, clientName: name, clientCpf: cpf, date: date, location: location, price: price, equipments: equipments };
+                    let sigClientAt = oldEv.signedClientAt;
+                    let sigDjAt = oldEv.signedDjAt;
+                    
+                    const tempEvCheck = { ...oldEv, clientName: name, clientCpf: cpf, clientPhone: phone, clientCep: cep, clientAddress: clientAddress, date: date, location: location, duration: duration, startTime: startTime, endTime: endTime, extraHour: extraHour, price: price, deposit: deposit, equipments: equipments, notes: notes };
                     const newCalculatedHash = computeContractHash(tempEvCheck);
 
                     if (sigClient && oldEv.contractHash && oldEv.contractHash !== newCalculatedHash) {
                         if (confirm("⚠️ Alteração detectada em dados contratuais principais após a assinatura. Por segurança jurídica, as assinaturas anteriores foram invalidadas e o contrato exigirá nova assinatura. Deseja aplicar?")) {
                             sigClient = null;
                             sigDj = null;
+                            sigClientAt = null;
+                            sigDjAt = null;
                         } else {
                             return;
                         }
@@ -1711,6 +1722,8 @@ OBSERVAÇÕES ADICIONAIS:
                         notes: notes,
                         signatureClient: sigClient,
                         signatureDj: sigDj,
+                        signedClientAt: sigClientAt,
+                        signedDjAt: sigDjAt,
                         contractHash: newCalculatedHash
                     };
                     eventsState[idx].contractSnapshot = compileContractText(eventsState[idx]);
@@ -1740,6 +1753,8 @@ OBSERVAÇÕES ADICIONAIS:
                     extraPayments: [],
                     signatureClient: null,
                     signatureDj: null,
+                    signedClientAt: null,
+                    signedDjAt: null,
                     contractSnapshot: '',
                     contractHash: ''
                 };
@@ -1747,6 +1762,21 @@ OBSERVAÇÕES ADICIONAIS:
                 newEvent.contractSnapshot = compileContractText(newEvent);
                 eventsState.push(newEvent);
                 activeEventId = newId;
+            }
+
+            // CORREÇÃO BUG 3: Auto-registro do sinal como pagamento efetivo ao confirmar evento com sinal > 0
+            const evToCheck = eventsState.find(e => e.id === activeEventId);
+            if (evToCheck && evToCheck.status === 'Confirmado' && evToCheck.deposit > 0) {
+                if (!evToCheck.extraPayments) evToCheck.extraPayments = [];
+                const hasDepositPayment = evToCheck.extraPayments.some(p => p.note && p.note.toLowerCase().includes('sinal'));
+                if (!hasDepositPayment) {
+                    evToCheck.extraPayments.push({
+                        id: 'pay_sinal_' + Date.now(),
+                        amount: parseFloat(evToCheck.deposit) || 0,
+                        date: new Date().toISOString().slice(0, 10),
+                        note: 'Sinal pago no ato da assinatura (auto)'
+                    });
+                }
             }
 
             saveToLocalStorage();
@@ -1790,7 +1820,6 @@ OBSERVAÇÕES ADICIONAIS:
             if (!ev) return;
 
             if (confirm(`Tem certeza que deseja excluir permanentemente o evento do cliente "${ev.clientName}"? (O histórico financeiro atrelado a pagamentos passados será arquivado).`)) {
-                // Arquivamento suave em vez de remoção financeira total se houver pagamentos (Requisito 7)
                 const hasPaid = (ev.extraPayments && ev.extraPayments.length > 0);
                 if (hasPaid) {
                     ev.status = 'Cancelado';
@@ -1826,7 +1855,7 @@ OBSERVAÇÕES ADICIONAIS:
 
             if (ev.signatureClient) {
                 clientImg.src = ev.signatureClient;
-                clientPrinted.innerText = `${ev.clientName} (${ev.clientCpf})`;
+                clientPrinted.innerText = `${ev.clientName} (${ev.clientCpf})${ev.signedClientAt ? ' - ' + new Date(ev.signedClientAt).toLocaleString('pt-BR') : ''}`;
                 clientExisting.classList.remove('hidden');
                 clientNew.classList.add('hidden');
             } else {
@@ -1843,7 +1872,7 @@ OBSERVAÇÕES ADICIONAIS:
             if (ev.signatureDj) {
                 djImg.src = ev.signatureDj;
                 djImg.style.display = 'block';
-                djPrinted.innerText = `${profileState.userName} (DJ BROW)`;
+                djPrinted.innerText = `${profileState.userName} (DJ BROW)${ev.signedDjAt ? ' - ' + new Date(ev.signedDjAt).toLocaleString('pt-BR') : ''}`;
                 djExisting.classList.remove('hidden');
                 djNew.classList.add('hidden');
             } else {
@@ -1929,6 +1958,7 @@ OBSERVAÇÕES ADICIONAIS:
             }
 
             const dataUrl = canvas.toDataURL('image/png');
+            const timestampNow = new Date().toISOString();
 
             if (isClientMode) {
                 const urlParams = new URLSearchParams(window.location.search);
@@ -1948,7 +1978,7 @@ OBSERVAÇÕES ADICIONAIS:
 
                 if (ev) {
                     ev.signatureClient = dataUrl;
-                    ev.signedAt = new Date().toISOString();
+                    ev.signedClientAt = timestampNow; // CORREÇÃO BUG 5: Timestamp isolado do cliente
                     activeEventId = ev.id;
                     const idx = eventsState.findIndex(e => e.id === ev.id);
                     if (idx !== -1) eventsState[idx] = ev;
@@ -1969,12 +1999,14 @@ OBSERVAÇÕES ADICIONAIS:
 
             const idx = eventsState.findIndex(e => e.id === activeEventId);
             if (idx !== -1) {
+                // CORREÇÃO BUG 5: Salvamento isolado de timestamps por papel (cliente x DJ)
                 if (role === 'client') {
                     eventsState[idx].signatureClient = dataUrl;
+                    eventsState[idx].signedClientAt = timestampNow;
                 } else {
                     eventsState[idx].signatureDj = dataUrl;
+                    eventsState[idx].signedDjAt = timestampNow;
                 }
-                eventsState[idx].signedAt = new Date().toISOString();
                 saveToLocalStorage();
                 alert(`Assinatura do ${role === 'client' ? 'Contratante' : 'DJ'} salva com sucesso!`);
                 viewEventContract(activeEventId);
@@ -2031,7 +2063,7 @@ OBSERVAÇÕES ADICIONAIS:
 
         function exportBackupData() {
             const dataStr = JSON.stringify({
-                version: "22.0_AUDIT",
+                version: "22.1_AUDIT",
                 exportDate: new Date().toISOString(),
                 events: eventsState,
                 expenses: expensesState,
@@ -2048,7 +2080,6 @@ OBSERVAÇÕES ADICIONAIS:
             URL.revokeObjectURL(url);
         }
 
-        // VALIDAÇÃO RIGOROSA DE BACKUP (Requisito 8)
         function processImportBackup(e) {
             const file = e.target.files[0];
             if (!file) return;
