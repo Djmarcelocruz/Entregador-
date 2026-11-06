@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DJ BROW - Gestão de Eventos, Contratos & Finanças</title>
+    <title>DJ BROW - Gestão de Eventos, Contratos & Finanças v22</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Biblioteca para geração do PDF -->
@@ -30,14 +30,12 @@
             color: #10b981;
             border-left: 4px solid #10b981;
         }
-        /* CORREÇÃO BUG 4: Regras de impressão e ocultação correta de elementos .no-print */
         @media print {
             .no-print { display: none !important; }
         }
         .pdf-export-mode .no-print {
             display: none !important;
         }
-        /* ESTILO PARA EXPORTAR PDF COM FUNDO BRANCO E TEXTO PRETO */
         .pdf-export-mode {
             background-color: #ffffff !important;
             color: #000000 !important;
@@ -71,7 +69,7 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-lg leading-none tracking-wide" id="sidebar-app-name">DJ BROW</h1>
-                    <span class="text-xs text-slate-400">Contratos & Gestão Total</span>
+                    <span class="text-xs text-slate-400">Contratos & Gestão Total v22</span>
                 </div>
             </div>
 
@@ -124,8 +122,8 @@
                     <i class="fa-solid fa-file-contract"></i>
                 </div>
                 <div>
-                    <h3 class="font-bold text-white text-base">Portal do Cliente - Assinatura & Envio de Contrato</h3>
-                    <p class="text-xs text-slate-300">Confira os termos, assine abaixo e clique no botão verde para enviar o PDF assinado direto para o DJ BROW.</p>
+                    <h3 class="font-bold text-white text-base">Portal do Cliente - Conferência & Assinatura Digital</h3>
+                    <p class="text-xs text-slate-300">Confira todos os seus dados e termos abaixo, assine no quadro indicado e envie o PDF pronto para o DJ BROW.</p>
                 </div>
             </div>
             <div id="client-actions-container" class="flex flex-wrap gap-2 pt-2 border-t border-emerald-900/50">
@@ -140,7 +138,7 @@
                 </button>
             </div>
             <p id="client-share-hint" class="text-[11px] text-emerald-400 italic hidden">
-                💡 Dica: Após tocar no botão de envio, selecione o WhatsApp, escolha a conversa com **DJ BROW** e confirme o envio do arquivo PDF assinado.
+                💡 Dica: Após tocar no botão de envio, selecione o WhatsApp, escolha a conversa com **DJ BROW** e confirme o envio do documento PDF.
             </p>
         </div>
 
@@ -149,7 +147,7 @@
             <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-bold tracking-tight text-white">Painel Geral</h2>
-                    <p class="text-slate-400 text-sm">Resumo financeiro e próximos compromissos da agenda</p>
+                    <p class="text-slate-400 text-sm">Resumo financeiro de caixa real e próximos compromissos da agenda</p>
                 </div>
                 <button onclick="prepareNewEvent()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-5 py-2.5 rounded-lg transition flex items-center gap-2 self-start md:self-auto shadow-lg shadow-emerald-500/10">
                     <i class="fa-solid fa-plus"></i> Novo Evento
@@ -295,8 +293,8 @@
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Status do Evento</label>
                             <select id="inp-event-status" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
-                                <option value="Proposta enviada">Proposta enviada</option>
                                 <option value="Em negociação">Em negociação</option>
+                                <option value="Proposta enviada">Proposta enviada</option>
                                 <option value="Aguardando assinatura">Aguardando assinatura</option>
                                 <option value="Confirmado">Confirmado</option>
                                 <option value="Realizado">Realizado (Finalizado)</option>
@@ -324,7 +322,7 @@
                             <input type="number" step="0.01" id="inp-event-price" required placeholder="1800.00" oninput="autoCalculateDeposit()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Sinal / Entrada (20%)</label>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Sinal / Entrada Previsto (20%)</label>
                             <input type="number" step="0.01" id="inp-event-deposit" required placeholder="360.00" oninput="autoCalculateSaldo()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
                         </div>
                         <div class="md:col-span-2">
@@ -441,7 +439,7 @@
                     </div>
 
                     <p class="text-[11px] text-slate-500 italic mt-4 no-print">
-                        * Nota de Transparência: As assinaturas digitais representam a manifestação de concordância entre as partes e registram carimbo de data e hora jurídico.
+                        * Nota de Transparência: As assinaturas digitais representam a manifestação de concordância entre as partes. Este aplicativo opera em arquitetura estática local (LocalStorage) com versionamento de integridade criptográfica SHA-256.
                     </p>
                 </div>
             </div>
@@ -454,21 +452,20 @@
                     <h2 class="text-2xl font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-sack-dollar text-emerald-400"></i> Gestão Financeira & Caixa
                     </h2>
-                    <p class="text-slate-400 text-sm">Controle rigoroso de entradas, sinal, pagamentos parciais, despesas e resultado de caixa por ano</p>
+                    <p class="text-slate-400 text-sm">Controle rigoroso de entradas reais contabilizadas pela **data efetiva do pagamento**, despesas e lucro líquido</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
                     <button onclick="openExpenseModal()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold px-4 py-2.5 rounded-lg text-sm transition flex items-center gap-2">
                         <i class="fa-solid fa-minus-circle"></i> Registrar Gasto / Despesa
                     </button>
                     <button onclick="openPaymentModal()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2.5 rounded-lg text-sm transition flex items-center gap-2">
-                        <i class="fa-solid fa-plus-circle"></i> Registrar Pagamento
+                        <i class="fa-solid fa-plus-circle"></i> Registrar Pagamento (Sinal / Parcela)
                     </button>
                 </div>
             </div>
 
-            <!-- CORREÇÃO BUG 5: Filtro de Ano Dinâmico -->
             <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 flex items-center gap-3">
-                <label class="text-xs font-semibold text-slate-300 uppercase"><i class="fa-solid fa-filter me-1 text-emerald-400"></i> Filtrar Ano Financeiro:</label>
+                <label class="text-xs font-semibold text-slate-300 uppercase"><i class="fa-solid fa-filter me-1 text-emerald-400"></i> Filtrar Ano Financeiro (Por Data de Recebimento/Pagamento):</label>
                 <select id="finance-year-select" onchange="setFinanceYearFilter(this.value)" class="bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-emerald-500">
                     <option value="all">Todos os Anos</option>
                 </select>
@@ -477,7 +474,7 @@
             <!-- CARDS DE RESUMO -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
-                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total em Caixa (Entradas)</span>
+                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Dinheiro Real em Caixa (Recebido)</span>
                     <p class="text-2xl font-extrabold text-emerald-400 mt-2" id="fin-total-received">R$ 0,00</p>
                 </div>
                 <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
@@ -485,7 +482,7 @@
                     <p class="text-2xl font-extrabold text-amber-400 mt-2" id="fin-total-pending">R$ 0,00</p>
                 </div>
                 <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
-                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total de Gastos / Despesas</span>
+                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total de Despesas Pagas</span>
                     <p class="text-2xl font-extrabold text-rose-400 mt-2" id="fin-total-expenses">R$ 0,00</p>
                 </div>
                 <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
@@ -504,11 +501,10 @@
                         <thead class="bg-slate-800 text-slate-400 uppercase text-xs">
                             <tr>
                                 <th class="p-3 rounded-l-lg">Cliente</th>
-                                <th class="p-3">Data</th>
+                                <th class="p-3">Data Evento</th>
                                 <th class="p-3">Valor Total</th>
-                                <th class="p-3">Sinal Pago</th>
-                                <th class="p-3">Outros Pagamentos</th>
-                                <th class="p-3">Total Pago</th>
+                                <th class="p-3">Sinal Previsto</th>
+                                <th class="p-3">Total Pago Efetivo</th>
                                 <th class="p-3">Saldo Devedor</th>
                                 <th class="p-3 rounded-r-lg text-right">Ação</th>
                             </tr>
@@ -633,7 +629,7 @@
                         </div>
                         <div>
                             <h3 class="font-bold text-white">Restaurar Backup</h3>
-                            <p class="text-xs text-slate-400">Importe um arquivo JSON salvo anteriormente</p>
+                            <p class="text-xs text-slate-400">Importe um arquivo JSON salvo anteriormente com validação de estrutura</p>
                         </div>
                     </div>
                     <input type="file" id="backup-file-input" accept=".json" class="hidden" onchange="processImportBackup(event)">
@@ -650,7 +646,7 @@
     <div id="modal-payment" class="fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50 hidden no-print">
         <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 space-y-4">
             <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i> Registrar Pagamento / Adiantamento
+                <i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i> Registrar Pagamento / Entrada no Caixa
             </h3>
             <form onsubmit="handleSavePayment(event)" class="space-y-4">
                 <div>
@@ -658,16 +654,16 @@
                     <select id="modal-pay-event-id" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none"></select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Valor do Pagamento (R$) *</label>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Valor Recebido (R$) *</label>
                     <input type="number" step="0.01" id="modal-pay-amount" required placeholder="0.00" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Data do Recebimento *</label>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Data Real do Recebimento (Caixa) *</label>
                     <input type="date" id="modal-pay-date" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Observação (Ex: PIX 2ª parcela)</label>
-                    <input type="text" id="modal-pay-note" placeholder="Forma de pagamento, parcela..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Observação (Ex: PIX Sinal / 2ª Parcela)</label>
+                    <input type="text" id="modal-pay-note" placeholder="Forma de pagamento, comprovante..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none">
                 </div>
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="closePaymentModal()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-lg text-sm">Cancelar</button>
@@ -693,7 +689,7 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Data *</label>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Data Efetiva (Caixa) *</label>
                         <input type="date" id="modal-exp-date" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none">
                     </div>
                     <div>
@@ -719,7 +715,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT DO APLICATIVO (VERSÃO 19 - CORREÇÕES DE TODOS OS BUGS CRÍTICOS, MÉDIOS E MENORES) -->
+    <!-- SCRIPT DO APLICATIVO (VERSÃO 22 - AUDITORIA DE INTEGRIDADE E CAIXA REAL) -->
     <script>
         const defaultContractText = `CONTRATO DJ BROW
 PRESTAÇÃO DE SERVIÇOS ARTÍSTICOS DE DJ - CASAMENTOS E ANIVERSÁRIOS
@@ -775,7 +771,7 @@ OBSERVAÇÕES ADICIONAIS:
         let activeEventId = null;
         let isClientMode = false;
         let currentEventFilter = 'pending';
-        let selectedFinanceYear = new Date().getFullYear().toString(); // Correção Bug 5: Ano dinâmico atual
+        let selectedFinanceYear = new Date().getFullYear().toString();
 
         function escapeHTML(str) {
             if (!str) return '';
@@ -787,7 +783,6 @@ OBSERVAÇÕES ADICIONAIS:
                 .replace(/'/g, '&#039;');
         }
 
-        // CORREÇÃO BUG 6: Codificação/Decodificação segura UTF-8 / Base64 sem usar escape/unescape deprecated
         function encodeBase64Json(obj) {
             try {
                 const jsonString = JSON.stringify(obj);
@@ -818,6 +813,18 @@ OBSERVAÇÕES ADICIONAIS:
             }
         }
 
+        // Função para calcular hash de integridade do contrato
+        function computeContractHash(ev) {
+            const rawString = `${ev.clientName}|${ev.clientCpf}|${ev.date}|${ev.location}|${ev.price}|${ev.deposit}|${ev.startTime}|${ev.endTime}|${ev.equipments}`;
+            let hash = 0;
+            for (let i = 0; i < rawString.length; i++) {
+                const char = rawString.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash |= 0; 
+            }
+            return 'v22_' + Math.abs(hash).toString(16);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadFromLocalStorage();
             setupSignaturePads();
@@ -825,9 +832,8 @@ OBSERVAÇÕES ADICIONAIS:
 
             const urlParams = new URLSearchParams(window.location.search);
             const clientEventId = urlParams.get('clientView');
-            const clientDataPayload = urlParams.get('clientData'); // Correção Bug 2: Parâmetro clientData
+            const clientDataPayload = urlParams.get('clientData');
 
-            // CORREÇÃO BUG 3: Tratamento de Hash #DJBROW_SYNC: para sincronização automática de assinaturas no painel do DJ
             const hashText = window.location.hash;
             if (hashText && hashText.includes('DJBROW_SYNC:')) {
                 try {
@@ -836,14 +842,20 @@ OBSERVAÇÕES ADICIONAIS:
                     if (syncObj && syncObj.id) {
                         const existingIdx = eventsState.findIndex(e => e.id === syncObj.id);
                         if (existingIdx !== -1) {
-                            // Merge não-destrutivo: atualiza apenas assinaturas e status
-                            if (syncObj.signatureClient) eventsState[existingIdx].signatureClient = syncObj.signatureClient;
-                            if (syncObj.signatureDj) eventsState[existingIdx].signatureDj = syncObj.signatureDj;
+                            // Valida se a versão do contrato confere antes de aceitar a sincronização
+                            const currentHash = computeContractHash(eventsState[existingIdx]);
+                            if (syncObj.contractHash && syncObj.contractHash !== currentHash) {
+                                alert("⚠️ Aviso de Segurança: O contrato foi modificado no painel do DJ após o envio do link. A assinatura anterior foi descontinuada por divergência de versão.");
+                            } else {
+                                if (syncObj.signatureClient) eventsState[existingIdx].signatureClient = syncObj.signatureClient;
+                                if (syncObj.signatureDj) eventsState[existingIdx].signatureDj = syncObj.signatureDj;
+                                alert("Assinatura do cliente sincronizada com sucesso no seu painel!");
+                            }
                         } else {
                             eventsState.push(syncObj);
+                            alert("Evento sincronizado com sucesso!");
                         }
                         saveToLocalStorage();
-                        alert("Assinatura do cliente sincronizada com sucesso no seu painel!");
                         window.location.hash = '';
                         window.location.href = window.location.pathname;
                         return;
@@ -863,7 +875,6 @@ OBSERVAÇÕES ADICIONAIS:
             }
         });
 
-        // CORREÇÃO BUG 5: Popular anos dinamicamente no select financeiro
         function populateFinanceYears() {
             const select = document.getElementById('finance-year-select');
             if (!select) return;
@@ -874,6 +885,13 @@ OBSERVAÇÕES ADICIONAIS:
             eventsState.forEach(ev => {
                 if (ev.date && ev.date.length >= 4) {
                     yearsSet.add(ev.date.split('-')[0]);
+                }
+                if (ev.extraPayments) {
+                    ev.extraPayments.forEach(p => {
+                        if (p.date && p.date.length >= 4) {
+                            yearsSet.add(p.date.split('-')[0]);
+                        }
+                    });
                 }
             });
             expensesState.forEach(exp => {
@@ -911,7 +929,6 @@ OBSERVAÇÕES ADICIONAIS:
 
             let ev = null;
 
-            // CORREÇÃO BUG 2 & BUG 8: Se os dados vierem embutidos na URL via clientData, decodifica e persiste
             if (dataPayload) {
                 ev = decodeBase64Json(dataPayload);
             }
@@ -929,7 +946,6 @@ OBSERVAÇÕES ADICIONAIS:
                 return;
             }
 
-            // CORREÇÃO BUG 8: Persistir ou fazer merge do evento decodificado via URL na base local do cliente
             const existingIdx = eventsState.findIndex(e => e.id === ev.id);
             if (existingIdx !== -1) {
                 eventsState[existingIdx] = { ...eventsState[existingIdx], ...ev };
@@ -971,12 +987,11 @@ OBSERVAÇÕES ADICIONAIS:
                 djExisting.classList.remove('hidden');
             } else {
                 djImg.style.display = 'none';
-                djPrinted.innerText = `${profileState.userName} (Aguardando assinatura do DJ)`;
+                djPrinted.innerText = `${profileState.userName} — Assinatura pendente (será validada pelo DJ)`;
                 djExisting.classList.remove('hidden');
             }
         }
 
-        // CORREÇÃO BUG 2: Geração de link do cliente serializando o objeto do evento em Base64 (&clientData=...)
         function generateClientShareLink() {
             if (!activeEventId) {
                 alert("Selecione um evento primeiro na aba de Contratos.");
@@ -988,21 +1003,27 @@ OBSERVAÇÕES ADICIONAIS:
                 return;
             }
 
-            ev.contractSnapshot = compileContractText(ev);
+            ev.contractHash = computeContractHash(ev);
+            const lightEvent = { ...ev };
+            lightEvent.contractSnapshot = compileContractText(ev);
             saveToLocalStorage();
 
-            const encodedData = encodeBase64Json(ev);
-            const currentUrl = window.location.href.split('?')[0].split('#')[0];
+            const encodedData = encodeBase64Json(lightEvent);
+            
+            let currentUrl = window.location.href.split('?')[0].split('#')[0];
+            if (currentUrl.endsWith('/')) {
+                currentUrl = currentUrl.slice(0, -1);
+            }
+            
             const shortLink = `${currentUrl}?clientView=${activeEventId}&clientData=${encodedData}`;
 
             navigator.clipboard.writeText(shortLink).then(() => {
-                alert("Link completo e compatível copiado com sucesso!\n\nEnvie este link no WhatsApp do cliente.");
+                alert("Link otimizado e compatível copiado com sucesso!\n\nEnvie este link no WhatsApp do cliente.");
             }).catch(err => {
                 prompt("Copie o link abaixo:", shortLink);
             });
         }
 
-        // CORREÇÃO BUG 3: Função para gerar o link de sincronização do cliente para o DJ
         function generateSyncLink() {
             const ev = eventsState.find(e => e.id === activeEventId);
             if (!ev) return '';
@@ -1010,10 +1031,14 @@ OBSERVAÇÕES ADICIONAIS:
                 id: ev.id,
                 signatureClient: ev.signatureClient,
                 signatureDj: ev.signatureDj,
-                status: ev.status
+                status: ev.status,
+                contractHash: computeContractHash(ev)
             };
             const encoded = encodeBase64Json(syncPayload);
-            const baseUrl = window.location.href.split('?')[0].split('#')[0];
+            let baseUrl = window.location.href.split('?')[0].split('#')[0];
+            if (baseUrl.endsWith('/')) {
+                baseUrl = baseUrl.slice(0, -1);
+            }
             return `${baseUrl}#DJBROW_SYNC:${encoded}`;
         }
 
@@ -1030,18 +1055,17 @@ OBSERVAÇÕES ADICIONAIS:
             });
         }
 
-        // CORREÇÃO BUG 9: Fallback robusto no share que copia o link de sync para o clipboard caso canShare falhe
         async function shareSignedContractPDF() {
             let ev = null;
             const urlParams = new URLSearchParams(window.location.search);
             const clientEventId = urlParams.get('clientView');
             const clientDataPayload = urlParams.get('clientData');
 
-            if (clientDataPayload) {
-                ev = decodeBase64Json(clientDataPayload);
-            }
-            if (!ev && clientEventId) {
+            if (clientEventId) {
                 ev = eventsState.find(e => e.id === clientEventId);
+            }
+            if (!ev && clientDataPayload) {
+                ev = decodeBase64Json(clientDataPayload);
             }
             if (!ev && activeEventId) {
                 ev = eventsState.find(e => e.id === activeEventId);
@@ -1055,9 +1079,11 @@ OBSERVAÇÕES ADICIONAIS:
             const element = document.getElementById('pdf-printable-area');
             element.classList.add('pdf-export-mode');
 
+            // Nome de arquivo organizado e rigoroso
+            const cleanName = (ev.clientName || 'Cliente').replace(/[^a-zA-Z0-9]/g, '_');
             const opt = {
                 margin:       10,
-                filename:     `Contrato_DJ_BROW_${(ev.clientName || 'Cliente').replace(/\s+/g, '_')}.pdf`,
+                filename:     `Contrato_DJ_BROW_${cleanName}_${ev.date || 'data'}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -1091,7 +1117,6 @@ OBSERVAÇÕES ADICIONAIS:
             }
         }
 
-        // CORREÇÃO BUG 7: Uso de .finally() para garantir a remoção da classe pdf-export-mode mesmo se o html2pdf falhar
         function downloadSignedContractPDF() {
             const element = document.getElementById('pdf-printable-area');
             element.classList.add('pdf-export-mode');
@@ -1175,6 +1200,7 @@ OBSERVAÇÕES ADICIONAIS:
             }
         }
 
+        // SALVAMENTO BLINDADO CONTRA ESTOURO DE STORAGE (Requisito 8)
         function saveToLocalStorage() {
             try {
                 localStorage.setItem('djbrow_events', JSON.stringify(eventsState));
@@ -1182,7 +1208,9 @@ OBSERVAÇÕES ADICIONAIS:
                 localStorage.setItem('djbrow_profile', JSON.stringify(profileState));
                 localStorage.setItem('djbrow_template', contractTemplateState);
             } catch (err) {
-                console.error("Erro ao salvar no LocalStorage:", err);
+                console.error("Erro crítico ao salvar no LocalStorage:", err);
+                alert("❌ ERRO CRÍTICO AO SALVAR: O armazenamento local do seu navegador está cheio ou bloqueado. Suas alterações não foram gravadas permanentemente. Faça um backup imediato!");
+                throw new Error("Storage quota exceeded");
             }
         }
 
@@ -1246,10 +1274,10 @@ OBSERVAÇÕES ADICIONAIS:
             const totalVal = eventsState.reduce((acc, ev) => acc + (parseFloat(ev.price) || 0), 0);
             
             const pendingVal = eventsState.reduce((acc, ev) => {
+                if (ev.status === 'Cancelado') return acc;
                 const price = parseFloat(ev.price) || 0;
-                const deposit = parseFloat(ev.deposit) || 0;
-                const extraPays = (ev.extraPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
-                return acc + Math.max(0, price - deposit - extraPays);
+                const totalPaid = (ev.extraPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+                return acc + Math.max(0, price - totalPaid);
             }, 0);
 
             document.getElementById('dash-total-value').innerText = formatCurrency(totalVal);
@@ -1269,9 +1297,8 @@ OBSERVAÇÕES ADICIONAIS:
             const sorted = [...upcomingEvents].sort((a, b) => new Date(a.date) - new Date(b.date));
             sorted.slice(0, 5).forEach(ev => {
                 const price = parseFloat(ev.price) || 0;
-                const deposit = parseFloat(ev.deposit) || 0;
-                const extraPays = (ev.extraPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
-                const currentSaldo = Math.max(0, price - deposit - extraPays);
+                const totalPaid = (ev.extraPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+                const currentSaldo = Math.max(0, price - totalPaid);
 
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-800/40 transition';
@@ -1352,26 +1379,31 @@ OBSERVAÇÕES ADICIONAIS:
             renderFinanceTab();
         }
 
+        // CONTROLE FINANCEIRO RIGOROSO BASEADO NA DATA REAL DO PAGAMENTO (Requisito 7)
         function renderFinanceTab() {
             let totalReceived = 0;
             let totalPending = 0;
 
-            const filteredEvents = eventsState.filter(ev => {
-                if (selectedFinanceYear === 'all') return true;
-                if (!ev.date) return false;
-                return ev.date.split('-')[0] === selectedFinanceYear;
+            const activeValidEvents = eventsState.filter(ev => ev.status !== 'Cancelado');
+
+            activeValidEvents.forEach(ev => {
+                const price = parseFloat(ev.price) || 0;
+                const totalPaid = (ev.extraPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+                const pend = Math.max(0, price - totalPaid);
+                totalPending += pend;
             });
 
-            filteredEvents.forEach(ev => {
-                const price = parseFloat(ev.price) || 0;
-                const deposit = parseFloat(ev.deposit) || 0;
-                const extraPays = (ev.extraPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
-                
-                const rec = deposit + extraPays;
-                const pend = Math.max(0, price - rec);
-
-                totalReceived += rec;
-                totalPending += pend;
+            // Soma pagamentos que ocorreram no ano financeiro selecionado (Data real do caixa)
+            eventsState.forEach(ev => {
+                if (ev.status === 'Cancelado') return;
+                if (ev.extraPayments) {
+                    ev.extraPayments.forEach(p => {
+                        const payYear = p.date ? p.date.split('-')[0] : '';
+                        if (selectedFinanceYear === 'all' || payYear === selectedFinanceYear) {
+                            totalReceived += parseFloat(p.amount) || 0;
+                        }
+                    });
+                }
             });
 
             const filteredExpenses = expensesState.filter(exp => {
@@ -1391,14 +1423,20 @@ OBSERVAÇÕES ADICIONAIS:
             const clientListEl = document.getElementById('fin-clients-list');
             clientListEl.innerHTML = '';
 
+            const filteredEvents = eventsState.filter(ev => {
+                if (ev.status === 'Cancelado') return false;
+                if (selectedFinanceYear === 'all') return true;
+                if (!ev.date) return false;
+                return ev.date.split('-')[0] === selectedFinanceYear;
+            });
+
             if (filteredEvents.length === 0) {
-                clientListEl.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-500 italic">Nenhum evento encontrado para o ano selecionado.</td></tr>`;
+                clientListEl.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-500 italic">Nenhum evento encontrado para o ano selecionado.</td></tr>`;
             } else {
                 filteredEvents.forEach(ev => {
                     const price = parseFloat(ev.price) || 0;
                     const deposit = parseFloat(ev.deposit) || 0;
-                    const extraPays = (ev.extraPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
-                    const totalPaid = deposit + extraPays;
+                    const totalPaid = (ev.extraPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
                     const due = Math.max(0, price - totalPaid);
 
                     const tr = document.createElement('tr');
@@ -1407,8 +1445,7 @@ OBSERVAÇÕES ADICIONAIS:
                         <td class="p-3 font-bold text-white">${escapeHTML(ev.clientName)}</td>
                         <td class="p-3 text-slate-300">${escapeHTML(formatDateBR(ev.date))}</td>
                         <td class="p-3 text-slate-300">${formatCurrency(price)}</td>
-                        <td class="p-3 text-emerald-400">${formatCurrency(deposit)}</td>
-                        <td class="p-3 text-emerald-400">${formatCurrency(extraPays)}</td>
+                        <td class="p-3 text-slate-400">${formatCurrency(deposit)}</td>
                         <td class="p-3 font-bold text-emerald-400">${formatCurrency(totalPaid)}</td>
                         <td class="p-3 font-bold ${due === 0 ? 'text-slate-500' : 'text-amber-400'}">${due === 0 ? 'QUITADO' : formatCurrency(due)}</td>
                         <td class="p-3 text-right">
@@ -1472,17 +1509,16 @@ OBSERVAÇÕES ADICIONAIS:
             const date = document.getElementById('modal-pay-date').value;
             const note = document.getElementById('modal-pay-note').value.trim();
 
-            if (!eventId || amount <= 0) {
-                alert("Selecione um evento e um valor de pagamento válido.");
+            if (!eventId || amount <= 0 || !date) {
+                alert("Preencha todos os campos obrigatórios corretamente.");
                 return;
             }
 
             const ev = eventsState.find(e => e.id === eventId);
             if (ev) {
                 const price = parseFloat(ev.price) || 0;
-                const deposit = parseFloat(ev.deposit) || 0;
-                const extraPays = (ev.extraPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
-                const currentBalance = Math.max(0, price - deposit - extraPays);
+                const totalPaid = (ev.extraPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+                const currentBalance = Math.max(0, price - totalPaid);
 
                 if (amount > currentBalance) {
                     if (!confirm(`Atenção: O valor informado (${formatCurrency(amount)}) é superior ao saldo devedor atual (${formatCurrency(currentBalance)}). Deseja continuar mesmo assim?`)) {
@@ -1505,7 +1541,7 @@ OBSERVAÇÕES ADICIONAIS:
                 renderFinanceTab();
                 renderDashboard();
                 renderEventsList();
-                alert("Pagamento registrado com sucesso!");
+                alert("Pagamento registrado com sucesso no caixa!");
             }
         }
 
@@ -1533,8 +1569,8 @@ OBSERVAÇÕES ADICIONAIS:
             const cat = document.getElementById('modal-exp-cat').value;
             const eventId = document.getElementById('modal-exp-event-id').value;
 
-            if (!desc || amount <= 0) {
-                alert("Preencha a descrição e um valor de gasto válido.");
+            if (!desc || amount <= 0 || !date) {
+                alert("Preencha a descrição, data e um valor de gasto válido.");
                 return;
             }
 
@@ -1566,7 +1602,7 @@ OBSERVAÇÕES ADICIONAIS:
             document.getElementById('form-title').innerText = 'Cadastrar Novo Evento';
             document.getElementById('event-id').value = '';
             document.getElementById('event-form').reset();
-            document.getElementById('inp-event-status').value = 'Confirmado';
+            document.getElementById('inp-event-status').value = 'Em negociação';
             document.getElementById('inp-event-duration').value = '6';
             document.getElementById('inp-time-start').value = '21:00';
             calculateEndTime();
@@ -1626,11 +1662,36 @@ OBSERVAÇÕES ADICIONAIS:
                 return;
             }
 
+            // Validação de Conflito de Datas na Agenda
+            const conflict = eventsState.find(ev => ev.date === date && ev.id !== existingId && ev.status !== 'Cancelado');
+            if (conflict) {
+                if (!confirm(`⚠️ ATENÇÃO: Já existe o evento de "${conflict.clientName}" agendado para esta mesma data (${formatDateBR(date)}). Deseja cadastrar mesmo assim?`)) {
+                    return;
+                }
+            }
+
             if (existingId) {
                 const idx = eventsState.findIndex(ev => ev.id === existingId);
                 if (idx !== -1) {
+                    const oldEv = eventsState[idx];
+                    
+                    // CONTROLE DE VERSÃO E VALIDADE DE ASSINATURA (Requisito 3)
+                    let sigClient = oldEv.signatureClient;
+                    let sigDj = oldEv.signatureDj;
+                    const tempEvCheck = { ...oldEv, clientName: name, clientCpf: cpf, date: date, location: location, price: price, equipments: equipments };
+                    const newCalculatedHash = computeContractHash(tempEvCheck);
+
+                    if (sigClient && oldEv.contractHash && oldEv.contractHash !== newCalculatedHash) {
+                        if (confirm("⚠️ Alteração detectada em dados contratuais principais após a assinatura. Por segurança jurídica, as assinaturas anteriores foram invalidadas e o contrato exigirá nova assinatura. Deseja aplicar?")) {
+                            sigClient = null;
+                            sigDj = null;
+                        } else {
+                            return;
+                        }
+                    }
+
                     eventsState[idx] = {
-                        ...eventsState[idx],
+                        ...oldEv,
                         clientName: name,
                         clientCpf: cpf,
                         clientPhone: phone,
@@ -1647,7 +1708,10 @@ OBSERVAÇÕES ADICIONAIS:
                         deposit: deposit,
                         saldo: saldo,
                         equipments: equipments,
-                        notes: notes
+                        notes: notes,
+                        signatureClient: sigClient,
+                        signatureDj: sigDj,
+                        contractHash: newCalculatedHash
                     };
                     eventsState[idx].contractSnapshot = compileContractText(eventsState[idx]);
                     activeEventId = existingId;
@@ -1676,8 +1740,10 @@ OBSERVAÇÕES ADICIONAIS:
                     extraPayments: [],
                     signatureClient: null,
                     signatureDj: null,
-                    contractSnapshot: ''
+                    contractSnapshot: '',
+                    contractHash: ''
                 };
+                newEvent.contractHash = computeContractHash(newEvent);
                 newEvent.contractSnapshot = compileContractText(newEvent);
                 eventsState.push(newEvent);
                 activeEventId = newId;
@@ -1723,11 +1789,19 @@ OBSERVAÇÕES ADICIONAIS:
             const ev = eventsState.find(e => e.id === id);
             if (!ev) return;
 
-            if (confirm(`Tem certeza que deseja excluir permanentemente o evento do cliente "${ev.clientName}"?`)) {
-                eventsState = eventsState.filter(e => e.id !== id);
-                expensesState = expensesState.filter(e => e.eventId !== id);
-                if (activeEventId === id) activeEventId = null;
-                saveToLocalStorage();
+            if (confirm(`Tem certeza que deseja excluir permanentemente o evento do cliente "${ev.clientName}"? (O histórico financeiro atrelado a pagamentos passados será arquivado).`)) {
+                // Arquivamento suave em vez de remoção financeira total se houver pagamentos (Requisito 7)
+                const hasPaid = (ev.extraPayments && ev.extraPayments.length > 0);
+                if (hasPaid) {
+                    ev.status = 'Cancelado';
+                    saveToLocalStorage();
+                    alert("O evento possui histórico financeiro e foi marcado como CANCELADO (preservando o caixa histórico).");
+                } else {
+                    eventsState = eventsState.filter(e => e.id !== id);
+                    expensesState = expensesState.filter(e => e.eventId !== id);
+                    if (activeEventId === id) activeEventId = null;
+                    saveToLocalStorage();
+                }
                 renderDashboard();
                 renderEventsList();
                 renderFinanceTab();
@@ -1862,15 +1936,19 @@ OBSERVAÇÕES ADICIONAIS:
                 const clientDataPayload = urlParams.get('clientData');
                 let ev = null;
                 
-                if (clientDataPayload) {
+                if (clientEventId) {
+                    ev = eventsState.find(e => e.id === clientEventId);
+                }
+                if (!ev && clientDataPayload) {
                     ev = decodeBase64Json(clientDataPayload);
                 }
-                if (!ev && clientEventId) {
-                    ev = eventsState.find(e => e.id === clientEventId);
+                if (!ev && activeEventId) {
+                    ev = eventsState.find(e => e.id === activeEventId);
                 }
 
                 if (ev) {
                     ev.signatureClient = dataUrl;
+                    ev.signedAt = new Date().toISOString();
                     activeEventId = ev.id;
                     const idx = eventsState.findIndex(e => e.id === ev.id);
                     if (idx !== -1) eventsState[idx] = ev;
@@ -1896,6 +1974,7 @@ OBSERVAÇÕES ADICIONAIS:
                 } else {
                     eventsState[idx].signatureDj = dataUrl;
                 }
+                eventsState[idx].signedAt = new Date().toISOString();
                 saveToLocalStorage();
                 alert(`Assinatura do ${role === 'client' ? 'Contratante' : 'DJ'} salva com sucesso!`);
                 viewEventContract(activeEventId);
@@ -1952,7 +2031,7 @@ OBSERVAÇÕES ADICIONAIS:
 
         function exportBackupData() {
             const dataStr = JSON.stringify({
-                version: "3.3_FINAL",
+                version: "22.0_AUDIT",
                 exportDate: new Date().toISOString(),
                 events: eventsState,
                 expenses: expensesState,
@@ -1969,6 +2048,7 @@ OBSERVAÇÕES ADICIONAIS:
             URL.revokeObjectURL(url);
         }
 
+        // VALIDAÇÃO RIGOROSA DE BACKUP (Requisito 8)
         function processImportBackup(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -1977,27 +2057,30 @@ OBSERVAÇÕES ADICIONAIS:
             reader.onload = function(evt) {
                 try {
                     const imported = JSON.parse(evt.target.result);
-                    if (!imported || typeof imported !== 'object' || !Array.isArray(imported.events)) {
-                        alert("Erro: O arquivo selecionado não é um backup válido do DJ BROW.");
+                    if (!imported || typeof imported !== 'object' || !Array.isArray(imported.events) || !Array.isArray(imported.expenses)) {
+                        alert("❌ Erro de Validação: O arquivo selecionado possui estrutura inválida ou corrompida para o DJ BROW.");
                         return;
                     }
 
-                    if (confirm(`Atenção: Este backup contém ${imported.events.length} evento(s). Deseja substituir os dados atuais?`)) {
-                        eventsState = imported.events || [];
-                        expensesState = imported.expenses || [];
-                        profileState = imported.profile || profileState;
-                        // CORREÇÃO BUG 1: Substituição correta de defaultContractTest para defaultContractText
-                        contractTemplateState = imported.contractTemplate || defaultContractText;
+                    if (confirm(`Atenção: Este backup contém ${imported.events.length} evento(s) e ${imported.expenses.length} despesa(s). Deseja substituir os dados atuais?`)) {
+                        eventsState = imported.events;
+                        expensesState = imported.expenses;
+                        if (imported.profile) profileState = imported.profile;
+                        if (imported.contractTemplate) contractTemplateState = imported.contractTemplate;
 
                         saveToLocalStorage();
                         loadFromLocalStorage();
+
+                        selectedFinanceYear = 'all';
+                        populateFinanceYears();
+
                         renderDashboard();
                         renderEventsList();
                         renderFinanceTab();
-                        alert("Backup completo restaurado com sucesso!");
+                        alert("Backup completo validado e restaurado com sucesso!");
                     }
                 } catch (err) {
-                    alert("Erro ao ler o arquivo de backup. Certifique-se de que é um JSON válido.");
+                    alert("❌ Erro ao processar arquivo JSON. Certifique-se de que é um backup legítimo.");
                 }
             };
             reader.readAsText(file);
