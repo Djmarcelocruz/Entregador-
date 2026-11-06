@@ -30,6 +30,13 @@
             color: #10b981;
             border-left: 4px solid #10b981;
         }
+        /* CORREÇÃO BUG 4: Regras de impressão e ocultação correta de elementos .no-print */
+        @media print {
+            .no-print { display: none !important; }
+        }
+        .pdf-export-mode .no-print {
+            display: none !important;
+        }
         /* ESTILO PARA EXPORTAR PDF COM FUNDO BRANCO E TEXTO PRETO */
         .pdf-export-mode {
             background-color: #ffffff !important;
@@ -124,6 +131,9 @@
             <div id="client-actions-container" class="flex flex-wrap gap-2 pt-2 border-t border-emerald-900/50">
                 <button onclick="shareSignedContractPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-md">
                     <i class="fa-brands fa-whatsapp text-base"></i> ENVIAR CONTRATO ASSINADO PARA O DJ BROW
+                </button>
+                <button onclick="copySyncLinkForDj()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-md">
+                    <i class="fa-solid fa-link"></i> Copiar Link de Sincronização Automática
                 </button>
                 <button onclick="downloadSignedContractPDF()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2.5 rounded-lg text-xs font-semibold transition flex items-center gap-2">
                     <i class="fa-solid fa-download"></i> Baixar Contrato em PDF
@@ -359,7 +369,7 @@
                 </div>
                 <div class="flex flex-wrap gap-3">
                     <button onclick="generateClientShareLink()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition flex items-center gap-2">
-                        <i class="fa-solid fa-share-nodes"></i> Copiar Link Curto para o Cliente
+                        <i class="fa-solid fa-share-nodes"></i> Copiar Link Único para o Cliente
                     </button>
                     <button onclick="editCurrentEventFromContract()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2">
                         <i class="fa-solid fa-pen-to-square"></i> Editar Evento
@@ -372,7 +382,7 @@
 
             <!-- ELEMENTO ALVO PARA GERAR O PDF -->
             <div id="pdf-printable-area" class="bg-slate-900 p-6 md:p-10 rounded-xl border border-slate-800 print-card space-y-6">
-                <div id="contract-render-view" class="contract-text text-slate-200 text-sm leading-relaxed">
+                <div id="contract-render-view" class="contract-text text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">
                     <p class="text-slate-500 text-center italic py-8">Nenhum evento selecionado para visualização de contrato.</p>
                 </div>
 
@@ -405,7 +415,7 @@
                             </div>
                         </div>
 
-                        <!-- PAINEL ASSINATURA DJ (BLINDADO E SEM TEXTO VISÍVEL DE AVISO) -->
+                        <!-- PAINEL ASSINATURA DJ -->
                         <div id="dj-signature-card" class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 sig-box-print">
                             <h4 class="text-xs font-semibold text-slate-300 uppercase">2. Assinatura do Contratado (DJ BROW)</h4>
 
@@ -456,14 +466,11 @@
                 </div>
             </div>
 
-            <!-- FILTRO DE ANO -->
+            <!-- CORREÇÃO BUG 5: Filtro de Ano Dinâmico -->
             <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 flex items-center gap-3">
                 <label class="text-xs font-semibold text-slate-300 uppercase"><i class="fa-solid fa-filter me-1 text-emerald-400"></i> Filtrar Ano Financeiro:</label>
                 <select id="finance-year-select" onchange="setFinanceYearFilter(this.value)" class="bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-emerald-500">
                     <option value="all">Todos os Anos</option>
-                    <option value="2025">Ano 2025</option>
-                    <option value="2026" selected>Ano 2026</option>
-                    <option value="2027">Ano 2027</option>
                 </select>
             </div>
 
@@ -712,7 +719,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT DO APLICATIVO (VERSÃO 17 - SEM AVISO DE ÁREA PROTEGIDA E BLINDAGEM MANTIDA) -->
+    <!-- SCRIPT DO APLICATIVO (VERSÃO 19 - CORREÇÕES DE TODOS OS BUGS CRÍTICOS, MÉDIOS E MENORES) -->
     <script>
         const defaultContractText = `CONTRATO DJ BROW
 PRESTAÇÃO DE SERVIÇOS ARTÍSTICOS DE DJ - CASAMENTOS E ANIVERSÁRIOS
@@ -768,7 +775,7 @@ OBSERVAÇÕES ADICIONAIS:
         let activeEventId = null;
         let isClientMode = false;
         let currentEventFilter = 'pending';
-        let selectedFinanceYear = '2026';
+        let selectedFinanceYear = new Date().getFullYear().toString(); // Correção Bug 5: Ano dinâmico atual
 
         function escapeHTML(str) {
             if (!str) return '';
@@ -780,38 +787,73 @@ OBSERVAÇÕES ADICIONAIS:
                 .replace(/'/g, '&#039;');
         }
 
+        // CORREÇÃO BUG 6: Codificação/Decodificação segura UTF-8 / Base64 sem usar escape/unescape deprecated
+        function encodeBase64Json(obj) {
+            try {
+                const jsonString = JSON.stringify(obj);
+                const utf8Bytes = new TextEncoder().encode(jsonString);
+                let binaryString = '';
+                for (let i = 0; i < utf8Bytes.length; i++) {
+                    binaryString += String.fromCharCode(utf8Bytes[i]);
+                }
+                return btoa(binaryString);
+            } catch (e) {
+                console.error("Erro ao codificar JSON:", e);
+                return '';
+            }
+        }
+
+        function decodeBase64Json(base64Str) {
+            try {
+                const binaryString = atob(base64Str);
+                const utf8Bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    utf8Bytes[i] = binaryString.charCodeAt(i);
+                }
+                const jsonString = new TextDecoder().decode(utf8Bytes);
+                return JSON.parse(jsonString);
+            } catch (e) {
+                console.error("Erro ao decodificar JSON:", e);
+                return null;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadFromLocalStorage();
             setupSignaturePads();
+            populateFinanceYears();
 
             const urlParams = new URLSearchParams(window.location.search);
             const clientEventId = urlParams.get('clientView');
-            const clientDataPayload = urlParams.get('clientData'); 
+            const clientDataPayload = urlParams.get('clientData'); // Correção Bug 2: Parâmetro clientData
 
+            // CORREÇÃO BUG 3: Tratamento de Hash #DJBROW_SYNC: para sincronização automática de assinaturas no painel do DJ
             const hashText = window.location.hash;
             if (hashText && hashText.includes('DJBROW_SYNC:')) {
                 try {
-                    const base64Data = hashText.split('DJBROW_SYNC:')[1];
-                    const decodedEvent = JSON.parse(decodeURIComponent(escape(atob(base64Data))));
-                    if (decodedEvent && decodedEvent.id) {
-                        const existingIdx = eventsState.findIndex(e => e.id === decodedEvent.id);
+                    const base64SyncData = hashText.split('DJBROW_SYNC:')[1];
+                    const syncObj = decodeBase64Json(base64SyncData);
+                    if (syncObj && syncObj.id) {
+                        const existingIdx = eventsState.findIndex(e => e.id === syncObj.id);
                         if (existingIdx !== -1) {
-                            eventsState[existingIdx] = decodedEvent;
+                            // Merge não-destrutivo: atualiza apenas assinaturas e status
+                            if (syncObj.signatureClient) eventsState[existingIdx].signatureClient = syncObj.signatureClient;
+                            if (syncObj.signatureDj) eventsState[existingIdx].signatureDj = syncObj.signatureDj;
                         } else {
-                            eventsState.push(decodedEvent);
+                            eventsState.push(syncObj);
                         }
                         saveToLocalStorage();
-                        alert("Assinatura do cliente recebida e sincronizada com sucesso no seu painel!");
+                        alert("Assinatura do cliente sincronizada com sucesso no seu painel!");
                         window.location.hash = '';
                         window.location.href = window.location.pathname;
                         return;
                     }
                 } catch(e) {
-                    console.error("Erro ao processar sincronização automática:", e);
+                    console.error("Erro ao processar sincronização de hash:", e);
                 }
             }
 
-            if (clientEventId) {
+            if (clientEventId || clientDataPayload) {
                 isClientMode = true;
                 activateClientViewMode(clientEventId, clientDataPayload);
             } else {
@@ -820,6 +862,32 @@ OBSERVAÇÕES ADICIONAIS:
                 renderFinanceTab();
             }
         });
+
+        // CORREÇÃO BUG 5: Popular anos dinamicamente no select financeiro
+        function populateFinanceYears() {
+            const select = document.getElementById('finance-year-select');
+            if (!select) return;
+
+            let yearsSet = new Set();
+            yearsSet.add(new Date().getFullYear().toString());
+
+            eventsState.forEach(ev => {
+                if (ev.date && ev.date.length >= 4) {
+                    yearsSet.add(ev.date.split('-')[0]);
+                }
+            });
+            expensesState.forEach(exp => {
+                if (exp.date && exp.date.length >= 4) {
+                    yearsSet.add(exp.date.split('-')[0]);
+                }
+            });
+
+            const sortedYears = Array.from(yearsSet).sort().reverse();
+            select.innerHTML = '<option value="all">Todos os Anos</option>';
+            sortedYears.forEach(y => {
+                select.innerHTML += `<option value="${y}" ${y === selectedFinanceYear ? 'selected' : ''}>Ano ${y}</option>`;
+            });
+        }
 
         function activateClientViewMode(eventId, dataPayload) {
             const sidebar = document.getElementById('app-sidebar');
@@ -834,7 +902,6 @@ OBSERVAÇÕES ADICIONAIS:
             const clientHint = document.getElementById('client-share-hint');
             if (clientHint) clientHint.classList.remove('hidden');
 
-            // Mantém a área de assinatura do DJ protegida (oculta a opção de desenhar para o cliente), mas sem exibir a caixinha de aviso visual
             const djCard = document.getElementById('dj-signature-card');
             if (djCard) {
                 document.getElementById('dj-new-sig-box').style.display = 'none';
@@ -843,22 +910,35 @@ OBSERVAÇÕES ADICIONAIS:
             }
 
             let ev = null;
-            if (dataPayload) {
-                try {
-                    ev = JSON.parse(decodeURIComponent(escape(atob(dataPayload))));
-                } catch (e) {}
-            }
 
-            if (!ev) {
+            // CORREÇÃO BUG 2 & BUG 8: Se os dados vierem embutidos na URL via clientData, decodifica e persiste
+            if (dataPayload) {
+                ev = decodeBase64Json(dataPayload);
+            }
+            if (!ev && eventId) {
                 ev = eventsState.find(e => e.id === eventId);
             }
 
             if (!ev) {
-                document.querySelector('main').innerHTML = `<div class="p-12 text-center space-y-4"><h2 class="text-2xl font-bold text-rose-500">Contrato não encontrado ou link expirado.</h2><p class="text-slate-400">Solicite ao DJ BROW um novo link atualizado de compartilhamento.</p></div>`;
+                document.querySelector('main').innerHTML = `
+                    <div class="p-8 text-center space-y-4 max-w-lg mx-auto mt-12 bg-slate-900 border border-slate-800 rounded-xl">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-400 text-4xl mb-2"></i>
+                        <h2 class="text-xl font-bold text-white">Contrato Não Encontrado</h2>
+                        <p class="text-slate-400 text-sm">Não foi possível carregar os dados deste contrato. Solicite ao DJ BROW um novo link atualizado.</p>
+                    </div>`;
                 return;
             }
 
-            activeEventId = eventId;
+            // CORREÇÃO BUG 8: Persistir ou fazer merge do evento decodificado via URL na base local do cliente
+            const existingIdx = eventsState.findIndex(e => e.id === ev.id);
+            if (existingIdx !== -1) {
+                eventsState[existingIdx] = { ...eventsState[existingIdx], ...ev };
+            } else {
+                eventsState.push(ev);
+            }
+            saveToLocalStorage();
+
+            activeEventId = ev.id || eventId;
             switchTab('contratos');
 
             let text = ev.contractSnapshot || compileContractText(ev);
@@ -896,6 +976,7 @@ OBSERVAÇÕES ADICIONAIS:
             }
         }
 
+        // CORREÇÃO BUG 2: Geração de link do cliente serializando o objeto do evento em Base64 (&clientData=...)
         function generateClientShareLink() {
             if (!activeEventId) {
                 alert("Selecione um evento primeiro na aba de Contratos.");
@@ -910,22 +991,56 @@ OBSERVAÇÕES ADICIONAIS:
             ev.contractSnapshot = compileContractText(ev);
             saveToLocalStorage();
 
+            const encodedData = encodeBase64Json(ev);
             const currentUrl = window.location.href.split('?')[0].split('#')[0];
-            const shortLink = `${currentUrl}?clientView=${activeEventId}`;
+            const shortLink = `${currentUrl}?clientView=${activeEventId}&clientData=${encodedData}`;
 
             navigator.clipboard.writeText(shortLink).then(() => {
-                alert("Link curto copiado com sucesso!\n\nEnvie este link no WhatsApp do cliente.");
+                alert("Link completo e compatível copiado com sucesso!\n\nEnvie este link no WhatsApp do cliente.");
             }).catch(err => {
-                prompt("Copie o link curto abaixo:", shortLink);
+                prompt("Copie o link abaixo:", shortLink);
             });
         }
 
+        // CORREÇÃO BUG 3: Função para gerar o link de sincronização do cliente para o DJ
+        function generateSyncLink() {
+            const ev = eventsState.find(e => e.id === activeEventId);
+            if (!ev) return '';
+            const syncPayload = {
+                id: ev.id,
+                signatureClient: ev.signatureClient,
+                signatureDj: ev.signatureDj,
+                status: ev.status
+            };
+            const encoded = encodeBase64Json(syncPayload);
+            const baseUrl = window.location.href.split('?')[0].split('#')[0];
+            return `${baseUrl}#DJBROW_SYNC:${encoded}`;
+        }
+
+        function copySyncLinkForDj() {
+            const syncLink = generateSyncLink();
+            if (!syncLink) {
+                alert("Nenhum evento ativo para sincronizar.");
+                return;
+            }
+            navigator.clipboard.writeText(syncLink).then(() => {
+                alert("Link de sincronização copiado!\n\nCole este link no WhatsApp do DJ BROW para atualizar o painel automaticamente com a assinatura.");
+            }).catch(() => {
+                prompt("Copie o link de sincronização:", syncLink);
+            });
+        }
+
+        // CORREÇÃO BUG 9: Fallback robusto no share que copia o link de sync para o clipboard caso canShare falhe
         async function shareSignedContractPDF() {
             let ev = null;
             const urlParams = new URLSearchParams(window.location.search);
             const clientEventId = urlParams.get('clientView');
-            
-            if (clientEventId) {
+            const clientDataPayload = urlParams.get('clientData');
+
+            if (clientDataPayload) {
+                ev = decodeBase64Json(clientDataPayload);
+            }
+            if (!ev && clientEventId) {
                 ev = eventsState.find(e => e.id === clientEventId);
             }
             if (!ev && activeEventId) {
@@ -963,7 +1078,9 @@ OBSERVAÇÕES ADICIONAIS:
                     });
                 } else {
                     worker.save();
-                    alert("O PDF foi baixado em seu aparelho. Agora abra o WhatsApp e envie o arquivo baixado para o DJ BROW.");
+                    const syncLink = generateSyncLink();
+                    navigator.clipboard.writeText(syncLink).catch(() => {});
+                    alert("O PDF foi baixado em seu aparelho. O Link de Sincronização Automática também foi copiado para a sua área de transferência — envie ambos no WhatsApp do DJ BROW!");
                 }
             } catch (error) {
                 element.classList.remove('pdf-export-mode');
@@ -974,6 +1091,7 @@ OBSERVAÇÕES ADICIONAIS:
             }
         }
 
+        // CORREÇÃO BUG 7: Uso de .finally() para garantir a remoção da classe pdf-export-mode mesmo se o html2pdf falhar
         function downloadSignedContractPDF() {
             const element = document.getElementById('pdf-printable-area');
             element.classList.add('pdf-export-mode');
@@ -984,9 +1102,12 @@ OBSERVAÇÕES ADICIONAIS:
                 html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
-            html2pdf().set(opt).from(element).save().then(() => {
-                element.classList.remove('pdf-export-mode');
-            });
+            html2pdf().set(opt).from(element).save()
+                .then(() => {})
+                .catch(err => console.error("Erro no download PDF:", err))
+                .finally(() => {
+                    element.classList.remove('pdf-export-mode');
+                });
         }
 
         function calculateEndTime() {
@@ -1088,7 +1209,10 @@ OBSERVAÇÕES ADICIONAIS:
 
             if (tabId === 'dashboard') renderDashboard();
             if (tabId === 'eventos') renderEventsList();
-            if (tabId === 'financeiro') renderFinanceTab();
+            if (tabId === 'financeiro') {
+                populateFinanceYears();
+                renderFinanceTab();
+            }
         }
 
         function formatCurrency(val) {
@@ -1735,9 +1859,13 @@ OBSERVAÇÕES ADICIONAIS:
             if (isClientMode) {
                 const urlParams = new URLSearchParams(window.location.search);
                 const clientEventId = urlParams.get('clientView');
+                const clientDataPayload = urlParams.get('clientData');
                 let ev = null;
                 
-                if (clientEventId) {
+                if (clientDataPayload) {
+                    ev = decodeBase64Json(clientDataPayload);
+                }
+                if (!ev && clientEventId) {
                     ev = eventsState.find(e => e.id === clientEventId);
                 }
 
@@ -1749,9 +1877,9 @@ OBSERVAÇÕES ADICIONAIS:
                     else eventsState.push(ev);
 
                     saveToLocalStorage();
-                    alert("Sua assinatura foi salva com sucesso! Agora toque no botão verde 'ENVIAR CONTRATO ASSINADO PARA O DJ BROW' acima para despachar o PDF pelo WhatsApp.");
+                    alert("Sua assinatura foi salva com sucesso! Agora toque no botão azul 'Copiar Link de Sincronização Automática' ou no botão verde do WhatsApp para despachar o contrato.");
                     
-                    activateClientViewMode(activeEventId, null);
+                    activateClientViewMode(activeEventId, encodeBase64Json(ev));
                 }
                 return;
             }
@@ -1824,7 +1952,7 @@ OBSERVAÇÕES ADICIONAIS:
 
         function exportBackupData() {
             const dataStr = JSON.stringify({
-                version: "3.1_STABLE",
+                version: "3.3_FINAL",
                 exportDate: new Date().toISOString(),
                 events: eventsState,
                 expenses: expensesState,
@@ -1858,7 +1986,8 @@ OBSERVAÇÕES ADICIONAIS:
                         eventsState = imported.events || [];
                         expensesState = imported.expenses || [];
                         profileState = imported.profile || profileState;
-                        contractTemplateState = imported.contractTemplate || defaultContractTest;
+                        // CORREÇÃO BUG 1: Substituição correta de defaultContractTest para defaultContractText
+                        contractTemplateState = imported.contractTemplate || defaultContractText;
 
                         saveToLocalStorage();
                         loadFromLocalStorage();
