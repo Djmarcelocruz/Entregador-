@@ -1261,4 +1261,616 @@ ${'</scr' + 'ipt>'}
                     <td class="p-3 text-right space-x-2">
                         <button onclick="viewEventContract('${ev.id}')" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 p-2 rounded transition" title="Contrato"><i class="fa-solid fa-file-contract"></i></button>
                         <button onclick="editEvent('${ev.id}')" class="bg-slate-800 hover:bg-slate-700 text-blue-400 p-2 rounded transition" title="Editar"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteEvent('${ev.id}')" class="bg-slate-800 hover:bg
+                        <button onclick="deleteEvent('${ev.id}')" class="bg-slate-800 hover:bg-slate-700 text-rose-400 p-2 rounded transition" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                listEl.appendChild(tr);
+            });
+        }
+
+        function renderFinanceTab() {
+            let received = 0, pending = 0;
+            eventsState.filter(e => e.status !== 'Cancelado').forEach(e => {
+                const p = parseFloat(e.price) || 0;
+                const paid = (e.extraPayments || []).reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
+                pending += Math.max(0, p - paid);
+            });
+            eventsState.forEach(e => (e.extraPayments || []).forEach(p => {
+                const y = p.date ? p.date.split('-')[0] : '';
+                if (selectedFinanceYear === 'all' || y === selectedFinanceYear) received += parseFloat(p.amount) || 0;
+            }));
+            const filteredExp = expensesState.filter(exp => {
+                if (selectedFinanceYear !== 'all' && exp.date && exp.date.split('-')[0] !== selectedFinanceYear) return false;
+                if (selectedFinanceCategory !== 'all' && exp.category !== selectedFinanceCategory) return false;
+                return true;
+            });
+            const paidExp = filteredExp.filter(e => e.status !== 'pending').reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+            const pendExp = filteredExp.filter(e => e.status === 'pending').reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+            const netProfit = received - paidExp;
+            document.getElementById('fin-total-received').innerText = formatCurrency(received);
+            document.getElementById('fin-total-pending').innerText = formatCurrency(pending);
+            document.getElementById('fin-total-expenses').innerText = formatCurrency(paidExp);
+            document.getElementById('fin-pending-expenses').innerText = pendExp > 0 ? `+ ${formatCurrency(pendExp)} a pagar` : '';
+            document.getElementById('fin-net-profit').innerText = formatCurrency(netProfit);
+            document.getElementById('fin-net-profit').className = `text-2xl font-extrabold mt-2 ${netProfit >= 0 ? 'text-blue-400' : 'text-rose-400'}`;
+
+            const cList = document.getElementById('fin-clients-list');
+            cList.innerHTML = '';
+            const fEvs = eventsState.filter(e => {
+                if (e.status === 'Cancelado') return false;
+                if (selectedFinanceYear === 'all') return true;
+                if (!e.date) return false;
+                return e.date.split('-')[0] === selectedFinanceYear;
+            });
+            if (fEvs.length === 0) {
+                cList.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-500 italic">Nenhum evento.</td></tr>`;
+            } else {
+                fEvs.forEach(ev => {
+                    const p = parseFloat(ev.price) || 0;
+                    const dep = parseFloat(ev.deposit) || 0;
+                    const paid = (ev.extraPayments || []).reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
+                    const due = Math.max(0, p - paid);
+                    const cnt = (ev.extraPayments || []).length;
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-800/40 transition';
+                    tr.innerHTML = `
+                        <td class="p-3 font-bold text-white">${escapeHTML(ev.clientName)}</td>
+                        <td class="p-3 text-slate-300">${escapeHTML(formatDateBR(ev.date))}</td>
+                        <td class="p-3 text-slate-300">${formatCurrency(p)}</td>
+                        <td class="p-3 text-slate-400">${formatCurrency(dep)}</td>
+                        <td class="p-3 font-bold text-emerald-400">${formatCurrency(paid)}</td>
+                        <td class="p-3 font-bold ${due === 0 ? 'text-slate-500' : 'text-amber-400'}">${due === 0 ? 'QUITADO' : formatCurrency(due)}</td>
+                        <td class="p-3 text-right space-x-1 whitespace-nowrap">
+                            <button onclick="openPaymentsHistory('${ev.id}')" class="bg-slate-800 hover:bg-slate-700 text-blue-400 px-2 py-1 rounded text-xs font-semibold"><i class="fa-solid fa-list-check me-1"></i>${cnt}</button>
+                            <button onclick="openPaymentModalForEvent('${ev.id}')" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded text-xs font-semibold">+ Pgto</button>
+                        </td>
+                    `;
+                    cList.appendChild(tr);
+                });
+            }
+
+            const eList = document.getElementById('fin-expenses-list');
+            eList.innerHTML = '';
+            if (filteredExp.length === 0) {
+                eList.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-500 italic">Nenhuma despesa.</td></tr>`;
+            } else {
+                filteredExp.forEach(exp => {
+                    const linked = eventsState.find(e => e.id === exp.eventId);
+                    const isPending = exp.status === 'pending';
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-800/40 transition';
+                    tr.innerHTML = `
+                        <td class="p-3 text-slate-300 whitespace-nowrap">${escapeHTML(formatDateBR(exp.date))}</td>
+                        <td class="p-3 font-bold text-white">${escapeHTML(exp.description)}</td>
+                        <td class="p-3"><span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-xs">${escapeHTML(exp.category)}</span></td>
+                        <td class="p-3 text-slate-400">${linked ? escapeHTML(linked.clientName) : 'Geral'}</td>
+                        <td class="p-3 text-slate-400 text-xs">${escapeHTML(exp.paymentMethod || '—')}</td>
+                        <td class="p-3">${isPending ? '<span class="bg-amber-500/20 text-amber-400 text-xs px-2 py-0.5 rounded font-semibold">A PAGAR</span>' : '<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2 py-0.5 rounded font-semibold">PAGO</span>'}</td>
+                        <td class="p-3 font-bold ${isPending ? 'text-amber-400' : 'text-rose-400'}">${formatCurrency(exp.amount)}</td>
+                        <td class="p-3 text-right space-x-1">
+                            <button onclick="editExpense('${exp.id}')" class="text-blue-400 hover:text-blue-300 p-1" title="Editar"><i class="fa-solid fa-pen text-xs"></i></button>
+                            <button onclick="deleteExpense('${exp.id}')" class="text-rose-400 hover:text-rose-300 p-1" title="Excluir"><i class="fa-solid fa-trash text-xs"></i></button>
+                        </td>
+                    `;
+                    eList.appendChild(tr);
+                });
+            }
+        }
+
+        function openPaymentsHistory(eventId) {
+            const ev = eventsState.find(e => e.id === eventId);
+            if (!ev) return;
+            document.getElementById('payments-history-title').innerText = `Histórico — ${ev.clientName}`;
+            const sum = document.getElementById('payments-history-summary');
+            const list = document.getElementById('payments-history-list');
+            const pays = ev.extraPayments || [];
+            const price = parseFloat(ev.price) || 0;
+            const total = pays.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+            const saldo = Math.max(0, price - total);
+            sum.innerHTML = `
+                <div class="flex justify-between text-xs"><span class="text-slate-400">Valor Total:</span><span class="font-bold text-white">${formatCurrency(price)}</span></div>
+                <div class="flex justify-between text-xs"><span class="text-slate-400">Recebido:</span><span class="font-bold text-emerald-400">${formatCurrency(total)} (${pays.length})</span></div>
+                <div class="flex justify-between text-xs"><span class="text-slate-400">Saldo:</span><span class="font-bold ${saldo === 0 ? 'text-slate-500' : 'text-amber-400'}">${saldo === 0 ? 'QUITADO' : formatCurrency(saldo)}</span></div>
+            `;
+            if (pays.length === 0) {
+                list.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-500 italic">Nenhum pagamento.</td></tr>';
+            } else {
+                list.innerHTML = [...pays].sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(p => `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="p-3 text-slate-300 whitespace-nowrap">${escapeHTML(formatDateBR(p.date))}</td>
+                        <td class="p-3 font-bold text-emerald-400 whitespace-nowrap">${formatCurrency(p.amount)}</td>
+                        <td class="p-3 text-slate-400 text-xs">${escapeHTML(p.paymentMethod || '—')}</td>
+                        <td class="p-3 text-slate-400 text-xs">${escapeHTML(p.note || '—')}</td>
+                        <td class="p-3 text-right"><button onclick="deletePayment('${ev.id}', '${p.id}')" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-trash text-xs"></i></button></td>
+                    </tr>
+                `).join('');
+            }
+            document.getElementById('modal-payments-history').classList.remove('hidden');
+        }
+        function closePaymentsHistory() { document.getElementById('modal-payments-history').classList.add('hidden'); }
+
+        function deletePayment(eid, pid) {
+            const ev = eventsState.find(e => e.id === eid);
+            if (!ev || !ev.extraPayments) return;
+            const p = ev.extraPayments.find(x => x.id === pid);
+            if (!p) return;
+            if (!confirm(`Excluir pagamento?\n\n${formatDateBR(p.date)} - ${formatCurrency(p.amount)}\n${p.note || '—'}`)) return;
+            ev.extraPayments = ev.extraPayments.filter(x => x.id !== pid);
+            saveToLocalStorage();
+            renderFinanceTab(); renderDashboard(); renderEventsList();
+            if (!document.getElementById('modal-payments-history').classList.contains('hidden')) openPaymentsHistory(eid);
+        }
+
+        function exportFinanceCSV() {
+            const rows = [['Tipo', 'Data', 'Descrição', 'Cliente/Evento', 'Categoria/Status', 'Forma', 'Valor (R$)']];
+            eventsState.forEach(ev => (ev.extraPayments || []).forEach(p => {
+                const y = p.date ? p.date.split('-')[0] : '';
+                if (selectedFinanceYear === 'all' || y === selectedFinanceYear) {
+                    rows.push(['Recebimento', formatDateBR(p.date), p.note || 'Pagamento', ev.clientName, ev.status === 'Cancelado' ? 'Cancelado' : (ev.status || 'Confirmado'), p.paymentMethod || '—', (parseFloat(p.amount) || 0).toFixed(2).replace('.', ',')]);
+                }
+            }));
+            expensesState.forEach(exp => {
+                const y = exp.date ? exp.date.split('-')[0] : '';
+                if (selectedFinanceYear === 'all' || y === selectedFinanceYear) {
+                    const linked = eventsState.find(e => e.id === exp.eventId);
+                    rows.push(['Despesa', formatDateBR(exp.date), exp.description, linked ? linked.clientName : 'Geral', exp.category, (exp.status === 'pending' ? 'A Pagar' : 'Pago') + ' via ' + (exp.paymentMethod || '—'), (parseFloat(exp.amount) || 0).toFixed(2).replace('.', ',')]);
+                }
+            });
+            if (rows.length <= 1) { alert("Sem dados."); return; }
+            const esc = v => { const s = String(v ?? ''); return (s.includes(';') || s.includes('"') || s.includes('\n')) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+            const csv = '\uFEFF' + rows.map(r => r.map(esc).join(';')).join('\r\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `DJ_BROW_Financeiro_${selectedFinanceYear}_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert(`✅ CSV com ${rows.length - 1} registros.`);
+        }
+
+        function openPaymentModal() {
+            const sel = document.getElementById('modal-pay-event-id');
+            sel.innerHTML = '<option value="">Selecione...</option>';
+            eventsState.filter(e => e.status !== 'Cancelado').forEach(e => sel.innerHTML += `<option value="${e.id}">${escapeHTML(e.clientName)} - ${formatDateBR(e.date)}</option>`);
+            document.getElementById('modal-pay-amount').value = '';
+            document.getElementById('modal-pay-date').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('modal-pay-method').value = 'PIX';
+            document.getElementById('modal-pay-note').value = '';
+            document.getElementById('modal-payment').classList.remove('hidden');
+        }
+        function openPaymentModalForEvent(eid) { openPaymentModal(); document.getElementById('modal-pay-event-id').value = eid; }
+        function closePaymentModal() { document.getElementById('modal-payment').classList.add('hidden'); }
+
+        function handleSavePayment(e) {
+            e.preventDefault();
+            const id = document.getElementById('modal-pay-event-id').value;
+            const amt = parseFloat(document.getElementById('modal-pay-amount').value) || 0;
+            const date = document.getElementById('modal-pay-date').value;
+            const method = document.getElementById('modal-pay-method').value;
+            const note = document.getElementById('modal-pay-note').value.trim();
+            if (!id || amt <= 0 || !date) { alert("Preencha tudo."); return; }
+            const ev = eventsState.find(e => e.id === id);
+            if (ev) {
+                if (ev.status === 'Cancelado') { alert("Evento cancelado."); return; }
+                const p = parseFloat(ev.price) || 0;
+                const paid = (ev.extraPayments || []).reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
+                const saldo = Math.max(0, p - paid);
+                if (amt > saldo && !confirm(`Valor > saldo (${formatCurrency(saldo)}). Continuar?`)) return;
+            }
+            const idx = eventsState.findIndex(e => e.id === id);
+            if (idx !== -1) {
+                if (!eventsState[idx].extraPayments) eventsState[idx].extraPayments = [];
+                eventsState[idx].extraPayments.push({ id: 'pay_' + Date.now(), amount: amt, date, note, paymentMethod: method });
+                saveToLocalStorage();
+                closePaymentModal();
+                renderFinanceTab(); renderDashboard(); renderEventsList();
+                alert("Pagamento registrado!");
+            }
+        }
+
+        function openExpenseModal() {
+            document.getElementById('modal-exp-id').value = '';
+            document.getElementById('modal-exp-title').innerText = 'Registrar Despesa';
+            document.getElementById('modal-exp-submit').innerText = 'Salvar Despesa';
+            const sel = document.getElementById('modal-exp-event-id');
+            sel.innerHTML = '<option value="">(Nenhum - Gasto Geral)</option>';
+            eventsState.forEach(e => sel.innerHTML += `<option value="${e.id}">${escapeHTML(e.clientName)} - ${formatDateBR(e.date)}</option>`);
+            document.getElementById('modal-exp-desc').value = '';
+            document.getElementById('modal-exp-amount').value = '';
+            document.getElementById('modal-exp-date').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('modal-exp-cat').value = 'Equipe / Auxiliar';
+            document.getElementById('modal-exp-method').value = 'PIX';
+            document.getElementById('modal-exp-status').value = 'paid';
+            document.getElementById('modal-expense').classList.remove('hidden');
+        }
+
+        function editExpense(id) {
+            const exp = expensesState.find(e => e.id === id);
+            if (!exp) return;
+            document.getElementById('modal-exp-id').value = exp.id;
+            document.getElementById('modal-exp-title').innerText = 'Editar Despesa';
+            document.getElementById('modal-exp-submit').innerText = 'Atualizar Despesa';
+            const sel = document.getElementById('modal-exp-event-id');
+            sel.innerHTML = '<option value="">(Nenhum - Gasto Geral)</option>';
+            eventsState.forEach(e => sel.innerHTML += `<option value="${e.id}">${escapeHTML(e.clientName)} - ${formatDateBR(e.date)}</option>`);
+            document.getElementById('modal-exp-desc').value = exp.description;
+            document.getElementById('modal-exp-amount').value = exp.amount;
+            document.getElementById('modal-exp-date').value = exp.date;
+            document.getElementById('modal-exp-cat').value = exp.category;
+            document.getElementById('modal-exp-method').value = exp.paymentMethod || 'PIX';
+            document.getElementById('modal-exp-status').value = exp.status || 'paid';
+            document.getElementById('modal-exp-event-id').value = exp.eventId || '';
+            document.getElementById('modal-expense').classList.remove('hidden');
+        }
+
+        function closeExpenseModal() { document.getElementById('modal-expense').classList.add('hidden'); }
+
+        function handleSaveExpense(e) {
+            e.preventDefault();
+            const existingId = document.getElementById('modal-exp-id').value;
+            const desc = document.getElementById('modal-exp-desc').value.trim();
+            const amt = parseFloat(document.getElementById('modal-exp-amount').value) || 0;
+            const date = document.getElementById('modal-exp-date').value;
+            const cat = document.getElementById('modal-exp-cat').value;
+            const method = document.getElementById('modal-exp-method').value;
+            const status = document.getElementById('modal-exp-status').value;
+            const eid = document.getElementById('modal-exp-event-id').value || null;
+            if (!desc || amt <= 0 || !date) { alert("Preencha tudo."); return; }
+            if (existingId) {
+                const idx = expensesState.findIndex(e => e.id === existingId);
+                if (idx !== -1) {
+                    expensesState[idx] = { ...expensesState[idx], description: desc, amount: amt, date, category: cat, paymentMethod: method, status, eventId: eid };
+                }
+                closeExpenseModal();
+                alert("Despesa atualizada!");
+            } else {
+                expensesState.push({ id: 'exp_' + Date.now(), description: desc, amount: amt, date, category: cat, paymentMethod: method, status, eventId: eid });
+                closeExpenseModal();
+                alert("Despesa registrada!");
+            }
+            saveToLocalStorage();
+            renderFinanceTab(); renderDashboard();
+        }
+
+        function deleteExpense(id) {
+            if (confirm("Excluir despesa?")) {
+                expensesState = expensesState.filter(e => e.id !== id);
+                saveToLocalStorage();
+                renderFinanceTab(); renderDashboard();
+            }
+        }
+
+        function prepareNewEvent() {
+            activeEventId = null;
+            document.getElementById('form-title').innerText = 'Cadastrar Novo Evento';
+            document.getElementById('event-id').value = '';
+            document.getElementById('event-form').reset();
+            document.getElementById('inp-event-status').value = 'Em negociação';
+            document.getElementById('inp-event-duration').value = '6';
+            document.getElementById('inp-time-start').value = '21:00';
+            calculateEndTime();
+            document.getElementById('inp-event-extra-hour').value = '150';
+            document.getElementById('inp-event-equipments').value = 'Iluminação com PAR LED, 2 moving, 2 spider, máquina de fumaça, TV de LED 43, Pista de LED, Microfone, Repertório personalizado, Montagem e desmontagem, Som e suporte técnico.';
+            switchTab('proposta');
+        }
+
+        function compileContractText(ev) {
+            return contractTemplateState
+                .replace(/{{NOME_CLIENTE}}/g, ev.clientName || '')
+                .replace(/{{CPF_CLIENTE}}/g, ev.clientCpf || '')
+                .replace(/{{FONE_CLIENTE}}/g, ev.clientPhone || '')
+                .replace(/{{CEP_CLIENTE}}/g, ev.clientCep || 'Não informado')
+                .replace(/{{ENDERECO_CLIENTE}}/g, ev.clientAddress || 'Não informado')
+                .replace(/{{DATA_EVENTO}}/g, formatDateBR(ev.date))
+                .replace(/{{LOCAL_EVENTO}}/g, ev.location || '')
+                .replace(/{{DURACAO}}/g, ev.duration || '6')
+                .replace(/{{HORARIO_INICIO}}/g, ev.startTime || '21:00')
+                .replace(/{{HORARIO_TERMINO}}/g, ev.endTime || '03:00')
+                .replace(/{{VALOR_EXTRA}}/g, formatNumberBR(ev.extraHour))
+                .replace(/{{VALOR_TOTAL}}/g, formatNumberBR(ev.price))
+                .replace(/{{ENTRADA}}/g, formatNumberBR(ev.deposit))
+                .replace(/{{SALDO}}/g, formatNumberBR(ev.saldo))
+                .replace(/{{EQUIPAMENTOS}}/g, ev.equipments || '')
+                .replace(/{{OBSERVACOES}}/g, ev.notes || 'Nenhuma.')
+                .replace(/{{NOME_DJ}}/g, profileState.userName)
+                .replace(/{{CPF_DJ}}/g, profileState.userCpf)
+                .replace(/{{FONE_DJ}}/g, profileState.userPhone)
+                .replace(/{{ENDERECO_DJ}}/g, profileState.userAddress || '');
+        }
+
+        function handleSaveEvent(e) {
+            e.preventDefault();
+            const name = document.getElementById('inp-client-name').value.trim();
+            const cpf = document.getElementById('inp-client-cpf').value.trim();
+            const phone = document.getElementById('inp-client-phone').value.trim();
+            const cep = document.getElementById('inp-client-cep').value.trim();
+            const addr = document.getElementById('inp-client-address').value.trim();
+            const date = document.getElementById('inp-event-date').value;
+            const loc = document.getElementById('inp-event-location').value.trim();
+            const status = document.getElementById('inp-event-status').value;
+            const dur = document.getElementById('inp-event-duration').value;
+            const st = document.getElementById('inp-time-start').value;
+            const et = document.getElementById('inp-time-end').value;
+            const eh = document.getElementById('inp-event-extra-hour').value;
+            const price = parseFloat(document.getElementById('inp-event-price').value) || 0;
+            const dep = parseFloat(document.getElementById('inp-event-deposit').value) || 0;
+            const saldo = Math.max(0, price - dep);
+            const eq = document.getElementById('inp-event-equipments').value.trim();
+            const notes = document.getElementById('inp-event-notes').value.trim();
+            const eid = document.getElementById('event-id').value;
+            if (!name || !cpf || !phone || !date || !loc || price <= 0) { alert("Preencha obrigatórios."); return; }
+            const conf = eventsState.find(e => e.date === date && e.id !== eid && e.status !== 'Cancelado');
+            if (conf && !confirm(`Já existe evento de "${conf.clientName}" nesta data. Continuar?`)) return;
+            if (eid) {
+                const idx = eventsState.findIndex(e => e.id === eid);
+                if (idx !== -1) {
+                    const old = eventsState[idx];
+                    let sc = old.signatureClient, sd = old.signatureDj, sca = old.signedClientAt, sda = old.signedDjAt;
+                    const tmp = { ...old, clientName: name, clientCpf: cpf, clientPhone: phone, clientCep: cep, clientAddress: addr, date, location: loc, duration: dur, startTime: st, endTime: et, extraHour: eh, price, deposit: dep, equipments: eq, notes };
+                    tmp.contractSnapshot = compileContractText(tmp);
+                    const newHash = computeContractHash(tmp);
+                    if (sc && old.contractHash && old.contractHash !== newHash) {
+                        if (confirm("⚠️ Alteração após assinatura. Invalidar assinaturas?")) { sc = null; sd = null; sca = null; sda = null; }
+                        else return;
+                    }
+                    eventsState[idx] = { ...old, clientName: name, clientCpf: cpf, clientPhone: phone, clientCep: cep, clientAddress: addr, date, location: loc, status, duration: dur, startTime: st, endTime: et, extraHour: eh, price, deposit: dep, saldo, equipments: eq, notes, signatureClient: sc, signatureDj: sd, signedClientAt: sca, signedDjAt: sda, contractHash: newHash };
+                    eventsState[idx].contractSnapshot = compileContractText(eventsState[idx]);
+                    eventsState[idx].contractHash = computeContractHash(eventsState[idx]);
+                    activeEventId = eid;
+                }
+            } else {
+                const nid = 'ev_' + Date.now();
+                const ne = { id: nid, clientName: name, clientCpf: cpf, clientPhone: phone, clientCep: cep, clientAddress: addr, date, location: loc, status, duration: dur, startTime: st, endTime: et, extraHour: eh, price, deposit: dep, saldo, equipments: eq, notes, extraPayments: [], signatureClient: null, signatureDj: null, signedClientAt: null, signedDjAt: null, contractSnapshot: '', contractHash: '' };
+                ne.contractSnapshot = compileContractText(ne);
+                ne.contractHash = computeContractHash(ne);
+                eventsState.push(ne);
+                activeEventId = nid;
+            }
+            const checkEv = eventsState.find(e => e.id === activeEventId);
+            if (checkEv && checkEv.status === 'Confirmado' && checkEv.deposit > 0) {
+                if (!checkEv.extraPayments) checkEv.extraPayments = [];
+                if (!checkEv.extraPayments.some(p => p.note && p.note.toLowerCase().includes('sinal'))) {
+                    checkEv.extraPayments.push({ id: 'pay_sinal_' + Date.now(), amount: parseFloat(checkEv.deposit) || 0, date: new Date().toISOString().slice(0, 10), note: 'Sinal auto', paymentMethod: 'PIX' });
+                }
+            }
+            saveToLocalStorage();
+            viewEventContract(activeEventId);
+        }
+
+        function editEvent(id) {
+            const ev = eventsState.find(e => e.id === id);
+            if (!ev) return;
+            activeEventId = id;
+            document.getElementById('form-title').innerText = 'Editar Evento';
+            document.getElementById('event-id').value = ev.id;
+            document.getElementById('inp-client-name').value = ev.clientName;
+            document.getElementById('inp-client-cpf').value = ev.clientCpf;
+            document.getElementById('inp-client-phone').value = ev.clientPhone;
+            document.getElementById('inp-client-cep').value = ev.clientCep || '';
+            document.getElementById('inp-client-address').value = ev.clientAddress || '';
+            document.getElementById('inp-event-date').value = ev.date;
+            document.getElementById('inp-event-location').value = ev.location;
+            document.getElementById('inp-event-status').value = ev.status || 'Confirmado';
+            document.getElementById('inp-event-duration').value = ev.duration || '6';
+            document.getElementById('inp-time-start').value = ev.startTime || '21:00';
+            calculateEndTime();
+            document.getElementById('inp-event-extra-hour').value = ev.extraHour || '150';
+            document.getElementById('inp-event-price').value = ev.price;
+            document.getElementById('inp-event-deposit').value = ev.deposit;
+            document.getElementById('inp-event-saldo').value = ev.saldo;
+            document.getElementById('inp-event-equipments').value = ev.equipments || '';
+            document.getElementById('inp-event-notes').value = ev.notes || '';
+            switchTab('proposta');
+        }
+
+        function editCurrentEventFromContract() { if (activeEventId) editEvent(activeEventId); }
+
+        function deleteEvent(id) {
+            const ev = eventsState.find(e => e.id === id);
+            if (!ev) return;
+            if (!confirm(`Excluir evento de "${ev.clientName}"?`)) return;
+            const hasPaid = (ev.extraPayments && ev.extraPayments.length > 0);
+            if (hasPaid) {
+                ev.status = 'Cancelado';
+                saveToLocalStorage();
+                alert("Marcado como CANCELADO (caixa histórico preservado).");
+            } else {
+                eventsState = eventsState.filter(e => e.id !== id);
+                expensesState = expensesState.filter(e => e.eventId !== id);
+                if (activeEventId === id) activeEventId = null;
+                saveToLocalStorage();
+            }
+            renderDashboard(); renderEventsList(); renderFinanceTab();
+        }
+
+        function viewEventContract(id) {
+            const ev = eventsState.find(e => e.id === id);
+            if (!ev) return;
+            activeEventId = id;
+            document.getElementById('contract-render-view').innerText = ev.contractSnapshot || compileContractText(ev);
+            const ce = document.getElementById('client-existing-sig-box');
+            const cn = document.getElementById('client-new-sig-box');
+            const ci = document.getElementById('img-client-signature');
+            const cp = document.getElementById('sig-client-printed-name');
+            if (ev.signatureClient) {
+                ci.src = ev.signatureClient;
+                cp.innerText = `${ev.clientName} (${ev.clientCpf})${ev.signedClientAt ? ' - ' + new Date(ev.signedClientAt).toLocaleString('pt-BR') : ''}`;
+                ce.classList.remove('hidden'); cn.classList.add('hidden');
+            } else {
+                ce.classList.add('hidden'); cn.classList.remove('hidden');
+                clearSignaturePad('client');
+            }
+            const de = document.getElementById('dj-existing-sig-box');
+            const dn = document.getElementById('dj-new-sig-box');
+            const di = document.getElementById('img-dj-signature');
+            const dp = document.getElementById('sig-dj-printed-name');
+            if (ev.signatureDj) {
+                di.src = ev.signatureDj; di.style.display = 'block';
+                dp.innerText = `${profileState.userName || 'DJ'} (DJ BROW)${ev.signedDjAt ? ' - ' + new Date(ev.signedDjAt).toLocaleString('pt-BR') : ''}`;
+                de.classList.remove('hidden'); dn.classList.add('hidden');
+            } else {
+                de.classList.add('hidden'); dn.classList.remove('hidden');
+                clearSignaturePad('dj');
+            }
+            switchTab('contratos');
+        }
+
+        let canvases = {}, ctxs = {}, isDrawingState = {};
+
+        function setupSignaturePads() {
+            ['client', 'dj'].forEach(role => {
+                const c = document.getElementById(`signature-pad-${role}`);
+                if (!c) return;
+                canvases[role] = c;
+                ctxs[role] = c.getContext('2d');
+                isDrawingState[role] = false;
+                const getPos = e => {
+                    const r = c.getBoundingClientRect();
+                    return { x: ((e.touches ? e.touches[0].clientX : e.clientX) - r.left) * (c.width / r.width), y: ((e.touches ? e.touches[0].clientY : e.clientY) - r.top) * (c.height / r.height) };
+                };
+                const start = e => { isDrawingState[role] = true; draw(e); };
+                const stop = () => { isDrawingState[role] = false; ctxs[role].beginPath(); };
+                const draw = e => {
+                    if (!isDrawingState[role]) return;
+                    e.preventDefault();
+                    const p = getPos(e);
+                    ctxs[role].lineWidth = 2.5;
+                    ctxs[role].lineCap = 'round';
+                    ctxs[role].strokeStyle = role === 'client' ? '#10b981' : '#3b82f6';
+                    ctxs[role].lineTo(p.x, p.y);
+                    ctxs[role].stroke();
+                    ctxs[role].beginPath();
+                    ctxs[role].moveTo(p.x, p.y);
+                };
+                c.addEventListener('mousedown', start);
+                c.addEventListener('mouseup', stop);
+                c.addEventListener('mousemove', draw);
+                c.addEventListener('mouseleave', stop);
+                c.addEventListener('touchstart', start, { passive: false });
+                c.addEventListener('touchend', stop);
+                c.addEventListener('touchmove', draw, { passive: false });
+            });
+        }
+
+        function clearSignaturePad(role) { if (ctxs[role] && canvases[role]) ctxs[role].clearRect(0, 0, canvases[role].width, canvases[role].height); }
+
+        function isCanvasBlank(c) { const b = document.createElement('canvas'); b.width = c.width; b.height = c.height; return c.toDataURL() === b.toDataURL(); }
+
+        function saveSignature(role) {
+            if (isClientMode && role === 'dj') { alert("Acesso negado."); return; }
+            const c = canvases[role];
+            if (isCanvasBlank(c)) { alert("Desenhe sua assinatura."); return; }
+            const url = c.toDataURL('image/png');
+            const ts = new Date().toISOString();
+            if (isClientMode) {
+                const p = new URLSearchParams(window.location.search);
+                const cid = p.get('clientView');
+                const cdp = p.get('clientData');
+                let ev = null;
+                if (cid) ev = eventsState.find(e => e.id === cid);
+                if (!ev && cdp) ev = decodeBase64Json(cdp);
+                if (!ev && activeEventId) ev = eventsState.find(e => e.id === activeEventId);
+                if (ev) {
+                    ev.signatureClient = url;
+                    ev.signedClientAt = ts;
+                    activeEventId = ev.id;
+                    const idx = eventsState.findIndex(e => e.id === ev.id);
+                    if (idx !== -1) eventsState[idx] = ev;
+                    else eventsState.push(ev);
+                    saveToLocalStorage();
+                    alert("Assinatura salva!");
+                    activateClientViewMode(activeEventId, encodeBase64Json(ev));
+                }
+                return;
+            }
+            if (!activeEventId) { alert("Selecione evento."); return; }
+            const idx = eventsState.findIndex(e => e.id === activeEventId);
+            if (idx !== -1) {
+                if (role === 'client') { eventsState[idx].signatureClient = url; eventsState[idx].signedClientAt = ts; }
+                else { eventsState[idx].signatureDj = url; eventsState[idx].signedDjAt = ts; }
+                saveToLocalStorage();
+                alert(`Assinatura do ${role === 'client' ? 'Cliente' : 'DJ'} salva!`);
+                viewEventContract(activeEventId);
+                renderEventsList();
+            }
+        }
+
+        function reopenSignaturePad(role) {
+            if (isClientMode && role === 'dj') { alert("Acesso negado."); return; }
+            if (!confirm("Refazer?")) return;
+            if (role === 'client') {
+                document.getElementById('client-existing-sig-box').classList.add('hidden');
+                document.getElementById('client-new-sig-box').classList.remove('hidden');
+                clearSignaturePad('client');
+            } else {
+                document.getElementById('dj-existing-sig-box').classList.add('hidden');
+                document.getElementById('dj-new-sig-box').classList.remove('hidden');
+                clearSignaturePad('dj');
+            }
+        }
+
+        function handleSaveProfile(e) {
+            e.preventDefault();
+            profileState.companyName = document.getElementById('cfg-company-name').value.trim();
+            profileState.userName = document.getElementById('cfg-user-name').value.trim();
+            profileState.userCpf = document.getElementById('cfg-user-cpf').value.trim();
+            profileState.userPhone = document.getElementById('cfg-user-phone').value.trim();
+            profileState.userAddress = document.getElementById('cfg-user-address').value.trim();
+            profileState.monthlyGoal = parseFloat(document.getElementById('cfg-monthly-goal').value) || 0;
+            saveToLocalStorage();
+            updateSidebarProfile();
+            alert("Perfil salvo!");
+        }
+
+        function handleSaveContractTemplate() {
+            contractTemplateState = document.getElementById('contract-template').value;
+            saveToLocalStorage();
+            alert("Modelo salvo!");
+        }
+
+        function restoreDefaultContractTemplate() {
+            if (confirm("Restaurar modelo padrão?")) {
+                contractTemplateState = defaultContractText;
+                document.getElementById('contract-template').value = defaultContractText;
+                saveToLocalStorage();
+                alert("Restaurado.");
+            }
+        }
+
+        function exportBackupData() {
+            const data = JSON.stringify({ version: "23_AUDIT", exportDate: new Date().toISOString(), events: eventsState, expenses: expensesState, profile: profileState, contractTemplate: contractTemplateState }, null, 2);
+            const blob = new Blob([data], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `DJ_BROW_Backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function processImportBackup(e) {
+            const f = e.target.files[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = evt => {
+                try {
+                    const d = JSON.parse(evt.target.result);
+                    if (!d || !Array.isArray(d.events) || !Array.isArray(d.expenses)) { alert("Arquivo inválido."); return; }
+                    if (!confirm(`Backup com ${d.events.length} eventos e ${d.expenses.length} despesas. Substituir?`)) return;
+                    eventsState = d.events; expensesState = d.expenses;
+                    if (d.profile) profileState = { ...profileState, ...d.profile };
+                    if (d.contractTemplate) contractTemplateState = d.contractTemplate;
+                    saveToLocalStorage();
+                    loadFromLocalStorage();
+                    selectedFinanceYear = 'all';
+                    populateFinanceYears();
+                    renderDashboard(); renderEventsList(); renderFinanceTab();
+                    alert("Restaurado!");
+                } catch (err) { alert("Erro ao processar."); }
+            };
+            r.readAsText(f);
+        }
+    </script>
+</body>
+</html>
