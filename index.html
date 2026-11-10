@@ -2,99 +2,57 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DJ BROW - Gestão Total v24.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DJ BROW - Gestão Total v24.2</title>
     <meta name="theme-color" content="#10b981">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="DJ BROW">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%2310b981' width='512' height='512' rx='96'/%3E%3Ctext x='256' y='340' font-size='220' font-weight='bold' text-anchor='middle' fill='%23000' font-family='Arial'%3EDJ%3C/text%3E%3C/svg%3E">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #10b981; --bg-dark: #090d16; --card-dark: #111827; }
-        body { background-color: var(--bg-dark); color: #f3f4f6; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
-        .canvas-container { border: 2px dashed #374151; border-radius: 8px; background: #030712; position: relative; }
+        body { background-color: #090d16; color: #f3f4f6; font-family: 'Segoe UI', sans-serif; margin: 0; }
         .tab-btn.active { background-color: #1e293b; color: #10b981; border-left: 4px solid #10b981; }
+        .canvas-container { border: 2px dashed #374151; border-radius: 8px; background: #030712; }
         
-        /* Área de Impressão Oculta (Nativa) */
         #print-section { display: none; }
-        
         @media print {
             body { background: #ffffff !important; color: #000000 !important; margin: 0; padding: 0; }
-            #app-sidebar, main, #modal-payment, #modal-payments-history, #modal-expense, #modal-onboarding, .no-print { display: none !important; }
-            
-            #print-section {
-                display: block !important;
-                font-family: Arial, sans-serif;
-                padding: 10mm;
-                color: #000;
-            }
+            #app-sidebar, main, #modal-payment, #modal-payments-history, #modal-expense, .no-print { display: none !important; }
+            #print-section { display: block !important; font-family: Arial, sans-serif; padding: 10mm; color: #000; }
             .print-header { text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; text-transform: uppercase; }
             .print-content { white-space: pre-wrap; font-size: 11px; line-height: 1.5; text-align: justify; margin-bottom: 40px; }
             .print-signatures { display: flex; justify-content: space-between; margin-top: 50px; page-break-inside: avoid; }
             .print-sig-box { width: 45%; text-align: center; }
             .print-sig-img { max-height: 80px; max-width: 100%; margin-bottom: -10px; }
             .print-sig-line { border-top: 1px solid #000; margin-top: 60px; padding-top: 5px; font-size: 11px; font-weight: bold; }
-            
             @page { margin: 15mm; size: A4; }
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col md:flex-row">
 
-    <!-- ONBOARDING -->
-    <div id="modal-onboarding" class="fixed inset-0 bg-slate-950/95 flex items-center justify-center p-4 z-[100] hidden no-print">
-        <div class="bg-slate-900 border border-slate-700 rounded-xl max-w-lg w-full p-6 space-y-4 max-h-[95vh] overflow-y-auto">
-            <div class="text-center">
-                <div class="w-16 h-16 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center font-bold text-2xl mx-auto mb-3 shadow-lg shadow-emerald-500/30">DJ</div>
-                <h2 class="text-xl font-bold text-white">Bem-vindo ao DJ BROW!</h2>
-                <p class="text-sm text-slate-400 mt-1">Vamos configurar seu perfil profissional.</p>
-            </div>
-            <div class="bg-amber-950/50 border border-amber-700/50 p-3 rounded-lg space-y-1 text-xs">
-                <p class="font-bold text-amber-400">⚠️ Importante:</p>
-                <p class="text-amber-200">Os dados são salvos no seu dispositivo. No iPhone, use <strong>"Adicionar à Tela de Início"</strong>.</p>
-            </div>
-            <form onsubmit="handleSaveOnboarding(event)" class="space-y-3">
-                <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Nome Artístico / Empresa *</label><input type="text" id="onb-company" required placeholder="Ex: DJ BROW Eventos" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:border-emerald-500 focus:outline-none"></div>
-                <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Seu Nome Completo *</label><input type="text" id="onb-name" required placeholder="Ex: Marcelo da Cruz" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:border-emerald-500 focus:outline-none"></div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">CPF *</label><input type="text" id="onb-cpf" required placeholder="000.000.000-00" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:border-emerald-500 focus:outline-none"></div>
-                    <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">WhatsApp *</label><input type="text" id="onb-phone" required placeholder="(00) 00000-0000" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:border-emerald-500 focus:outline-none"></div>
-                </div>
-                <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Endereço (opcional)</label><input type="text" id="onb-address" placeholder="Rua, número, cidade - UF" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:border-emerald-500 focus:outline-none"></div>
-                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-lg transition text-sm shadow-lg shadow-emerald-500/20">Começar a Usar →</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- SIDEBAR -->
     <aside id="app-sidebar" class="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col justify-between no-print shrink-0">
         <div>
             <div class="flex items-center gap-3 mb-8">
-                <div class="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-slate-950 text-xl shadow-lg shadow-emerald-500/20">DJ</div>
+                <div class="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-slate-950 text-xl">DJ</div>
                 <div>
-                    <h1 class="font-bold text-lg leading-none tracking-wide" id="sidebar-app-name">DJ BROW</h1>
-                    <span class="text-xs text-slate-400">Gestão Total v24.1</span>
+                    <h1 class="font-bold text-lg leading-none tracking-wide">DJ BROW</h1>
+                    <span class="text-xs text-slate-400">Gestão Total v24.2</span>
                 </div>
             </div>
             <nav class="space-y-1" id="nav-container">
                 <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="tab-btn active w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition"><i class="fa-solid fa-chart-pie w-5 text-emerald-400"></i> Dashboard</button>
-                <button onclick="switchTab('eventos')" id="btn-tab-eventos" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition"><i class="fa-solid fa-calendar-days w-5 text-emerald-400"></i> Meus Eventos</button>
-                <button onclick="prepareNewEvent()" id="btn-tab-proposta" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition"><i class="fa-solid fa-plus-circle w-5 text-emerald-400"></i> Novo / Editar Evento</button>
-                <button onclick="switchTab('contratos')" id="btn-tab-contratos" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition"><i class="fa-solid fa-file-contract w-5 text-emerald-400"></i> Visualizar Contrato</button>
-                <button onclick="switchTab('financeiro')" id="btn-tab-financeiro" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-emerald-400 font-semibold hover:text-white transition"><i class="fa-solid fa-wallet w-5 text-emerald-400"></i> Caixas & Lucros</button>
-                <button onclick="switchTab('perfil')" id="btn-tab-perfil" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition"><i class="fa-solid fa-user-gear w-5 text-emerald-400"></i> Perfil & Empresa</button>
-                <button onclick="switchTab('modelo-contrato')" id="btn-tab-modelo-contrato" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition"><i class="fa-solid fa-file-lines w-5 text-emerald-400"></i> Modelo Padrão</button>
-                <button onclick="switchTab('backup')" id="btn-tab-backup" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition"><i class="fa-solid fa-database w-5 text-emerald-400"></i> Backup & Segurança</button>
+                <button onclick="switchTab('eventos')" id="btn-tab-eventos" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition"><i class="fa-solid fa-calendar-days w-5 text-emerald-400"></i> Eventos</button>
+                <button onclick="prepareNewEvent()" id="btn-tab-proposta" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition"><i class="fa-solid fa-plus-circle w-5 text-emerald-400"></i> Novo Evento</button>
+                <button onclick="switchTab('contratos')" id="btn-tab-contratos" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition"><i class="fa-solid fa-file-contract w-5 text-emerald-400"></i> Contratos</button>
+                <button onclick="switchTab('financeiro')" id="btn-tab-financeiro" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition"><i class="fa-solid fa-wallet w-5 text-emerald-400"></i> Financeiro</button>
+                <button onclick="switchTab('perfil')" id="btn-tab-perfil" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition"><i class="fa-solid fa-user-gear w-5 text-emerald-400"></i> Perfil</button>
+                <button onclick="switchTab('backup')" id="btn-tab-backup" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 flex items-center gap-3 text-slate-300 hover:text-white transition"><i class="fa-solid fa-database w-5 text-emerald-400"></i> Backup</button>
             </nav>
         </div>
         <div class="pt-4 border-t border-slate-800 mt-6">
             <div class="flex items-center gap-3 p-2 bg-slate-800/50 rounded-lg">
                 <div class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-slate-950 text-xs" id="sidebar-initials">DJ</div>
                 <div class="overflow-hidden">
-                    <p class="text-sm font-semibold truncate" id="sidebar-user-name">Novo usuário</p>
+                    <p class="text-sm font-semibold truncate" id="sidebar-user-name">DJ BROW</p>
                     <p class="text-xs text-slate-400 truncate" id="sidebar-company-name">Configurar perfil</p>
                 </div>
             </div>
@@ -103,220 +61,133 @@
 
     <main class="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
 
-        <div id="client-banner" class="hidden bg-emerald-950/60 border border-emerald-500/40 p-4 rounded-xl mb-6 flex flex-col gap-3 no-print">
+        <div id="client-banner" class="hidden bg-emerald-950/60 border border-emerald-500/40 p-4 rounded-xl mb-6 flex-col gap-3 no-print">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center font-bold shrink-0"><i class="fa-solid fa-file-contract"></i></div>
                 <div>
-                    <h3 class="font-bold text-white text-base">Portal do Cliente - Assinatura Digital</h3>
-                    <p class="text-xs text-slate-300">Confira os dados, assine e envie o PDF para o DJ BROW.</p>
+                    <h3 class="font-bold text-white text-base">Portal do Cliente</h3>
+                    <p class="text-xs text-slate-300">Confira os dados, assine e envie o PDF para o DJ.</p>
                 </div>
             </div>
-            <div id="client-actions-container" class="flex flex-wrap gap-2 pt-2 border-t border-emerald-900/50">
-                <button onclick="shareSignedContractPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-md"><i class="fa-brands fa-whatsapp text-base"></i> ENVIAR PDF PARA O DJ</button>
-                <button onclick="copySyncLinkForDj()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-md"><i class="fa-solid fa-link"></i> Copiar Link de Sincronização</button>
-                <button onclick="downloadSignedContractPDF()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2.5 rounded-lg text-xs font-semibold transition flex items-center gap-2"><i class="fa-solid fa-download"></i> Baixar PDF</button>
+            <div class="flex flex-wrap gap-2 pt-2 border-t border-emerald-900/50">
+                <button onclick="downloadSignedContractPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-md"><i class="fa-solid fa-download"></i> Baixar PDF Assinado</button>
             </div>
         </div>
 
         <!-- DASHBOARD -->
         <section id="tab-dashboard" class="space-y-6">
-            <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                <div>
-                    <h2 class="text-2xl font-bold tracking-tight text-white">Painel Geral</h2>
-                    <p class="text-slate-400 text-sm">Resumo financeiro de caixa e agenda</p>
-                </div>
-                <button onclick="prepareNewEvent()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-5 py-2.5 rounded-lg transition flex items-center gap-2 self-start md:self-auto shadow-lg shadow-emerald-500/10"><i class="fa-solid fa-plus"></i> Novo Evento</button>
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-white">Painel Geral</h2>
+                <button onclick="prepareNewEvent()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-lg transition">Novo Evento</button>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                <div class="bg-slate-900 p-5 md:p-6 rounded-xl border border-slate-800 shadow-sm">
-                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Eventos Cadastrados</span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+                    <span class="text-slate-400 text-xs font-semibold uppercase">Eventos</span>
                     <p class="text-3xl font-extrabold text-white mt-2" id="dash-total-events">0</p>
                 </div>
-                <div class="bg-slate-900 p-5 md:p-6 rounded-xl border border-slate-800 shadow-sm">
-                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Valor Total Contratado</span>
-                    <p class="text-3xl font-extrabold text-emerald-400 mt-2" id="dash-total-value">R$ 0,00</p>
-                </div>
-                <div class="bg-slate-900 p-5 md:p-6 rounded-xl border border-slate-800 shadow-sm">
-                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Saldo Pendente (A Receber)</span>
+                <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+                    <span class="text-slate-400 text-xs font-semibold uppercase">A Receber</span>
                     <p class="text-3xl font-extrabold text-amber-400 mt-2" id="dash-pending-value">R$ 0,00</p>
                 </div>
-                <div class="bg-gradient-to-br from-blue-950/60 to-slate-900 p-5 md:p-6 rounded-xl border border-blue-800/60 shadow-sm">
-                    <span class="text-blue-300 text-xs font-semibold uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-coins"></i> Lucro Líquido do Caixa</span>
+                <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+                    <span class="text-slate-400 text-xs font-semibold uppercase">Lucro Líquido</span>
                     <p class="text-3xl font-extrabold text-blue-400 mt-2" id="dash-net-profit">R$ 0,00</p>
-                    <p class="text-[10px] text-slate-500 mt-1 italic" id="dash-net-profit-detail">Recebido − Despesas pagas</p>
                 </div>
             </div>
-
-            <div id="dash-goal-card" class="bg-gradient-to-r from-purple-950/40 to-slate-900 rounded-xl border border-purple-800/50 p-5 md:p-6 hidden">
-                <div class="flex justify-between items-center mb-3">
-                    <div>
-                        <h3 class="text-sm font-bold text-purple-300 flex items-center gap-2"><i class="fa-solid fa-bullseye"></i> Meta de Faturamento do Mês</h3>
-                        <p class="text-xs text-slate-400 mt-0.5" id="dash-goal-month"></p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-xs text-slate-400">Recebido / Meta</p>
-                        <p class="text-lg font-extrabold text-white"><span id="dash-goal-received">R$ 0,00</span> <span class="text-slate-500 text-sm font-normal">/ <span id="dash-goal-target">R$ 0,00</span></span></p>
-                    </div>
-                </div>
-                <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
-                    <div id="dash-goal-bar" class="h-full bg-gradient-to-r from-purple-500 to-emerald-500 transition-all duration-500" style="width: 0%"></div>
-                </div>
-                <p class="text-xs text-slate-400 mt-2 text-right" id="dash-goal-percent">0% da meta</p>
-            </div>
-
-            <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 md:p-6 space-y-4">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-calendar-day text-emerald-400"></i> Próximos Eventos</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="bg-slate-800/60 text-slate-400 uppercase text-xs">
-                            <tr><th class="p-3 rounded-l-lg">Data</th><th class="p-3">Cliente</th><th class="p-3">Local</th><th class="p-3">Status</th><th class="p-3">Valor</th><th class="p-3">Saldo</th><th class="p-3 text-right rounded-r-lg">Ação</th></tr>
-                        </thead>
-                        <tbody id="dash-events-list" class="divide-y divide-slate-800"></tbody>
-                    </table>
-                </div>
+            
+            <div class="bg-slate-900 rounded-xl border border-slate-800 p-5">
+                <h3 class="text-md font-bold text-white mb-4">Próximos Eventos</h3>
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-800 text-slate-400 uppercase text-xs">
+                        <tr><th class="p-3 rounded-l-lg">Data</th><th class="p-3">Cliente</th><th class="p-3">Status</th><th class="p-3">Saldo</th><th class="p-3 text-right rounded-r-lg">Ação</th></tr>
+                    </thead>
+                    <tbody id="dash-events-list" class="divide-y divide-slate-800"></tbody>
+                </table>
             </div>
         </section>
 
         <!-- EVENTOS -->
         <section id="tab-eventos" class="space-y-6 hidden">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h2 class="text-2xl font-bold text-white">Meus Eventos & Propostas</h2>
-                    <p class="text-slate-400 text-sm">Gerencie festas a realizar e consulte o histórico</p>
-                </div>
-                <button onclick="prepareNewEvent()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2.5 rounded-lg transition text-sm flex items-center gap-2"><i class="fa-solid fa-plus"></i> Novo Evento</button>
-            </div>
-            <div class="flex flex-wrap gap-2 border-b border-slate-800 pb-3">
-                <button onclick="setEventFilter('pending')" id="filter-btn-pending" class="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white transition"><i class="fa-solid fa-clock me-1"></i> Festas a Realizar</button>
-                <button onclick="setEventFilter('completed')" id="filter-btn-completed" class="px-4 py-2 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:text-white transition"><i class="fa-solid fa-check-circle me-1"></i> Finalizados</button>
-                <button onclick="setEventFilter('all')" id="filter-btn-all" class="px-4 py-2 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:text-white transition"><i class="fa-solid fa-list me-1"></i> Todos</button>
-            </div>
-            <div class="bg-slate-900 rounded-xl border border-slate-800 p-4 md:p-6">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="bg-slate-800 text-slate-400 uppercase text-xs">
-                            <tr><th class="p-3 rounded-l-lg">Cliente</th><th class="p-3">Data</th><th class="p-3">Status</th><th class="p-3">Valor Total</th><th class="p-3">Assinaturas</th><th class="p-3 text-right rounded-r-lg">Ações</th></tr>
-                        </thead>
-                        <tbody id="full-events-list" class="divide-y divide-slate-800"></tbody>
-                    </table>
-                </div>
+            <h2 class="text-2xl font-bold text-white">Meus Eventos</h2>
+            <div class="bg-slate-900 rounded-xl border border-slate-800 p-5">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-800 text-slate-400 uppercase text-xs">
+                        <tr><th class="p-3 rounded-l-lg">Cliente</th><th class="p-3">Data</th><th class="p-3">Status</th><th class="p-3">Valor</th><th class="p-3 text-right rounded-r-lg">Ações</th></tr>
+                    </thead>
+                    <tbody id="full-events-list" class="divide-y divide-slate-800"></tbody>
+                </table>
             </div>
         </section>
 
         <!-- PROPOSTA -->
         <section id="tab-proposta" class="space-y-6 hidden">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2 class="text-2xl font-bold text-white" id="form-title">Cadastrar Novo Evento</h2>
-                    <p class="text-slate-400 text-sm">Preencha os dados do cliente e do evento</p>
-                </div>
-                <button onclick="switchTab('eventos')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-sm transition"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
-            </div>
-            <form id="event-form" onsubmit="handleSaveEvent(event)" class="bg-slate-900 p-5 md:p-8 rounded-xl border border-slate-800 space-y-6">
+            <h2 class="text-2xl font-bold text-white" id="form-title">Novo Evento</h2>
+            <form id="event-form" onsubmit="handleSaveEvent(event)" class="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-4">
                 <input type="hidden" id="event-id" value="">
-                <div class="border-b border-slate-800 pb-4">
-                    <h3 class="text-md font-semibold text-emerald-400 uppercase tracking-wider mb-4"><i class="fa-solid fa-user me-2"></i>Dados do Contratante</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="md:col-span-2"><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Nome Completo *</label><input type="text" id="inp-client-name" required placeholder="Ex: Bruna Nabais" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm"></div>
-                        <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">CPF/CNPJ *</label><input type="text" id="inp-client-cpf" required placeholder="000.000.000-00" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm"></div>
-                        <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Telefone / WhatsApp *</label><input type="text" id="inp-client-phone" required placeholder="(14) 99999-9999" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm"></div>
-                        <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">CEP (auto)</label><div class="relative"><input type="text" id="inp-client-cep" placeholder="00000-000" onblur="fetchAddressByCEP()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm"><span id="cep-loading" class="hidden absolute right-3 top-3 text-xs text-emerald-400"><i class="fa-solid fa-spinner fa-spin"></i></span></div></div>
-                        <div class="md:col-span-2"><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Endereço</label><input type="text" id="inp-client-address" placeholder="Rua, número, bairro, cidade - UF" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm"></div>
-                    </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block text-xs text-slate-400 mb-1">Nome do Cliente *</label><input type="text" id="inp-client-name" required class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
+                    <div><label class="block text-xs text-slate-400 mb-1">CPF *</label><input type="text" id="inp-client-cpf" required class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
+                    <div><label class="block text-xs text-slate-400 mb-1">WhatsApp *</label><input type="text" id="inp-client-phone" required class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
+                    <div><label class="block text-xs text-slate-400 mb-1">CEP</label><input type="text" id="inp-client-cep" onblur="fetchAddressByCEP()" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
+                    <div class="md:col-span-2"><label class="block text-xs text-slate-400 mb-1">Endereço</label><input type="text" id="inp-client-address" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
                 </div>
-                <div class="border-b border-slate-800 pb-4">
-                    <h3 class="text-md font-semibold text-emerald-400 uppercase tracking-wider mb-4"><i class="fa-solid fa-calendar-check me-2"></i>Evento & Valores</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Data do Evento *</label><input type="date" id="inp-event-date" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm"></div>
-                        <div class="md:col-span-2"><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Local do Evento *</label><input type="text" id="inp-event-location" required placeholder="Ex: Spazio Vigonza, Marília - SP" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm"></div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Status</label>
-                            <select id="inp-event-status" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">
-                                <option value="Em negociação">Em negociação</option>
-                                <option value="Proposta enviada">Proposta enviada</option>
-                                <option value="Aguardando assinatura">Aguardando assinatura</option>
-                                <option value="Confirmado">Confirmado</option>
-                                <option value="Realizado">Realizado</option>
-                                <option value="Cancelado">Cancelado</option>
-                            </select>
-                        </div>
-                        <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Duração (h) *</label><input type="number" id="inp-event-duration" value="6" required oninput="calculateEndTime()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm"></div>
-                        <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Início *</label><input type="time" id="inp-time-start" value="21:00" required oninput="calculateEndTime()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm"></div>
-                        <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Término (auto)</label><input type="time" id="inp-time-end" readonly class="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-emerald-400 font-bold text-sm"></div>
-                        <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Hora Extra (R$)</label><input type="number" id="inp-event-extra-hour" value="150" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm"></div>
-                        <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Valor Total (R$) *</label><input type="number" step="0.01" id="inp-event-price" required placeholder="1800.00" oninput="autoCalculateDeposit()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm"></div>
-                        <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Sinal (20%)</label><input type="number" step="0.01" id="inp-event-deposit" required placeholder="360.00" oninput="autoCalculateSaldo()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm"></div>
-                        <div class="md:col-span-2"><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Saldo (R$)</label><input type="number" step="0.01" id="inp-event-saldo" readonly class="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-amber-400 font-bold text-sm"></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-800 pt-4">
+                    <div><label class="block text-xs text-slate-400 mb-1">Data do Evento *</label><input type="date" id="inp-event-date" required class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
+                    <div class="md:col-span-2"><label class="block text-xs text-slate-400 mb-1">Local *</label><input type="text" id="inp-event-location" required class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Status</label>
+                        <select id="inp-event-status" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white">
+                            <option value="Em negociação">Em negociação</option>
+                            <option value="Confirmado">Confirmado</option>
+                            <option value="Realizado">Realizado</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
                     </div>
+                    <div><label class="block text-xs text-slate-400 mb-1">Duração (Horas) *</label><input type="number" id="inp-event-duration" value="6" required oninput="calculateEndTime()" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
+                    <div><label class="block text-xs text-slate-400 mb-1">Hora Início *</label><input type="time" id="inp-time-start" value="21:00" required oninput="calculateEndTime()" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
+                    <div><label class="block text-xs text-slate-400 mb-1">Hora Fim (Auto)</label><input type="time" id="inp-time-end" readonly class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-emerald-400"></div>
+                    <div><label class="block text-xs text-slate-400 mb-1">Valor Total (R$) *</label><input type="number" step="0.01" id="inp-event-price" required oninput="autoCalculateDeposit()" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
+                    <div><label class="block text-xs text-slate-400 mb-1">Sinal (20%)</label><input type="number" step="0.01" id="inp-event-deposit" required class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
+                    <div><label class="block text-xs text-slate-400 mb-1">Saldo Restante</label><input type="number" step="0.01" id="inp-event-saldo" readonly class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-amber-400"></div>
                 </div>
-                <div>
-                    <h3 class="text-md font-semibold text-emerald-400 uppercase tracking-wider mb-4"><i class="fa-solid fa-sliders me-2"></i>Serviços & Observações</h3>
-                    <div class="space-y-4">
-                        <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Equipamentos e Serviços Incluídos</label><textarea id="inp-event-equipments" rows="3" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm">Iluminação com PAR LED, 2 moving, 2 spider, máquina de fumaça, TV de LED 43, Pista de LED (preto com dourado), Microfone, Repertório personalizado, Montagem e desmontagem, Estrutura cerimônia, Som e suporte técnico.</textarea></div>
-                        <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Observações</label><textarea id="inp-event-notes" rows="2" placeholder="Cláusulas especiais..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none text-sm"></textarea></div>
-                    </div>
-                </div>
-                <div class="flex gap-4 pt-4 border-t border-slate-800">
-                    <button type="button" onclick="switchTab('eventos')" class="w-1/3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3 rounded-lg transition text-sm">Cancelar</button>
-                    <button type="submit" class="w-2/3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-lg transition text-sm shadow-lg shadow-emerald-500/10">Salvar Evento</button>
+                <div><label class="block text-xs text-slate-400 mb-1">Equipamentos / Serviços</label><textarea id="inp-event-equipments" rows="3" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white">Iluminação, Som, Microfone, Pista de LED, Montagem e desmontagem.</textarea></div>
+                
+                <div class="flex gap-2 pt-4">
+                    <button type="button" onclick="switchTab('eventos')" class="w-1/3 bg-slate-800 text-white font-bold py-2 rounded">Cancelar</button>
+                    <button type="submit" class="w-2/3 bg-emerald-500 text-slate-950 font-bold py-2 rounded">Salvar Evento</button>
                 </div>
             </form>
         </section>
 
         <!-- CONTRATOS -->
         <section id="tab-contratos" class="space-y-6 hidden">
-            <div id="dj-contract-actions" class="flex flex-col gap-4 no-print">
-                <div>
-                    <h2 class="text-2xl font-bold text-white">Contrato & Assinaturas</h2>
-                    <p class="text-slate-400 text-sm">Assine como DJ e escolha como enviar</p>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="generateClientShareLink()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition flex items-center gap-2"><i class="fa-solid fa-share-nodes"></i> Copiar Link Único</button>
-                    <button onclick="exportStandaloneHTML()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition flex items-center gap-2"><i class="fa-solid fa-file-export"></i> Exportar HTML</button>
-                    <button onclick="downloadPDFForClientExternal()" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Gerar PDF p/ Cliente Assinar</button>
-                    <button onclick="editCurrentEventFromContract()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2"><i class="fa-solid fa-pen-to-square"></i> Editar</button>
-                    <button onclick="window.print()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-4 py-2.5 rounded-lg text-sm font-bold transition flex items-center gap-2"><i class="fa-solid fa-print"></i> Imprimir Tela</button>
-                </div>
+            <div id="dj-contract-actions" class="flex flex-wrap gap-2 no-print">
+                <button onclick="downloadPDFForClientExternal()" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded font-bold"><i class="fa-solid fa-file-pdf"></i> Gerar PDF (Cliente Assinar)</button>
+                <button onclick="window.print()" class="bg-emerald-500 text-slate-950 px-4 py-2 rounded font-bold"><i class="fa-solid fa-print"></i> Imprimir Contrato</button>
             </div>
-            <div id="pdf-printable-area" class="bg-slate-900 p-6 md:p-10 rounded-xl border border-slate-800 print-card space-y-6">
-                <div id="contract-render-view" class="contract-text text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">
-                    <p class="text-slate-500 text-center italic py-8">Nenhum evento selecionado.</p>
-                </div>
-                <div class="mt-8 pt-6 border-t border-slate-800 space-y-4">
-                    <h3 class="text-md font-bold text-emerald-400 uppercase tracking-wider">Assinaturas Digitais</h3>
-                    <div class="flex flex-wrap gap-6">
-                        <div class="flex-1 min-w-[250px] bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-                            <h4 class="text-xs font-semibold text-slate-300 uppercase">1. Contratante (Cliente)</h4>
-                            <div id="client-existing-sig-box" class="hidden space-y-2">
-                                <div class="border border-slate-700 rounded bg-slate-900 p-3 text-center">
-                                    <img id="img-client-signature" src="" alt="Assinatura Cliente" class="max-h-24 mx-auto">
-                                    <div class="border-t border-slate-700 pt-1 mt-2 text-xs text-slate-300 font-semibold" id="sig-client-printed-name"></div>
-                                </div>
-                                <button id="btn-reopen-client" onclick="reopenSignaturePad('client')" class="no-print text-xs text-amber-400 hover:underline">Refazer</button>
-                            </div>
-                            <div id="client-new-sig-box" class="no-print space-y-2">
-                                <div class="canvas-container"><canvas id="signature-pad-client" width="400" height="130" class="w-full touch-none cursor-crosshair rounded-lg"></canvas></div>
-                                <div class="flex gap-2">
-                                    <button type="button" onclick="clearSignaturePad('client')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-3 py-1.5 rounded">Limpar</button>
-                                    <button type="button" onclick="saveSignature('client')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold px-3 py-1.5 rounded">Salvar Cliente</button>
-                                </div>
+            <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
+                <div id="contract-render-view" class="text-slate-200 text-sm whitespace-pre-wrap">Nenhum contrato selecionado.</div>
+                
+                <div class="border-t border-slate-700 pt-6 flex flex-wrap gap-4">
+                    <div class="flex-1 bg-slate-950 p-4 rounded border border-slate-800">
+                        <p class="text-xs font-bold text-slate-300 mb-2">1. Assinatura do Cliente</p>
+                        <div id="client-existing-sig-box" class="hidden"><img id="img-client-signature" class="max-h-20 mx-auto"></div>
+                        <div id="client-new-sig-box">
+                            <canvas id="signature-pad-client" width="300" height="100" class="w-full bg-slate-900 border border-slate-700 rounded touch-none"></canvas>
+                            <div class="flex gap-2 mt-2">
+                                <button onclick="clearSignaturePad('client')" class="bg-slate-800 text-xs px-2 py-1 rounded">Limpar</button>
+                                <button onclick="saveSignature('client')" class="bg-emerald-500 text-slate-950 text-xs font-bold px-2 py-1 rounded">Salvar</button>
                             </div>
                         </div>
-                        <div id="dj-signature-card" class="flex-1 min-w-[250px] bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-                            <h4 class="text-xs font-semibold text-slate-300 uppercase">2. Contratado (DJ BROW)</h4>
-                            <div id="dj-existing-sig-box" class="hidden space-y-2">
-                                <div class="border border-slate-700 rounded bg-slate-900 p-3 text-center">
-                                    <img id="img-dj-signature" src="" alt="Assinatura DJ" class="max-h-24 mx-auto">
-                                    <div class="border-t border-slate-700 pt-1 mt-2 text-xs text-slate-300 font-semibold" id="sig-dj-printed-name"></div>
-                                </div>
-                                <button id="btn-reopen-dj" onclick="reopenSignaturePad('dj')" class="no-print text-xs text-amber-400 hover:underline">Refazer</button>
-                            </div>
-                            <div id="dj-new-sig-box" class="no-print space-y-2">
-                                <div class="canvas-container"><canvas id="signature-pad-dj" width="400" height="130" class="w-full touch-none cursor-crosshair rounded-lg"></canvas></div>
-                                <div class="flex gap-2">
-                                    <button type="button" onclick="clearSignaturePad('dj')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-3 py-1.5 rounded">Limpar</button>
-                                    <button type="button" onclick="saveSignature('dj')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold px-3 py-1.5 rounded">Salvar DJ</button>
-                                </div>
+                    </div>
+                    <div class="flex-1 bg-slate-950 p-4 rounded border border-slate-800">
+                        <p class="text-xs font-bold text-slate-300 mb-2">2. Assinatura do DJ</p>
+                        <div id="dj-existing-sig-box" class="hidden"><img id="img-dj-signature" class="max-h-20 mx-auto"></div>
+                        <div id="dj-new-sig-box">
+                            <canvas id="signature-pad-dj" width="300" height="100" class="w-full bg-slate-900 border border-slate-700 rounded touch-none"></canvas>
+                            <div class="flex gap-2 mt-2">
+                                <button onclick="clearSignaturePad('dj')" class="bg-slate-800 text-xs px-2 py-1 rounded">Limpar</button>
+                                <button onclick="saveSignature('dj')" class="bg-emerald-500 text-slate-950 text-xs font-bold px-2 py-1 rounded">Salvar</button>
                             </div>
                         </div>
                     </div>
@@ -326,777 +197,146 @@
 
         <!-- FINANCEIRO -->
         <section id="tab-financeiro" class="space-y-6 hidden">
-            <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                <div>
-                    <h2 class="text-2xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-sack-dollar text-emerald-400"></i> Gestão Financeira & Caixa</h2>
-                    <p class="text-slate-400 text-sm">Controle de entradas reais pela data de pagamento, despesas e lucro</p>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="exportFinanceCSV()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-lg text-sm transition flex items-center gap-2"><i class="fa-solid fa-file-csv"></i> CSV</button>
-                    <button onclick="openExpenseModal()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold px-4 py-2.5 rounded-lg text-sm transition flex items-center gap-2"><i class="fa-solid fa-minus-circle"></i> Gasto</button>
-                    <button onclick="openPaymentModal()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2.5 rounded-lg text-sm transition flex items-center gap-2"><i class="fa-solid fa-plus-circle"></i> Pagamento</button>
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-white">Financeiro</h2>
+                <div class="flex gap-2">
+                    <button onclick="openExpenseModal()" class="bg-rose-500 text-white px-3 py-2 rounded text-sm font-bold">+ Gasto</button>
+                    <button onclick="openPaymentModal()" class="bg-emerald-500 text-slate-950 px-3 py-2 rounded text-sm font-bold">+ Pagamento</button>
                 </div>
             </div>
-
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 flex flex-wrap items-center gap-4">
-                <div class="flex items-center gap-2">
-                    <label class="text-xs font-semibold text-slate-300 uppercase"><i class="fa-solid fa-filter me-1 text-emerald-400"></i> Ano:</label>
-                    <select id="finance-year-select" onchange="setFinanceYearFilter(this.value)" class="bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-emerald-500"><option value="all">Todos</option></select>
-                </div>
-                <div class="flex items-center gap-2">
-                    <label class="text-xs font-semibold text-slate-300 uppercase"><i class="fa-solid fa-tag me-1 text-rose-400"></i> Categoria (Despesas):</label>
-                    <select id="finance-category-filter" onchange="setFinanceCategoryFilter(this.value)" class="bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-emerald-500">
-                        <option value="all">Todas</option>
-                        <option value="Equipe / Auxiliar">Equipe / Auxiliar</option>
-                        <option value="Combustível / Transporte">Combustível / Transporte</option>
-                        <option value="Equipamentos / Manutenção">Equipamentos / Manutenção</option>
-                        <option value="Impostos / Taxas">Impostos / Taxas</option>
-                        <option value="Alimentação">Alimentação</option>
-                        <option value="Outros">Outros</option>
-                    </select>
-                </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-slate-900 p-4 rounded border border-slate-800"><span class="text-xs text-slate-400">Recebido</span><p class="text-xl font-bold text-emerald-400" id="fin-total-received">R$ 0,00</p></div>
+                <div class="bg-slate-900 p-4 rounded border border-slate-800"><span class="text-xs text-slate-400">Despesas</span><p class="text-xl font-bold text-rose-400" id="fin-total-expenses">R$ 0,00</p></div>
+                <div class="bg-slate-900 p-4 rounded border border-slate-800"><span class="text-xs text-slate-400">Lucro</span><p class="text-xl font-bold text-blue-400" id="fin-net-profit">R$ 0,00</p></div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
-                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Recebido (Caixa)</span>
-                    <p class="text-2xl font-extrabold text-emerald-400 mt-2" id="fin-total-received">R$ 0,00</p>
-                </div>
-                <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
-                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Saldo a Receber</span>
-                    <p class="text-2xl font-extrabold text-amber-400 mt-2" id="fin-total-pending">R$ 0,00</p>
-                </div>
-                <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
-                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Despesas Pagas</span>
-                    <p class="text-2xl font-extrabold text-rose-400 mt-2" id="fin-total-expenses">R$ 0,00</p>
-                    <p class="text-[10px] text-amber-400 mt-1" id="fin-pending-expenses"></p>
-                </div>
-                <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
-                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Lucro Líquido</span>
-                    <p class="text-2xl font-extrabold text-blue-400 mt-2" id="fin-net-profit">R$ 0,00</p>
-                </div>
+            <div class="bg-slate-900 rounded border border-slate-800 p-4">
+                <h3 class="font-bold text-white mb-2">Clientes</h3>
+                <table class="w-full text-sm text-slate-300">
+                    <thead class="text-xs bg-slate-800 text-slate-400"><tr><th class="p-2">Cliente</th><th class="p-2">Pago</th><th class="p-2">Saldo</th><th class="p-2 text-right">Ação</th></tr></thead>
+                    <tbody id="fin-clients-list"></tbody>
+                </table>
             </div>
-
-            <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 space-y-4">
-                <h3 class="text-md font-bold text-white flex items-center gap-2"><i class="fa-solid fa-users-rectangle text-emerald-400"></i> Situação por Cliente</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="bg-slate-800 text-slate-400 uppercase text-xs">
-                            <tr><th class="p-3 rounded-l-lg">Cliente</th><th class="p-3">Data</th><th class="p-3">Valor</th><th class="p-3">Sinal</th><th class="p-3">Pago</th><th class="p-3">Saldo</th><th class="p-3 text-right rounded-r-lg">Ações</th></tr>
-                        </thead>
-                        <tbody id="fin-clients-list" class="divide-y divide-slate-800"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 space-y-4">
-                <h3 class="text-md font-bold text-white flex items-center gap-2"><i class="fa-solid fa-receipt text-rose-400"></i> Despesas & Custos</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="bg-slate-800 text-slate-400 uppercase text-xs">
-                            <tr><th class="p-3 rounded-l-lg">Data</th><th class="p-3">Descrição</th><th class="p-3">Categoria</th><th class="p-3">Evento</th><th class="p-3">Forma</th><th class="p-3">Status</th><th class="p-3">Valor</th><th class="p-3 text-right rounded-r-lg">Ações</th></tr>
-                        </thead>
-                        <tbody id="fin-expenses-list" class="divide-y divide-slate-800"></tbody>
-                    </table>
-                </div>
+            
+            <div class="bg-slate-900 rounded border border-slate-800 p-4">
+                <h3 class="font-bold text-white mb-2">Despesas</h3>
+                <table class="w-full text-sm text-slate-300">
+                    <thead class="text-xs bg-slate-800 text-slate-400"><tr><th class="p-2">Data</th><th class="p-2">Descrição</th><th class="p-2">Valor</th><th class="p-2 text-right">Ação</th></tr></thead>
+                    <tbody id="fin-expenses-list"></tbody>
+                </table>
             </div>
         </section>
 
         <!-- PERFIL -->
         <section id="tab-perfil" class="space-y-6 hidden">
-            <div>
-                <h2 class="text-2xl font-bold text-white">Dados do DJ & Empresa</h2>
-                <p class="text-slate-400 text-sm">Configure seus dados para os contratos</p>
-            </div>
-            <form onsubmit="handleSaveProfile(event)" class="bg-slate-900 p-6 md:p-8 rounded-xl border border-slate-800 max-w-2xl space-y-4">
-                <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Nome Artístico / Empresa *</label><input type="text" id="cfg-company-name" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm"></div>
-                <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Nome Completo do Responsável *</label><input type="text" id="cfg-user-name" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm"></div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">CPF *</label><input type="text" id="cfg-user-cpf" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm"></div>
-                    <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">WhatsApp *</label><input type="text" id="cfg-user-phone" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm"></div>
-                </div>
-                <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Endereço</label><input type="text" id="cfg-user-address" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm"></div>
-                <div class="border-t border-slate-800 pt-4 mt-4">
-                    <label class="block text-xs font-semibold text-emerald-400 uppercase mb-1"><i class="fa-solid fa-bullseye me-1"></i> Meta Mensal de Faturamento (R$)</label>
-                    <input type="number" step="0.01" id="cfg-monthly-goal" placeholder="0.00" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm">
-                    <p class="text-xs text-slate-500 mt-1">Deixe em 0 para desativar a meta</p>
-                </div>
-                <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-6 py-3 rounded-lg transition text-sm">Salvar Perfil</button>
+            <h2 class="text-2xl font-bold text-white">Meu Perfil</h2>
+            <form onsubmit="handleSaveProfile(event)" class="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-4 max-w-lg">
+                <div><label class="block text-xs text-slate-400">Nome / Empresa</label><input type="text" id="cfg-company-name" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
+                <div><label class="block text-xs text-slate-400">Seu Nome (DJ)</label><input type="text" id="cfg-user-name" required class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
+                <div><label class="block text-xs text-slate-400">CPF / CNPJ</label><input type="text" id="cfg-user-cpf" required class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
+                <div><label class="block text-xs text-slate-400">WhatsApp</label><input type="text" id="cfg-user-phone" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
+                <div><label class="block text-xs text-slate-400">Endereço</label><input type="text" id="cfg-user-address" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></div>
+                <button type="submit" class="bg-emerald-500 text-slate-950 font-bold py-2 px-4 rounded mt-4">Salvar Perfil</button>
             </form>
-        </section>
-
-        <!-- MODELO -->
-        <section id="tab-modelo-contrato" class="space-y-6 hidden">
-            <div>
-                <h2 class="text-2xl font-bold text-white">Modelo Padrão de Contrato</h2>
-                <p class="text-slate-400 text-sm">Edite o texto base utilizado para os novos contratos</p>
-            </div>
-            <div class="bg-slate-900 p-6 md:p-8 rounded-xl border border-slate-800 space-y-4">
-                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs text-slate-400 space-y-1">
-                    <p class="font-bold text-emerald-400">Variáveis Disponíveis:</p>
-                    <p><code class="text-emerald-300">{{NOME_CLIENTE}}</code>, <code class="text-emerald-300">{{CPF_CLIENTE}}</code>, <code class="text-emerald-300">{{FONE_CLIENTE}}</code>, <code class="text-emerald-300">{{CEP_CLIENTE}}</code>, <code class="text-emerald-300">{{ENDERECO_CLIENTE}}</code>, <code class="text-emerald-300">{{DATA_EVENTO}}</code>, <code class="text-emerald-300">{{LOCAL_EVENTO}}</code>, <code class="text-emerald-300">{{DURACAO}}</code>, <code class="text-emerald-300">{{HORARIO_INICIO}}</code>, <code class="text-emerald-300">{{HORARIO_TERMINO}}</code>, <code class="text-emerald-300">{{VALOR_EXTRA}}</code>, <code class="text-emerald-300">{{VALOR_TOTAL}}</code>, <code class="text-emerald-300">{{ENTRADA}}</code>, <code class="text-emerald-300">{{SALDO}}</code>, <code class="text-emerald-300">{{EQUIPAMENTOS}}</code>, <code class="text-emerald-300">{{OBSERVACOES}}</code>, <code class="text-emerald-300">{{NOME_DJ}}</code>, <code class="text-emerald-300">{{CPF_DJ}}</code>, <code class="text-emerald-300">{{FONE_DJ}}</code>, <code class="text-emerald-300">{{ENDERECO_DJ}}</code></p>
-                </div>
-                <textarea id="contract-template" rows="18" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-4 text-slate-200 font-mono text-xs leading-relaxed focus:border-emerald-500 focus:outline-none"></textarea>
-                <div class="flex gap-4">
-                    <button onclick="restoreDefaultContractTemplate()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2.5 rounded-lg transition text-sm">Restaurar Padrão</button>
-                    <button onclick="handleSaveContractTemplate()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-6 py-2.5 rounded-lg transition text-sm">Salvar Modelo</button>
-                </div>
-            </div>
         </section>
 
         <!-- BACKUP -->
         <section id="tab-backup" class="space-y-6 hidden">
-            <div>
-                <h2 class="text-2xl font-bold text-white">Backup e Segurança</h2>
-                <p class="text-slate-400 text-sm">Exporte cópias ou restaure dados</p>
-            </div>
-            <div class="bg-amber-950/40 border border-amber-700/50 p-4 rounded-xl">
-                <p class="text-amber-400 font-bold text-sm mb-1"><i class="fa-solid fa-triangle-exclamation me-1"></i> Aviso sobre iOS</p>
-                <p class="text-amber-200 text-xs">No iPhone/iPad, o Safari apaga dados após 7 dias sem uso. Adicione o app à <strong>Tela de Início</strong> e faça <strong>backup semanal</strong>.</p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold"><i class="fa-solid fa-download text-lg"></i></div>
-                        <div><h3 class="font-bold text-white">Exportar Backup</h3><p class="text-xs text-slate-400">Arquivo JSON com tudo</p></div>
-                    </div>
-                    <button onclick="exportBackupData()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-lg transition text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-file-export"></i> Baixar Backup (.json)</button>
-                </div>
-                <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold"><i class="fa-solid fa-upload text-lg"></i></div>
-                        <div><h3 class="font-bold text-white">Restaurar</h3><p class="text-xs text-slate-400">Importar JSON com validação</p></div>
-                    </div>
-                    <input type="file" id="backup-file-input" accept=".json" class="hidden" onchange="processImportBackup(event)">
-                    <button onclick="document.getElementById('backup-file-input').click()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-lg transition text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-file-import"></i> Importar Arquivo</button>
-                </div>
+            <h2 class="text-2xl font-bold text-white">Backup</h2>
+            <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 flex gap-4 max-w-lg">
+                <button onclick="exportBackupData()" class="bg-emerald-500 text-slate-950 font-bold py-2 px-4 rounded flex-1">Baixar Backup</button>
+                <input type="file" id="backup-file-input" accept=".json" class="hidden" onchange="processImportBackup(event)">
+                <button onclick="document.getElementById('backup-file-input').click()" class="bg-amber-500 text-slate-950 font-bold py-2 px-4 rounded flex-1">Restaurar</button>
             </div>
         </section>
 
-        <!-- ÁREA OCULTA DE IMPRESSÃO NATIVA -->
         <div id="print-section">
             <div class="print-header">CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE DJ</div>
             <div class="print-content" id="print-contract-text"></div>
             <div class="print-signatures">
-                <div class="print-sig-box">
-                    <img id="print-sig-dj-img" class="print-sig-img" src="">
-                    <div class="print-sig-line" id="print-sig-dj-name"></div>
-                </div>
-                <div class="print-sig-box">
-                    <img id="print-sig-client-img" class="print-sig-img" src="">
-                    <div class="print-sig-line" id="print-sig-client-name"></div>
-                </div>
+                <div class="print-sig-box"><img id="print-sig-dj-img" class="print-sig-img" src=""><div class="print-sig-line" id="print-sig-dj-name"></div></div>
+                <div class="print-sig-box"><img id="print-sig-client-img" class="print-sig-img" src=""><div class="print-sig-line" id="print-sig-client-name"></div></div>
             </div>
         </div>
-
     </main>
 
-    <!-- MODAIS -->
-    <div id="modal-payment" class="fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50 hidden no-print">
+    <div id="modal-payment" class="fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 space-y-4">
-            <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i> Registrar Pagamento</h3>
-            <form onsubmit="handleSavePayment(event)" class="space-y-4">
-                <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Evento / Cliente *</label><select id="modal-pay-event-id" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none"></select></div>
-                <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Valor (R$) *</label><input type="number" step="0.01" id="modal-pay-amount" required placeholder="0.00" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none"></div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Data *</label><input type="date" id="modal-pay-date" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none"></div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Forma *</label>
-                        <select id="modal-pay-method" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none">
-                            <option value="PIX">PIX</option>
-                            <option value="Dinheiro">Dinheiro</option>
-                            <option value="Cartão Débito">Cartão Débito</option>
-                            <option value="Cartão Crédito">Cartão Crédito</option>
-                            <option value="Transferência">Transferência</option>
-                            <option value="Boleto">Boleto</option>
-                            <option value="Outro">Outro</option>
-                        </select>
-                    </div>
-                </div>
-                <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Observação</label><input type="text" id="modal-pay-note" placeholder="Ex: Sinal via PIX" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none"></div>
-                <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="closePaymentModal()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-lg text-sm">Cancelar</button>
-                    <button type="submit" class="w-1/2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-lg text-sm">Salvar</button>
-                </div>
+            <h3 class="font-bold text-white">Registrar Pagamento</h3>
+            <form onsubmit="handleSavePayment(event)" class="space-y-3">
+                <select id="modal-pay-event-id" required class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"></select>
+                <input type="number" step="0.01" id="modal-pay-amount" required placeholder="Valor R$" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white">
+                <input type="date" id="modal-pay-date" required class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white">
+                <input type="text" id="modal-pay-note" placeholder="Observação (Ex: Sinal)" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white">
+                <div class="flex gap-2"><button type="button" onclick="closePaymentModal()" class="w-1/2 bg-slate-800 text-white py-2 rounded">Cancelar</button><button type="submit" class="w-1/2 bg-emerald-500 text-slate-950 font-bold py-2 rounded">Salvar</button></div>
             </form>
         </div>
     </div>
 
-    <div id="modal-payments-history" class="fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50 hidden no-print">
-        <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-2xl w-full p-6 space-y-4 max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-start">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-list-check text-emerald-400"></i><span id="payments-history-title">Histórico</span></h3>
-                <button onclick="closePaymentsHistory()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-times text-lg"></i></button>
-            </div>
-            <div id="payments-history-summary" class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1"></div>
-            <div class="overflow-y-auto flex-1 min-h-[100px]">
-                <table class="w-full text-left text-sm text-slate-300">
-                    <thead class="bg-slate-800 text-slate-400 uppercase text-xs sticky top-0">
-                        <tr><th class="p-3 rounded-l-lg">Data</th><th class="p-3">Valor</th><th class="p-3">Forma</th><th class="p-3">Obs</th><th class="p-3 text-right rounded-r-lg">Ação</th></tr>
-                    </thead>
-                    <tbody id="payments-history-list" class="divide-y divide-slate-800"></tbody>
-                </table>
-            </div>
-            <div class="flex justify-end pt-2 border-t border-slate-800">
-                <button onclick="closePaymentsHistory()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2 px-4 rounded-lg text-sm">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-expense" class="fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50 hidden no-print">
-        <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 space-y-4 max-h-[95vh] overflow-y-auto">
-            <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-receipt text-rose-400"></i><span id="modal-exp-title">Registrar Despesa</span></h3>
-            <form onsubmit="handleSaveExpense(event)" class="space-y-4">
-                <input type="hidden" id="modal-exp-id" value="">
-                <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Descrição *</label><input type="text" id="modal-exp-desc" required placeholder="Ex: Ajudante / Combustível" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none"></div>
-                <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Valor (R$) *</label><input type="number" step="0.01" id="modal-exp-amount" required placeholder="0.00" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none"></div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Data *</label><input type="date" id="modal-exp-date" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none"></div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Categoria *</label>
-                        <select id="modal-exp-cat" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none">
-                            <option value="Equipe / Auxiliar">Equipe / Auxiliar</option>
-                            <option value="Combustível / Transporte">Combustível / Transporte</option>
-                            <option value="Equipamentos / Manutenção">Equipamentos / Manutenção</option>
-                            <option value="Impostos / Taxas">Impostos / Taxas</option>
-                            <option value="Alimentação">Alimentação</option>
-                            <option value="Outros">Outros</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Forma *</label>
-                        <select id="modal-exp-method" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none">
-                            <option value="PIX">PIX</option>
-                            <option value="Dinheiro">Dinheiro</option>
-                            <option value="Cartão Débito">Cartão Débito</option>
-                            <option value="Cartão Crédito">Cartão Crédito</option>
-                            <option value="Transferência">Transferência</option>
-                            <option value="Boleto">Boleto</option>
-                            <option value="Outro">Outro</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Status *</label>
-                        <select id="modal-exp-status" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none">
-                            <option value="paid">Pago</option>
-                            <option value="pending">A Pagar (Pendente)</option>
-                        </select>
-                    </div>
-                </div>
-                <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Vincular a Evento</label><select id="modal-exp-event-id" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none"></select></div>
-                <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="closeExpenseModal()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-lg text-sm">Cancelar</button>
-                    <button type="submit" class="w-1/2 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2.5 rounded-lg text-sm" id="modal-exp-submit">Salvar</button>
-                </div>
+    <div id="modal-expense" class="fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 space-y-4">
+            <h3 class="font-bold text-white">Registrar Gasto</h3>
+            <form onsubmit="handleSaveExpense(event)" class="space-y-3">
+                <input type="text" id="modal-exp-desc" required placeholder="Descrição" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white">
+                <input type="number" step="0.01" id="modal-exp-amount" required placeholder="Valor R$" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white">
+                <input type="date" id="modal-exp-date" required class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white">
+                <div class="flex gap-2"><button type="button" onclick="document.getElementById('modal-expense').classList.add('hidden')" class="w-1/2 bg-slate-800 text-white py-2 rounded">Cancelar</button><button type="submit" class="w-1/2 bg-rose-500 text-white font-bold py-2 rounded">Salvar</button></div>
             </form>
         </div>
     </div>
 
     <script>
-        const defaultContractText = `CONTRATO DJ BROW
-PRESTAÇÃO DE SERVIÇOS ARTÍSTICOS DE DJ
+        // --- PREVENÇÃO DE TELA BRANCA ---
+        window.onerror = function(msg, url, line) {
+            document.body.innerHTML = `<div style="padding:20px; background:#111; color:red; font-family:sans-serif; min-height:100vh;">
+                <h1>Ocorreu um erro no App</h1>
+                <p>Mensagem: ${msg}</p>
+                <p>Linha: ${line}</p>
+                <p style="margin-top:20px; color:#fff;">Dica: Limpe os dados do navegador (Cache e Cookies) e recarregue a página.</p>
+            </div>`;
+        };
 
-CONTRATANTE: {{NOME_CLIENTE}}, CPF/CNPJ nº {{CPF_CLIENTE}}, residente e domiciliado à {{ENDERECO_CLIENTE}}, CEP {{CEP_CLIENTE}}, telefone/WhatsApp {{FONE_CLIENTE}}.
+        const defaultContractText = `CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE DJ
 
-CONTRATADO: {{NOME_DJ}}, CPF nº {{CPF_DJ}}, residente e domiciliado à {{ENDERECO_DJ}}, Telefone/WhatsApp {{FONE_DJ}}.
+CONTRATANTE: {{NOME_CLIENTE}}, CPF/CNPJ: {{CPF_CLIENTE}}, residente em {{ENDERECO_CLIENTE}}, CEP: {{CEP_CLIENTE}}, telefone: {{FONE_CLIENTE}}.
 
-CLÁUSULA 1ª - DO EVENTO E DO SERVIÇO
-O CONTRATADO prestará serviços profissionais de DJ no evento do CONTRATANTE, em {{DATA_EVENTO}}, no local {{LOCAL_EVENTO}}, com duração de {{DURACAO}} horas (das {{HORARIO_INICIO}} às {{HORARIO_TERMINO}}). O CONTRATADO terá autonomia profissional para selecionar e organizar o repertório durante a festa.
+CONTRATADO: {{NOME_DJ}}, CPF: {{CPF_DJ}}, telefone: {{FONE_DJ}}.
 
-CLÁUSULA 2ª - DOS EQUIPAMENTOS E SERVIÇOS INCLUÍDOS
-Fazem parte desta contratação somente os itens discriminados:
-{{EQUIPAMENTOS}}
+EVENTO: {{DATA_EVENTO}}, no local {{LOCAL_EVENTO}}, com duração de {{DURACAO}} horas (das {{HORARIO_INICIO}} às {{HORARIO_TERMINO}}).
 
-CLÁUSULA 3ª - DO VALOR E PAGAMENTO
-O valor total da contratação será de R$ {{VALOR_TOTAL}}. No ato da assinatura, o CONTRATANTE pagará 20%, correspondente a R$ {{ENTRADA}}, confirmando a contratação e a reserva da data. O saldo de R$ {{SALDO}} deverá ser pago até 07 dias antes do evento. Forma de pagamento: PIX (Chave PIX: {{CPF_DJ}}).
+VALORES: O valor total é de R$ {{VALOR_TOTAL}}. O sinal pago será de R$ {{ENTRADA}} e o saldo restante de R$ {{SALDO}}.
 
-CLÁUSULA 4ª - DO CANCELAMENTO E DO SINAL
-Em caso de cancelamento por iniciativa do CONTRATANTE, sem culpa do CONTRATADO, o valor pago para reserva da data poderá ser retido, observadas a legislação aplicável e as circunstâncias do cancelamento.
+SERVIÇOS: {{EQUIPAMENTOS}}
 
-CLÁUSULA 5ª - DA REMARCAÇÃO
-O CONTRATANTE poderá solicitar a remarcação do evento, preferencialmente com antecedência mínima de 30 dias. A remarcação estará condicionada à disponibilidade do CONTRATADO.
-
-CLÁUSULA 6ª - DOS ATRASOS E DAS HORAS EXTRAS
-O período contratado é de {{DURACAO}} horas (término às {{HORARIO_TERMINO}}). Permanência após o horário contratado dependerá da disponibilidade do DJ e será cobrada à parte no valor de R$ {{VALOR_EXTRA}} por hora adicional.
-
-CLÁUSULA 7ª - DA ESTRUTURA, ENERGIA E SEGURANÇA
-O CONTRATANTE deverá disponibilizar local adequado e seguro para instalação dos equipamentos, bem como energia elétrica compatível. Danos causados aos equipamentos por convidados ou terceiros serão de responsabilidade de quem os causar.
-
-CLÁUSULA 8ª - DE EVENTOS AO AR LIVRE E FORÇA MAIOR
-Em áreas externas, o CONTRATANTE deverá disponibilizar cobertura adequada contra chuva e sol excessivo. Em situações de força maior ou caso fortuito, as partes deverão priorizar a remarcação.
-
-CLÁUSULA 9ª - DA ALIMENTAÇÃO
-O CONTRATANTE deverá fornecer alimentação e água ao CONTRATADO durante o período de trabalho.
-
-CLÁUSULA 10ª - DA ASSINATURA ELETRÔNICA E DISPOSIÇÕES FINAIS
-As partes reconhecem e aceitam a validade jurídica da assinatura eletrônica simples, nos termos do art. 10 da MP 2.200-2/2001 e da Lei 14.063/2020, dispensando certificação ICP-Brasil. A assinatura desenhada em meio eletrônico manifesta a livre e espontânea vontade das partes em firmar o presente contrato. O CONTRATANTE declara ter lido integralmente o conteúdo do contrato antes de assiná-lo. Este documento poderá ser assinado em vias separadas, sendo considerado válido o conjunto de assinaturas reunidas em um único arquivo PDF.
-
-OBSERVAÇÕES ADICIONAIS:
-{{OBSERVACOES}}`;
+OBSERVAÇÕES: {{OBSERVACOES}}`;
 
         let eventsState = [];
         let expensesState = [];
-        let profileState = { companyName: '', userName: '', userCpf: '', userPhone: '', userAddress: '', monthlyGoal: 0 };
+        let profileState = { companyName: 'DJ BROW', userName: 'Marcelo', userCpf: '', userPhone: '', userAddress: '' };
         let contractTemplateState = defaultContractText;
         let activeEventId = null;
         let isClientMode = false;
-        let currentEventFilter = 'pending';
-        let selectedFinanceYear = new Date().getFullYear().toString();
-        let selectedFinanceCategory = 'all';
 
-        function escapeHTML(str) {
-            if (!str) return '';
-            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-        }
-
-        function safeJSONForScript(str) {
-            if (str === null || str === undefined) return '""';
-            return JSON.stringify(str).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
-        }
-
-        function encodeBase64Json(obj) {
+        // --- INICIALIZAÇÃO BLINDADA ---
+        window.onload = function() {
             try {
-                const utf8 = new TextEncoder().encode(JSON.stringify(obj));
-                let bin = '';
-                for (let i = 0; i < utf8.length; i++) bin += String.fromCharCode(utf8[i]);
-                return btoa(bin);
-            } catch (e) { return ''; }
-        }
-
-        function decodeBase64Json(b64) {
-            try {
-                const bin = atob(b64);
-                const utf8 = new Uint8Array(bin.length);
-                for (let i = 0; i < bin.length; i++) utf8[i] = bin.charCodeAt(i);
-                return JSON.parse(new TextDecoder().decode(utf8));
-            } catch (e) { return null; }
-        }
-
-        function computeContractHash(ev) {
-            const snap = ev.contractSnapshot || compileContractText(ev);
-            const raw = `${ev.clientName}|${ev.clientCpf}|${ev.clientPhone}|${ev.clientCep}|${ev.clientAddress}|${ev.date}|${ev.location}|${ev.duration}|${ev.startTime}|${ev.endTime}|${ev.extraHour}|${ev.price}|${ev.deposit}|${ev.equipments}|${ev.notes}|${snap}`;
-            let h = 0;
-            for (let i = 0; i < raw.length; i++) { h = ((h << 5) - h) + raw.charCodeAt(i); h |= 0; }
-            return 'v24.1_' + Math.abs(h).toString(16);
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadFromLocalStorage();
-            setupSignaturePads();
-            populateFinanceYears();
-            registerServiceWorker();
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const clientEventId = urlParams.get('clientView');
-            const clientDataPayload = urlParams.get('clientData');
-
-            const hashText = window.location.hash;
-            if (hashText && hashText.includes('DJBROW_SYNC:')) {
-                try {
-                    const syncObj = decodeBase64Json(hashText.split('DJBROW_SYNC:')[1]);
-                    if (syncObj && syncObj.id) {
-                        const idx = eventsState.findIndex(e => e.id === syncObj.id);
-                        if (idx !== -1) {
-                            if (syncObj.signatureClient) eventsState[idx].signatureClient = syncObj.signatureClient;
-                            if (syncObj.signedClientAt) eventsState[idx].signedClientAt = syncObj.signedClientAt;
-                            if (syncObj.signatureDj) eventsState[idx].signatureDj = syncObj.signatureDj;
-                            if (syncObj.signedDjAt) eventsState[idx].signedDjAt = syncObj.signedDjAt;
-                            alert("Assinatura sincronizada!");
-                        } else {
-                            alert("Assinatura recebida, mas evento não existe.");
-                            window.location.hash = '';
-                            return;
-                        }
-                        saveToLocalStorage();
-                        window.location.hash = '';
-                        window.location.href = window.location.pathname;
-                        return;
-                    }
-                } catch (e) { console.error(e); }
-            }
-
-            if (clientEventId || clientDataPayload) {
-                isClientMode = true;
-                activateClientViewMode(clientEventId, clientDataPayload);
-            } else if (!profileState.userCpf || !profileState.userName) {
-                showOnboarding();
-            } else {
-                renderDashboard();
-                renderEventsList();
-                renderFinanceTab();
-            }
-        });
-
-        function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW error:', err));
-            }
-        }
-
-        function showOnboarding() {
-            document.getElementById('modal-onboarding').classList.remove('hidden');
-        }
-
-        function handleSaveOnboarding(e) {
-            e.preventDefault();
-            profileState.companyName = document.getElementById('onb-company').value.trim();
-            profileState.userName = document.getElementById('onb-name').value.trim();
-            profileState.userCpf = document.getElementById('onb-cpf').value.trim();
-            profileState.userPhone = document.getElementById('onb-phone').value.trim();
-            profileState.userAddress = document.getElementById('onb-address').value.trim();
-            if (!profileState.userCpf || !profileState.userName) { alert("Preencha CPF e Nome."); return; }
-            saveToLocalStorage();
-            updateSidebarProfile();
-            document.getElementById('cfg-company-name').value = profileState.companyName;
-            document.getElementById('cfg-user-name').value = profileState.userName;
-            document.getElementById('cfg-user-cpf').value = profileState.userCpf;
-            document.getElementById('cfg-user-phone').value = profileState.userPhone;
-            document.getElementById('cfg-user-address').value = profileState.userAddress;
-            document.getElementById('modal-onboarding').classList.add('hidden');
-            renderDashboard();
-            renderEventsList();
-            renderFinanceTab();
-        }
-
-        function populateFinanceYears() {
-            const sel = document.getElementById('finance-year-select');
-            if (!sel) return;
-            const years = new Set([new Date().getFullYear().toString()]);
-            eventsState.forEach(ev => {
-                if (ev.date && ev.date.length >= 4) years.add(ev.date.split('-')[0]);
-                (ev.extraPayments || []).forEach(p => { if (p.date && p.date.length >= 4) years.add(p.date.split('-')[0]); });
-            });
-            expensesState.forEach(exp => { if (exp.date && exp.date.length >= 4) years.add(exp.date.split('-')[0]); });
-            sel.innerHTML = '<option value="all">Todos</option>';
-            Array.from(years).sort().reverse().forEach(y => sel.innerHTML += `<option value="${y}" ${y === selectedFinanceYear ? 'selected' : ''}>${y}</option>`);
-        }
-
-        function setFinanceYearFilter(y) { selectedFinanceYear = y; renderFinanceTab(); }
-        function setFinanceCategoryFilter(c) { selectedFinanceCategory = c; renderFinanceTab(); }
-
-        function activateClientViewMode(eventId, dataPayload) {
-            const sb = document.getElementById('app-sidebar'); if (sb) sb.style.display = 'none';
-            const da = document.getElementById('dj-contract-actions'); if (da) da.style.display = 'none';
-            const banner = document.getElementById('client-banner'); if (banner) banner.classList.remove('hidden');
-            const djCard = document.getElementById('dj-signature-card');
-            if (djCard) {
-                document.getElementById('dj-new-sig-box').style.display = 'none';
-                const btn = document.getElementById('btn-reopen-dj'); if (btn) btn.style.display = 'none';
-            }
-            let ev = null;
-            if (dataPayload) ev = decodeBase64Json(dataPayload);
-            if (!ev && eventId) ev = eventsState.find(e => e.id === eventId);
-            if (!ev) {
-                document.querySelector('main').innerHTML = `<div class="p-8 text-center space-y-4 max-w-lg mx-auto mt-12 bg-slate-900 border border-slate-800 rounded-xl"><i class="fa-solid fa-triangle-exclamation text-amber-400 text-4xl mb-2"></i><h2 class="text-xl font-bold text-white">Contrato Não Encontrado</h2><p class="text-slate-400 text-sm">Solicite ao DJ BROW um novo link.</p></div>`;
-                return;
-            }
-            const idx = eventsState.findIndex(e => e.id === ev.id);
-            if (idx !== -1) eventsState[idx] = { ...eventsState[idx], ...ev };
-            else eventsState.push(ev);
-            saveToLocalStorage();
-            activeEventId = ev.id || eventId;
-            switchTab('contratos');
-            document.getElementById('contract-render-view').innerText = ev.contractSnapshot || compileContractText(ev);
-            const ce = document.getElementById('client-existing-sig-box');
-            const cn = document.getElementById('client-new-sig-box');
-            const ci = document.getElementById('img-client-signature');
-            const cp = document.getElementById('sig-client-printed-name');
-            if (ev.signatureClient) {
-                ci.src = ev.signatureClient;
-                cp.innerText = `${ev.clientName} (${ev.clientCpf})`;
-                ce.classList.remove('hidden'); cn.classList.add('hidden');
-            } else {
-                ce.classList.add('hidden'); cn.classList.remove('hidden');
-                clearSignaturePad('client');
-            }
-            const de = document.getElementById('dj-existing-sig-box');
-            const di = document.getElementById('img-dj-signature');
-            const dp = document.getElementById('sig-dj-printed-name');
-            if (ev.signatureDj) {
-                di.src = ev.signatureDj; di.style.display = 'block';
-                dp.innerText = `${profileState.userName || 'DJ'} (DJ BROW)`;
-                de.classList.remove('hidden');
-            } else {
-                di.style.display = 'none';
-                dp.innerText = 'Assinatura pendente';
-                de.classList.remove('hidden');
-            }
-        }
-
-        function generateClientShareLink() {
-            if (!activeEventId) { alert("Selecione um evento."); return; }
-            const ev = eventsState.find(e => e.id === activeEventId);
-            if (!ev) return;
-            if (ev.signatureDj) {
-                if (!confirm("Você já assinou. O link pode ficar longo e ser truncado pelo WhatsApp. Recomendamos usar o PDF. Continuar?")) return;
-            }
-            ev.contractSnapshot = compileContractText(ev);
-            saveToLocalStorage();
-            const enc = encodeBase64Json({ ...ev });
-            let url = window.location.href.split('?')[0].split('#')[0];
-            if (url.endsWith('/')) url = url.slice(0, -1);
-            const link = `${url}?clientView=${activeEventId}&clientData=${enc}`;
-            navigator.clipboard.writeText(link).then(() => alert("Link copiado!")).catch(() => prompt("Copie:", link));
-        }
-
-        function downloadPDFForClientExternal() {
-            if (!activeEventId) { alert("Selecione um evento."); return; }
-            const ev = eventsState.find(e => e.id === activeEventId);
-            if (!ev) return;
-            if (!ev.signatureDj) { alert("Assine como DJ primeiro."); return; }
-            
-            const text = ev.contractSnapshot || compileContractText(ev);
-            
-            document.getElementById('print-contract-text').innerText = text;
-            document.getElementById('print-sig-dj-img').src = ev.signatureDj;
-            document.getElementById('print-sig-dj-name').innerText = (profileState.userName || 'DJ BROW') + ' (Contratado)';
-            
-            document.getElementById('print-sig-client-img').style.display = 'none';
-            document.getElementById('print-sig-client-name').innerText = (ev.clientName || 'Cliente') + ' (Contratante)';
-            
-            setTimeout(() => { window.print(); }, 200);
-        }
-
-        function exportStandaloneHTML() {
-            if (!activeEventId) { alert("Selecione um evento."); return; }
-            const ev = eventsState.find(e => e.id === activeEventId);
-            if (!ev) return;
-            if (!ev.signatureDj) { alert("Assine como DJ primeiro."); return; }
-
-            const contractText = ev.contractSnapshot || compileContractText(ev);
-            const sc = escapeHTML(ev.clientName || '');
-            const sd = escapeHTML(profileState.userName || 'DJ BROW');
-            const sdSig = ev.signatureDj;
-            const scJS = safeJSONForScript(ev.clientName || '');
-            const sctJS = safeJSONForScript(contractText);
-
-            const html = String.raw`<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Contrato DJ BROW - ${sc}</title>
-<style>
-* { box-sizing: border-box; }
-body { font-family: 'Segoe UI', sans-serif; background: #f3f4f6; color: #111; margin: 0; padding: 16px; line-height: 1.5; }
-.container { max-width: 820px; margin: 0 auto; background: #fff; padding: 32px; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
-@media screen and (max-width: 600px) { .container { padding: 16px; border-radius: 0; box-shadow: none; } body { padding: 0; } }
-h1 { text-align: center; font-size: 17px; margin: 0 0 16px 0; border-bottom: 2px solid #10b981; padding-bottom: 10px; color: #065f46; }
-.notice { background: #ecfdf5; border-left: 4px solid #10b981; padding: 12px; margin-bottom: 20px; font-size: 12px; border-radius: 4px; color: #065f46; }
-#contract-text { font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; background: #f9fafb; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; margin: 0 0 24px 0; text-align: justify; }
-.sig-section { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 1px solid #e5e7eb; }
-.sig-box { flex: 1 1 45%; min-width: 250px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; background: #f9fafb; }
-.sig-box h4 { margin: 0 0 8px 0; font-size: 11px; color: #374151; text-transform: uppercase; }
-.sig-img-container { text-align: center; padding: 8px; background: #fff; border: 1px solid #e5e7eb; border-radius: 4px; }
-.sig-img-container img { max-height: 100px; max-width: 100%; }
-.sig-img-container p { margin: 6px 0 0 0; padding-top: 6px; border-top: 1px solid #e5e7eb; font-size: 10px; font-weight: 600; color: #374151; }
-canvas { width: 100%; height: 120px; background: #fff; border: 2px dashed #9ca3af; border-radius: 6px; touch-action: none; cursor: crosshair; display: block; }
-.actions-row { display: flex; gap: 8px; margin-top: 8px; }
-button { padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px; font-family: inherit; }
-.btn-clear { background: #e5e7eb; color: #374151; }
-.btn-save { background: #10b981; color: #fff; }
-.btn-download { display: block; width: 100%; padding: 14px; background: #10b981; color: #fff; font-size: 15px; margin-top: 24px; border-radius: 8px; font-weight: 700; }
-.btn-download:disabled { background: #9ca3af; cursor: not-allowed; }
-.alert-success { background: #d1fae5; border: 1px solid #10b981; color: #065f46; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 12px; display: none; }
-.alert-success.show { display: block; }
-.warning-box { display: none; background: #fef3c7; border: 1px solid #fbbf24; color: #78350f; padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 12px; }
-@media print { 
-    body { background: #fff; padding: 0; margin: 0; } 
-    .container { box-shadow: none; padding: 0; max-width: 100%; } 
-    .actions-row, .btn-download, .notice, .no-print, canvas, .alert-success, .warning-box { display: none !important; } 
-    #contract-text { border: none; padding: 0; background: #fff; }
-    .sig-box { border: none; background: #fff; padding: 0; }
-    .sig-img-container { border: none; }
-    @page { margin: 15mm; size: A4; }
-}
-</style>
-</head>
-<body>
-<div class="container" id="pdf-area">
-    <div class="warning-box" id="browser-warning">
-        <strong>⚠️ Atenção:</strong> Você está usando o navegador interno do WhatsApp/Instagram. Para gerar o PDF corretamente, toque nos <strong>3 pontinhos (⋮)</strong> no topo e escolha <strong>"Abrir no Chrome"</strong> ou <strong>"Abrir no Safari"</strong>.
-    </div>
-    <div class="notice no-print"><strong>📄 Contrato enviado por DJ BROW.</strong><br>Leia, assine no quadro e clique em "Salvar PDF Assinado".</div>
-    <div class="alert-success" id="success-msg">✅ Assinatura confirmada! Clique em "Salvar PDF Assinado".</div>
-    <h1>CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE DJ</h1>
-    <pre id="contract-text"></pre>
-    <div class="sig-section">
-        <div class="sig-box">
-            <h4>1. Contratado (DJ)</h4>
-            <div class="sig-img-container"><img src="${sdSig}" alt="DJ"><p>${sd}</p></div>
-        </div>
-        <div class="sig-box">
-            <h4>2. Contratante (Cliente)</h4>
-            <div id="sig-preview" class="sig-img-container" style="display:none"><img id="sig-img-preview"><p id="sig-name-preview"></p></div>
-            <div id="sig-pad-area" class="no-print">
-                <canvas id="sig-canvas"></canvas>
-                <div class="actions-row">
-                    <button type="button" class="btn-clear" onclick="clearSig()">Limpar</button>
-                    <button type="button" class="btn-save" onclick="saveSig()">Confirmar Assinatura</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <button id="btn-download" class="btn-download no-print" onclick="downloadPDF()" disabled>📥 SALVAR PDF ASSINADO</button>
-</div>
-<script>
-const contractText = ${sctJS};
-const clientName = ${scJS};
-document.getElementById('contract-text').textContent = contractText;
-
-if (/(WhatsApp|Instagram|FBAN|FBAV)/i.test(navigator.userAgent)) {
-    document.getElementById('browser-warning').style.display = 'block';
-}
-
-const canvas = document.getElementById('sig-canvas'), ctx = canvas.getContext('2d');
-let isDrawing = false, hasSignature = false;
-function resizeCanvas() { const r = canvas.getBoundingClientRect(); if (!r.width) { setTimeout(resizeCanvas, 50); return; } canvas.width = r.width * 2; canvas.height = r.height * 2; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.scale(2, 2); ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.strokeStyle = '#111'; }
-resizeCanvas();
-window.addEventListener('resize', () => { if (!hasSignature) { ctx.clearRect(0,0,canvas.width,canvas.height); resizeCanvas(); } });
-function getPos(e) { const r = canvas.getBoundingClientRect(); return { x: (e.touches ? e.touches[0].clientX : e.clientX) - r.left, y: (e.touches ? e.touches[0].clientY : e.clientY) - r.top }; }
-function start(e) { e.preventDefault(); isDrawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
-function stop() { isDrawing = false; ctx.beginPath(); }
-function draw(e) { if (!isDrawing) return; e.preventDefault(); const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
-canvas.addEventListener('mousedown', start);
-canvas.addEventListener('mouseup', stop);
-canvas.addEventListener('mousemove', draw);
-canvas.addEventListener('mouseleave', stop);
-canvas.addEventListener('touchstart', start, { passive: false });
-canvas.addEventListener('touchend', stop);
-canvas.addEventListener('touchmove', draw, { passive: false });
-
-function clearSig() { ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,canvas.width,canvas.height); resizeCanvas(); hasSignature = false; document.getElementById('sig-preview').style.display = 'none'; document.getElementById('sig-pad-area').style.display = 'block'; document.getElementById('btn-download').disabled = true; document.getElementById('success-msg').classList.remove('show'); }
-
-function saveSig() { 
-    const b = document.createElement('canvas'); b.width = canvas.width; b.height = canvas.height; 
-    if (canvas.toDataURL() === b.toDataURL()) { alert('Desenhe sua assinatura.'); return; } 
-    hasSignature = true; 
-    document.getElementById('sig-img-preview').src = canvas.toDataURL('image/png'); 
-    document.getElementById('sig-name-preview').textContent = clientName + ' - ' + new Date().toLocaleString('pt-BR'); 
-    document.getElementById('sig-preview').style.display = 'block'; 
-    document.getElementById('sig-pad-area').style.display = 'none'; 
-    document.getElementById('success-msg').classList.add('show'); 
-    document.getElementById('btn-download').disabled = false; 
-}
-
-function downloadPDF() {
-    if (!hasSignature) { alert('Por favor, assine antes de baixar o PDF.'); return; }
-    
-    document.querySelectorAll('.no-print').forEach(e => e.style.display = 'none');
-    document.getElementById('browser-warning').style.display = 'none';
-    
-    setTimeout(() => {
-        window.print();
-    }, 300);
-}
-${'</scr' + 'ipt>'}
-</body>
-</html>`;
-
-            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            const clean = (ev.clientName || 'Cliente').replace(/[^a-zA-Z0-9]/g, '_');
-            a.download = `Contrato_DJ_BROW_${clean}_${ev.date}_PARA_ASSINAR.html`;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            alert(`✅ Arquivo HTML exportado!\n\nEnvie para o cliente no WhatsApp.`);
-        }
-
-        function generateSyncLink() {
-            const ev = eventsState.find(e => e.id === activeEventId);
-            if (!ev) return '';
-            const enc = encodeBase64Json({ id: ev.id, signatureClient: ev.signatureClient, signedClientAt: ev.signedClientAt, signatureDj: ev.signatureDj, signedDjAt: ev.signedDjAt, status: ev.status });
-            let url = window.location.href.split('?')[0].split('#')[0];
-            if (url.endsWith('/')) url = url.slice(0, -1);
-            return `${url}#DJBROW_SYNC:${enc}`;
-        }
-
-        function copySyncLinkForDj() {
-            const l = generateSyncLink();
-            if (!l) { alert("Nenhum evento."); return; }
-            navigator.clipboard.writeText(l).then(() => alert("Link copiado!")).catch(() => prompt("Copie:", l));
-        }
-
-        function shareSignedContractPDF() {
-            alert("Para enviar o contrato assinado:\n\n1. Toque em 'Baixar PDF' e escolha 'Salvar como PDF'.\n2. Volte ao WhatsApp e anexe o PDF na conversa.");
-            const el = document.getElementById('pdf-printable-area');
-            el.style.display = 'block';
-            setTimeout(() => window.print(), 300);
-        }
-
-        function downloadSignedContractPDF() {
-            let ev = null;
-            const p = new URLSearchParams(window.location.search);
-            const cid = p.get('clientView');
-            const cdp = p.get('clientData');
-            if (cid) ev = eventsState.find(e => e.id === cid);
-            if (!ev && cdp) ev = decodeBase64Json(cdp);
-            if (!ev && activeEventId) ev = eventsState.find(e => e.id === activeEventId);
-            if (!ev) return;
-
-            const text = ev.contractSnapshot || compileContractText(ev);
-            
-            document.getElementById('print-contract-text').innerText = text;
-            
-            if (ev.signatureDj) {
-                document.getElementById('print-sig-dj-img').src = ev.signatureDj;
-                document.getElementById('print-sig-dj-img').style.display = 'block';
-            } else {
-                document.getElementById('print-sig-dj-img').style.display = 'none';
-            }
-            document.getElementById('print-sig-dj-name').innerText = (profileState.userName || 'DJ BROW') + ' (Contratado)';
-            
-            if (ev.signatureClient) {
-                document.getElementById('print-sig-client-img').src = ev.signatureClient;
-                document.getElementById('print-sig-client-img').style.display = 'block';
-            } else {
-                document.getElementById('print-sig-client-img').style.display = 'none';
-            }
-            document.getElementById('print-sig-client-name').innerText = (ev.clientName || 'Cliente') + ' (Contratante)';
-            
-            setTimeout(() => { window.print(); }, 200);
-        }
-
-        function calculateEndTime() {
-            const s = document.getElementById('inp-time-start').value;
-            const d = parseFloat(document.getElementById('inp-event-duration').value) || 0;
-            if (!s) return;
-            const [h, m] = s.split(':').map(Number);
-            const dt = new Date();
-            dt.setHours(h, m, 0, 0);
-            dt.setMinutes(dt.getMinutes() + d * 60);
-            document.getElementById('inp-time-end').value = `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
-        }
-
-        async function fetchAddressByCEP() {
-            const c = document.getElementById('inp-client-cep');
-            const a = document.getElementById('inp-client-address');
-            const l = document.getElementById('cep-loading');
-            const clean = c.value.replace(/\D/g, '');
-            if (clean.length !== 8) {
-                if(clean.length > 0) alert("CEP inválido. Deve conter 8 números.");
-                return;
-            }
-            l.classList.remove('hidden');
-            try {
-                const r = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
-                const d = await r.json();
-                if (d.erro) {
-                    alert("CEP não encontrado na base dos Correios. Preencha o endereço manualmente.");
+                loadFromLocalStorage();
+                setupSignaturePads();
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('clientView') || urlParams.get('clientData')) {
+                    isClientMode = true;
+                    activateClientViewMode(urlParams.get('clientView'), urlParams.get('clientData'));
                 } else {
-                    a.value = `${d.logradouro}, ${d.bairro}, ${d.localidade} - ${d.uf}`;
+                    renderDashboard();
+                    renderEventsList();
+                    renderFinanceTab();
                 }
-            } catch (e) { 
-                console.error(e);
-                alert("Falha de rede ao buscar o CEP. Verifique sua internet e preencha manualmente se necessário.");
-            } finally { 
-                l.classList.add('hidden'); 
+            } catch(e) {
+                alert("Erro ao iniciar o aplicativo: " + e.message);
             }
-        }
+        };
 
         function loadFromLocalStorage() {
             try {
@@ -1104,15 +344,16 @@ ${'</scr' + 'ipt>'}
                 const ex = localStorage.getItem('djbrow_expenses'); if (ex) expensesState = JSON.parse(ex);
                 const pr = localStorage.getItem('djbrow_profile'); if (pr) profileState = { ...profileState, ...JSON.parse(pr) };
                 const tp = localStorage.getItem('djbrow_template'); if (tp) contractTemplateState = tp;
-                document.getElementById('cfg-company-name').value = profileState.companyName || '';
-                document.getElementById('cfg-user-name').value = profileState.userName || '';
-                document.getElementById('cfg-user-cpf').value = profileState.userCpf || '';
-                document.getElementById('cfg-user-phone').value = profileState.userPhone || '';
-                document.getElementById('cfg-user-address').value = profileState.userAddress || '';
-                document.getElementById('cfg-monthly-goal').value = profileState.monthlyGoal || '';
-                document.getElementById('contract-template').value = contractTemplateState;
-                updateSidebarProfile();
-            } catch (e) { console.error("Erro ao carregar dados:", e); }
+                
+                if(document.getElementById('cfg-company-name')) document.getElementById('cfg-company-name').value = profileState.companyName || '';
+                if(document.getElementById('cfg-user-name')) document.getElementById('cfg-user-name').value = profileState.userName || '';
+                if(document.getElementById('cfg-user-cpf')) document.getElementById('cfg-user-cpf').value = profileState.userCpf || '';
+                if(document.getElementById('cfg-user-phone')) document.getElementById('cfg-user-phone').value = profileState.userPhone || '';
+                if(document.getElementById('cfg-user-address')) document.getElementById('cfg-user-address').value = profileState.userAddress || '';
+                
+                if(document.getElementById('sidebar-user-name')) document.getElementById('sidebar-user-name').innerText = profileState.userName || 'DJ BROW';
+                if(document.getElementById('sidebar-company-name')) document.getElementById('sidebar-company-name').innerText = profileState.companyName || 'Configurar perfil';
+            } catch(e) { console.log("Erro no LocalStorage, limpando dados corrompidos."); localStorage.clear(); }
         }
 
         function saveToLocalStorage() {
@@ -1121,761 +362,412 @@ ${'</scr' + 'ipt>'}
                 localStorage.setItem('djbrow_expenses', JSON.stringify(expensesState));
                 localStorage.setItem('djbrow_profile', JSON.stringify(profileState));
                 localStorage.setItem('djbrow_template', contractTemplateState);
-            } catch (e) {
-                alert("❌ ERRO GRAVE: O armazenamento do navegador está cheio ou bloqueado. Suas alterações recentes NÃO foram salvas permanentemente. Exporte um backup imediatamente!");
-                throw e;
-            }
-        }
-
-        function updateSidebarProfile() {
-            document.getElementById('sidebar-company-name').innerText = profileState.companyName || 'Configurar perfil';
-            document.getElementById('sidebar-user-name').innerText = profileState.userName || 'Novo usuário';
-            document.getElementById('sidebar-initials').innerText = profileState.userName ? profileState.userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'DJ';
+            } catch(e) { alert("Erro ao salvar: Armazenamento cheio."); }
         }
 
         function switchTab(id) {
-            ['dashboard', 'eventos', 'proposta', 'contratos', 'financeiro', 'perfil', 'modelo-contrato', 'backup'].forEach(t => {
-                const s = document.getElementById(`tab-${t}`); if (s) s.classList.add('hidden');
-                const b = document.getElementById(`btn-tab-${t}`); if (b) b.classList.remove('active');
-            });
-            const s = document.getElementById(`tab-${id}`); if (s) s.classList.remove('hidden');
-            const b = document.getElementById(`btn-tab-${id}`); if (b) b.classList.add('active');
+            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            const sec = document.getElementById(`tab-${id}`);
+            const btn = document.getElementById(`btn-tab-${id}`);
+            if(sec) sec.classList.remove('hidden');
+            if(btn) btn.classList.add('active');
+            
             if (id === 'dashboard') renderDashboard();
             if (id === 'eventos') renderEventsList();
-            if (id === 'financeiro') { populateFinanceYears(); renderFinanceTab(); }
+            if (id === 'financeiro') renderFinanceTab();
         }
 
         function formatCurrency(v) { return (parseFloat(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
-        function formatNumberBR(v) { return (parseFloat(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-        function formatDateBR(d) { if (!d) return ''; const p = d.split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d; }
+        function formatDateBR(d) { if(!d) return ''; const p = d.split('-'); return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : d; }
+        function escapeHTML(str) { return String(str || '').replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+        function prepareNewEvent() {
+            activeEventId = null;
+            document.getElementById('event-form').reset();
+            document.getElementById('event-id').value = '';
+            document.getElementById('inp-event-duration').value = '6';
+            document.getElementById('inp-time-start').value = '21:00';
+            calculateEndTime();
+            switchTab('proposta');
+        }
+
+        function calculateEndTime() {
+            const s = document.getElementById('inp-time-start').value;
+            const d = parseFloat(document.getElementById('inp-event-duration').value) || 0;
+            if (!s) return;
+            const [h, m] = s.split(':').map(Number);
+            const dt = new Date(); dt.setHours(h, m, 0, 0); dt.setMinutes(dt.getMinutes() + d * 60);
+            document.getElementById('inp-time-end').value = `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+        }
 
         function autoCalculateDeposit() {
             const p = parseFloat(document.getElementById('inp-event-price').value) || 0;
             document.getElementById('inp-event-deposit').value = (p * 0.20).toFixed(2);
-            autoCalculateSaldo();
-        }
-        function autoCalculateSaldo() {
-            const p = parseFloat(document.getElementById('inp-event-price').value) || 0;
-            const d = parseFloat(document.getElementById('inp-event-deposit').value) || 0;
-            document.getElementById('inp-event-saldo').value = Math.max(0, p - d).toFixed(2);
-        }
-
-        function renderDashboard() {
-            document.getElementById('dash-total-events').innerText = eventsState.length;
-            const totalVal = eventsState.reduce((a, e) => a + (parseFloat(e.price) || 0), 0);
-            const pendingVal = eventsState.reduce((a, e) => {
-                if (e.status === 'Cancelado') return a;
-                const p = parseFloat(e.price) || 0;
-                const paid = (e.extraPayments || []).reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
-                return a + Math.max(0, p - paid);
-            }, 0);
-            let received = 0;
-            eventsState.forEach(e => (e.extraPayments || []).forEach(p => received += parseFloat(p.amount) || 0));
-            const expensesPaid = expensesState.filter(e => e.status !== 'pending').reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
-            const netProfit = received - expensesPaid;
-            document.getElementById('dash-total-value').innerText = formatCurrency(totalVal);
-            document.getElementById('dash-pending-value').innerText = formatCurrency(pendingVal);
-            document.getElementById('dash-net-profit').innerText = formatCurrency(netProfit);
-            document.getElementById('dash-net-profit').className = `text-3xl font-extrabold mt-2 ${netProfit >= 0 ? 'text-blue-400' : 'text-rose-400'}`;
-            document.getElementById('dash-net-profit-detail').innerText = `Recebido ${formatCurrency(received)} − Despesas ${formatCurrency(expensesPaid)}`;
-
-            const goal = parseFloat(profileState.monthlyGoal) || 0;
-            const goalCard = document.getElementById('dash-goal-card');
-            if (goal > 0) {
-                goalCard.classList.remove('hidden');
-                const now = new Date();
-                const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-                let monthReceived = 0;
-                eventsState.forEach(e => (e.extraPayments || []).forEach(p => {
-                    if (p.date && p.date.startsWith(monthPrefix)) monthReceived += parseFloat(p.amount) || 0;
-                }));
-                const pct = Math.min(100, Math.round((monthReceived / goal) * 100));
-                document.getElementById('dash-goal-month').innerText = now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-                document.getElementById('dash-goal-received').innerText = formatCurrency(monthReceived);
-                document.getElementById('dash-goal-target').innerText = formatCurrency(goal);
-                document.getElementById('dash-goal-bar').style.width = pct + '%';
-                document.getElementById('dash-goal-percent').innerText = pct + '% da meta' + (pct >= 100 ? ' 🎉' : '');
-            } else {
-                goalCard.classList.add('hidden');
-            }
-
-            const listEl = document.getElementById('dash-events-list');
-            listEl.innerHTML = '';
-            const today = new Date().toISOString().slice(0, 10);
-            const upcoming = eventsState.filter(e => e.date >= today && e.status !== 'Cancelado' && e.status !== 'Realizado');
-            if (upcoming.length === 0) {
-                listEl.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-500 italic">Nenhum evento pendente.</td></tr>`;
-                return;
-            }
-            [...upcoming].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 5).forEach(ev => {
-                const p = parseFloat(ev.price) || 0;
-                const paid = (ev.extraPayments || []).reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-800/40 transition';
-                tr.innerHTML = `
-                    <td class="p-3 font-semibold text-white">${escapeHTML(formatDateBR(ev.date))}</td>
-                    <td class="p-3 font-medium text-slate-200">${escapeHTML(ev.clientName)}</td>
-                    <td class="p-3 text-slate-400 truncate max-w-xs">${escapeHTML(ev.location)}</td>
-                    <td class="p-3"><span class="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded font-semibold">${escapeHTML(ev.status || 'Confirmado')}</span></td>
-                    <td class="p-3 text-emerald-400 font-semibold">${formatCurrency(ev.price)}</td>
-                    <td class="p-3 text-amber-400 font-semibold">${formatCurrency(Math.max(0, p - paid))}</td>
-                    <td class="p-3 text-right"><button onclick="viewEventContract('${ev.id}')" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded text-xs font-semibold">Ver Contrato</button></td>
-                `;
-                listEl.appendChild(tr);
-            });
-        }
-
-        function setEventFilter(f) {
-            currentEventFilter = f;
-            ['pending', 'completed', 'all'].forEach(x => {
-                const b = document.getElementById(`filter-btn-${x}`);
-                if (b) b.className = x === f ? 'px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white transition' : 'px-4 py-2 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:text-white transition';
-            });
-            renderEventsList();
-        }
-
-        function renderEventsList() {
-            const listEl = document.getElementById('full-events-list');
-            listEl.innerHTML = '';
-            const today = new Date().toISOString().slice(0, 10);
-            const filtered = eventsState.filter(ev => {
-                const r = ev.status === 'Realizado' || ev.date < today;
-                if (currentEventFilter === 'pending') return !r && ev.status !== 'Cancelado';
-                if (currentEventFilter === 'completed') return r || ev.status === 'Realizado';
-                return true;
-            });
-            if (filtered.length === 0) {
-                listEl.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500 italic">Nenhum evento.</td></tr>`;
-                return;
-            }
-            filtered.forEach(ev => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-800/40 transition';
-                const hasSig = !!ev.signatureClient && !!ev.signatureDj;
-                tr.innerHTML = `
-                    <td class="p-3 font-bold text-white">${escapeHTML(ev.clientName)}</td>
-                    <td class="p-3 text-slate-300">${escapeHTML(formatDateBR(ev.date))}</td>
-                    <td class="p-3"><span class="bg-slate-800 text-slate-300 text-xs px-2.5 py-1 rounded font-semibold">${escapeHTML(ev.status || 'Confirmado')}</span></td>
-                    <td class="p-3 text-emerald-400 font-semibold">${formatCurrency(ev.price)}</td>
-                    <td class="p-3">${hasSig ? '<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-semibold"><i class="fa-solid fa-check me-1"></i> Assinado</span>' : '<span class="bg-amber-500/20 text-amber-400 text-xs px-2.5 py-1 rounded-full font-semibold">Pendente</span>'}</td>
-                    <td class="p-3 text-right space-x-2">
-                        <button onclick="viewEventContract('${ev.id}')" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 p-2 rounded transition" title="Contrato"><i class="fa-solid fa-file-contract"></i></button>
-                        <button onclick="editEvent('${ev.id}')" class="bg-slate-800 hover:bg-slate-700 text-blue-400 p-2 rounded transition" title="Editar"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteEvent('${ev.id}')" class="bg-slate-800 hover:bg-slate-700 text-rose-400 p-2 rounded transition" title="Excluir"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                `;
-                listEl.appendChild(tr);
-            });
-        }
-
-        function renderFinanceTab() {
-            let received = 0, pending = 0;
-            eventsState.filter(e => e.status !== 'Cancelado').forEach(e => {
-                // Filtro de saldo pendente deve respeitar o ano selecionado
-                if (selectedFinanceYear !== 'all' && e.date && e.date.split('-')[0] !== selectedFinanceYear) return;
-
-                const p = parseFloat(e.price) || 0;
-                const paid = (e.extraPayments || []).reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
-                pending += Math.max(0, p - paid);
-            });
-            
-            eventsState.forEach(e => (e.extraPayments || []).forEach(p => {
-                const y = p.date ? p.date.split('-')[0] : '';
-                if (selectedFinanceYear === 'all' || y === selectedFinanceYear) received += parseFloat(p.amount) || 0;
-            }));
-            
-            const filteredExp = expensesState.filter(exp => {
-                if (selectedFinanceYear !== 'all' && exp.date && exp.date.split('-')[0] !== selectedFinanceYear) return false;
-                if (selectedFinanceCategory !== 'all' && exp.category !== selectedFinanceCategory) return false;
-                return true;
-            });
-            
-            const paidExp = filteredExp.filter(e => e.status !== 'pending').reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
-            const pendExp = filteredExp.filter(e => e.status === 'pending').reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
-            const netProfit = received - paidExp;
-            
-            document.getElementById('fin-total-received').innerText = formatCurrency(received);
-            document.getElementById('fin-total-pending').innerText = formatCurrency(pending);
-            document.getElementById('fin-total-expenses').innerText = formatCurrency(paidExp);
-            document.getElementById('fin-pending-expenses').innerText = pendExp > 0 ? `+ ${formatCurrency(pendExp)} a pagar` : '';
-            document.getElementById('fin-net-profit').innerText = formatCurrency(netProfit);
-            document.getElementById('fin-net-profit').className = `text-2xl font-extrabold mt-2 ${netProfit >= 0 ? 'text-blue-400' : 'text-rose-400'}`;
-
-            const cList = document.getElementById('fin-clients-list');
-            cList.innerHTML = '';
-            const fEvs = eventsState.filter(e => {
-                if (e.status === 'Cancelado') return false;
-                if (selectedFinanceYear === 'all') return true;
-                if (!e.date) return false;
-                return e.date.split('-')[0] === selectedFinanceYear;
-            });
-            if (fEvs.length === 0) {
-                cList.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-500 italic">Nenhum evento.</td></tr>`;
-            } else {
-                fEvs.forEach(ev => {
-                    const p = parseFloat(ev.price) || 0;
-                    const dep = parseFloat(ev.deposit) || 0;
-                    const paid = (ev.extraPayments || []).reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
-                    const due = Math.max(0, p - paid);
-                    const cnt = (ev.extraPayments || []).length;
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-800/40 transition';
-                    tr.innerHTML = `
-                        <td class="p-3 font-bold text-white">${escapeHTML(ev.clientName)}</td>
-                        <td class="p-3 text-slate-300">${escapeHTML(formatDateBR(ev.date))}</td>
-                        <td class="p-3 text-slate-300">${formatCurrency(p)}</td>
-                        <td class="p-3 text-slate-400">${formatCurrency(dep)}</td>
-                        <td class="p-3 font-bold text-emerald-400">${formatCurrency(paid)}</td>
-                        <td class="p-3 font-bold ${due === 0 ? 'text-slate-500' : 'text-amber-400'}">${due === 0 ? 'QUITADO' : formatCurrency(due)}</td>
-                        <td class="p-3 text-right space-x-1 whitespace-nowrap">
-                            <button onclick="openPaymentsHistory('${ev.id}')" class="bg-slate-800 hover:bg-slate-700 text-blue-400 px-2 py-1 rounded text-xs font-semibold"><i class="fa-solid fa-list-check me-1"></i>${cnt}</button>
-                            <button onclick="openPaymentModalForEvent('${ev.id}')" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded text-xs font-semibold">+ Pgto</button>
-                        </td>
-                    `;
-                    cList.appendChild(tr);
-                });
-            }
-
-            const eList = document.getElementById('fin-expenses-list');
-            eList.innerHTML = '';
-            if (filteredExp.length === 0) {
-                eList.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-500 italic">Nenhuma despesa.</td></tr>`;
-            } else {
-                filteredExp.forEach(exp => {
-                    const linked = eventsState.find(e => e.id === exp.eventId);
-                    const isPending = exp.status === 'pending';
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-800/40 transition';
-                    tr.innerHTML = `
-                        <td class="p-3 text-slate-300 whitespace-nowrap">${escapeHTML(formatDateBR(exp.date))}</td>
-                        <td class="p-3 font-bold text-white">${escapeHTML(exp.description)}</td>
-                        <td class="p-3"><span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-xs">${escapeHTML(exp.category)}</span></td>
-                        <td class="p-3 text-slate-400">${linked ? escapeHTML(linked.clientName) : 'Geral'}</td>
-                        <td class="p-3 text-slate-400 text-xs">${escapeHTML(exp.paymentMethod || '—')}</td>
-                        <td class="p-3">${isPending ? '<span class="bg-amber-500/20 text-amber-400 text-xs px-2 py-0.5 rounded font-semibold">A PAGAR</span>' : '<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2 py-0.5 rounded font-semibold">PAGO</span>'}</td>
-                        <td class="p-3 font-bold ${isPending ? 'text-amber-400' : 'text-rose-400'}">${formatCurrency(exp.amount)}</td>
-                        <td class="p-3 text-right space-x-1">
-                            <button onclick="editExpense('${exp.id}')" class="text-blue-400 hover:text-blue-300 p-1" title="Editar"><i class="fa-solid fa-pen text-xs"></i></button>
-                            <button onclick="deleteExpense('${exp.id}')" class="text-rose-400 hover:text-rose-300 p-1" title="Excluir"><i class="fa-solid fa-trash text-xs"></i></button>
-                        </td>
-                    `;
-                    eList.appendChild(tr);
-                });
-            }
-        }
-
-        function openPaymentsHistory(eventId) {
-            const ev = eventsState.find(e => e.id === eventId);
-            if (!ev) return;
-            document.getElementById('payments-history-title').innerText = `Histórico — ${ev.clientName}`;
-            const sum = document.getElementById('payments-history-summary');
-            const list = document.getElementById('payments-history-list');
-            const pays = ev.extraPayments || [];
-            const price = parseFloat(ev.price) || 0;
-            const total = pays.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
-            const saldo = Math.max(0, price - total);
-            sum.innerHTML = `
-                <div class="flex justify-between text-xs"><span class="text-slate-400">Valor Total:</span><span class="font-bold text-white">${formatCurrency(price)}</span></div>
-                <div class="flex justify-between text-xs"><span class="text-slate-400">Recebido:</span><span class="font-bold text-emerald-400">${formatCurrency(total)} (${pays.length})</span></div>
-                <div class="flex justify-between text-xs"><span class="text-slate-400">Saldo:</span><span class="font-bold ${saldo === 0 ? 'text-slate-500' : 'text-amber-400'}">${saldo === 0 ? 'QUITADO' : formatCurrency(saldo)}</span></div>
-            `;
-            if (pays.length === 0) {
-                list.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-500 italic">Nenhum pagamento.</td></tr>';
-            } else {
-                list.innerHTML = [...pays].sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(p => `
-                    <tr class="hover:bg-slate-800/40 transition">
-                        <td class="p-3 text-slate-300 whitespace-nowrap">${escapeHTML(formatDateBR(p.date))}</td>
-                        <td class="p-3 font-bold text-emerald-400 whitespace-nowrap">${formatCurrency(p.amount)}</td>
-                        <td class="p-3 text-slate-400 text-xs">${escapeHTML(p.paymentMethod || '—')}</td>
-                        <td class="p-3 text-slate-400 text-xs">${escapeHTML(p.note || '—')}</td>
-                        <td class="p-3 text-right"><button onclick="deletePayment('${ev.id}', '${p.id}')" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-trash text-xs"></i></button></td>
-                    </tr>
-                `).join('');
-            }
-            document.getElementById('modal-payments-history').classList.remove('hidden');
-        }
-        function closePaymentsHistory() { document.getElementById('modal-payments-history').classList.add('hidden'); }
-
-        function deletePayment(eid, pid) {
-            const ev = eventsState.find(e => e.id === eid);
-            if (!ev || !ev.extraPayments) return;
-            const p = ev.extraPayments.find(x => x.id === pid);
-            if (!p) return;
-            if (!confirm(`Excluir pagamento?\n\n${formatDateBR(p.date)} - ${formatCurrency(p.amount)}\n${p.note || '—'}`)) return;
-            ev.extraPayments = ev.extraPayments.filter(x => x.id !== pid);
-            saveToLocalStorage();
-            renderFinanceTab(); renderDashboard(); renderEventsList();
-            if (!document.getElementById('modal-payments-history').classList.contains('hidden')) openPaymentsHistory(eid);
-        }
-
-        function exportFinanceCSV() {
-            const rows = [['Tipo', 'Data', 'Descrição', 'Cliente/Evento', 'Categoria/Status', 'Forma', 'Valor (R$)']];
-            eventsState.forEach(ev => (ev.extraPayments || []).forEach(p => {
-                const y = p.date ? p.date.split('-')[0] : '';
-                if (selectedFinanceYear === 'all' || y === selectedFinanceYear) {
-                    rows.push(['Recebimento', formatDateBR(p.date), p.note || 'Pagamento', ev.clientName, ev.status === 'Cancelado' ? 'Cancelado' : (ev.status || 'Confirmado'), p.paymentMethod || '—', (parseFloat(p.amount) || 0).toFixed(2).replace('.', ',')]);
-                }
-            }));
-            expensesState.forEach(exp => {
-                const y = exp.date ? exp.date.split('-')[0] : '';
-                if (selectedFinanceYear === 'all' || y === selectedFinanceYear) {
-                    const linked = eventsState.find(e => e.id === exp.eventId);
-                    rows.push(['Despesa', formatDateBR(exp.date), exp.description, linked ? linked.clientName : 'Geral', exp.category, (exp.status === 'pending' ? 'A Pagar' : 'Pago') + ' via ' + (exp.paymentMethod || '—'), (parseFloat(exp.amount) || 0).toFixed(2).replace('.', ',')]);
-                }
-            });
-            if (rows.length <= 1) { alert("Sem dados."); return; }
-            const esc = v => { const s = String(v ?? ''); return (s.includes(';') || s.includes('"') || s.includes('\n')) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-            const csv = '\uFEFF' + rows.map(r => r.map(esc).join(';')).join('\r\n');
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `DJ_BROW_Financeiro_${selectedFinanceYear}_${new Date().toISOString().slice(0,10)}.csv`;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            alert(`✅ CSV com ${rows.length - 1} registros.`);
-        }
-
-        function openPaymentModal() {
-            const sel = document.getElementById('modal-pay-event-id');
-            sel.innerHTML = '<option value="">Selecione...</option>';
-            eventsState.filter(e => e.status !== 'Cancelado').forEach(e => sel.innerHTML += `<option value="${e.id}">${escapeHTML(e.clientName)} - ${formatDateBR(e.date)}</option>`);
-            document.getElementById('modal-pay-amount').value = '';
-            document.getElementById('modal-pay-date').value = new Date().toISOString().slice(0, 10);
-            document.getElementById('modal-pay-method').value = 'PIX';
-            document.getElementById('modal-pay-note').value = '';
-            document.getElementById('modal-payment').classList.remove('hidden');
-        }
-        function openPaymentModalForEvent(eid) { openPaymentModal(); document.getElementById('modal-pay-event-id').value = eid; }
-        function closePaymentModal() { document.getElementById('modal-payment').classList.add('hidden'); }
-
-        function handleSavePayment(e) {
-            e.preventDefault();
-            const id = document.getElementById('modal-pay-event-id').value;
-            const amt = parseFloat(document.getElementById('modal-pay-amount').value) || 0;
-            const date = document.getElementById('modal-pay-date').value;
-            const method = document.getElementById('modal-pay-method').value;
-            const note = document.getElementById('modal-pay-note').value.trim();
-            if (!id || amt <= 0 || !date) { alert("Preencha tudo."); return; }
-            const ev = eventsState.find(e => e.id === id);
-            if (ev) {
-                if (ev.status === 'Cancelado') { alert("Evento cancelado."); return; }
-                const p = parseFloat(ev.price) || 0;
-                const paid = (ev.extraPayments || []).reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
-                const saldo = Math.max(0, p - paid);
-                if (amt > saldo && !confirm(`Valor > saldo (${formatCurrency(saldo)}). Continuar?`)) return;
-            }
-            const idx = eventsState.findIndex(e => e.id === id);
-            if (idx !== -1) {
-                if (!eventsState[idx].extraPayments) eventsState[idx].extraPayments = [];
-                eventsState[idx].extraPayments.push({ id: 'pay_' + Date.now(), amount: amt, date, note, paymentMethod: method });
-                saveToLocalStorage();
-                closePaymentModal();
-                renderFinanceTab(); renderDashboard(); renderEventsList();
-                alert("Pagamento registrado!");
-            }
-        }
-
-        function openExpenseModal() {
-            document.getElementById('modal-exp-id').value = '';
-            document.getElementById('modal-exp-title').innerText = 'Registrar Despesa';
-            document.getElementById('modal-exp-submit').innerText = 'Salvar Despesa';
-            const sel = document.getElementById('modal-exp-event-id');
-            sel.innerHTML = '<option value="">(Nenhum - Gasto Geral)</option>';
-            eventsState.forEach(e => sel.innerHTML += `<option value="${e.id}">${escapeHTML(e.clientName)} - ${formatDateBR(e.date)}</option>`);
-            document.getElementById('modal-exp-desc').value = '';
-            document.getElementById('modal-exp-amount').value = '';
-            document.getElementById('modal-exp-date').value = new Date().toISOString().slice(0, 10);
-            document.getElementById('modal-exp-cat').value = 'Equipe / Auxiliar';
-            document.getElementById('modal-exp-method').value = 'PIX';
-            document.getElementById('modal-exp-status').value = 'paid';
-            document.getElementById('modal-expense').classList.remove('hidden');
-        }
-
-        function editExpense(id) {
-            const exp = expensesState.find(e => e.id === id);
-            if (!exp) return;
-            document.getElementById('modal-exp-id').value = exp.id;
-            document.getElementById('modal-exp-title').innerText = 'Editar Despesa';
-            document.getElementById('modal-exp-submit').innerText = 'Atualizar Despesa';
-            const sel = document.getElementById('modal-exp-event-id');
-            sel.innerHTML = '<option value="">(Nenhum - Gasto Geral)</option>';
-            eventsState.forEach(e => sel.innerHTML += `<option value="${e.id}">${escapeHTML(e.clientName)} - ${formatDateBR(e.date)}</option>`);
-            document.getElementById('modal-exp-desc').value = exp.description;
-            document.getElementById('modal-exp-amount').value = exp.amount;
-            document.getElementById('modal-exp-date').value = exp.date;
-            document.getElementById('modal-exp-cat').value = exp.category;
-            document.getElementById('modal-exp-method').value = exp.paymentMethod || 'PIX';
-            document.getElementById('modal-exp-status').value = exp.status || 'paid';
-            document.getElementById('modal-exp-event-id').value = exp.eventId || '';
-            document.getElementById('modal-expense').classList.remove('hidden');
-        }
-
-        function closeExpenseModal() { document.getElementById('modal-expense').classList.add('hidden'); }
-
-        function handleSaveExpense(e) {
-            e.preventDefault();
-            const existingId = document.getElementById('modal-exp-id').value;
-            const desc = document.getElementById('modal-exp-desc').value.trim();
-            const amt = parseFloat(document.getElementById('modal-exp-amount').value) || 0;
-            const date = document.getElementById('modal-exp-date').value;
-            const cat = document.getElementById('modal-exp-cat').value;
-            const method = document.getElementById('modal-exp-method').value;
-            const status = document.getElementById('modal-exp-status').value;
-            const eid = document.getElementById('modal-exp-event-id').value || null;
-            if (!desc || amt <= 0 || !date) { alert("Preencha tudo."); return; }
-            if (existingId) {
-                const idx = expensesState.findIndex(e => e.id === existingId);
-                if (idx !== -1) {
-                    expensesState[idx] = { ...expensesState[idx], description: desc, amount: amt, date, category: cat, paymentMethod: method, status, eventId: eid };
-                }
-                closeExpenseModal();
-                alert("Despesa atualizada!");
-            } else {
-                expensesState.push({ id: 'exp_' + Date.now(), description: desc, amount: amt, date, category: cat, paymentMethod: method, status, eventId: eid });
-                closeExpenseModal();
-                alert("Despesa registrada!");
-            }
-            saveToLocalStorage();
-            renderFinanceTab(); renderDashboard();
-        }
-
-        function deleteExpense(id) {
-            if (confirm("Excluir despesa?")) {
-                expensesState = expensesState.filter(e => e.id !== id);
-                saveToLocalStorage();
-                renderFinanceTab(); renderDashboard();
-            }
-        }
-
-        function prepareNewEvent() {
-            activeEventId = null;
-            document.getElementById('form-title').innerText = 'Cadastrar Novo Evento';
-            document.getElementById('event-id').value = '';
-            document.getElementById('event-form').reset();
-            document.getElementById('inp-event-status').value = 'Em negociação';
-            document.getElementById('inp-event-duration').value = '6';
-            document.getElementById('inp-time-start').value = '21:00';
-            calculateEndTime();
-            document.getElementById('inp-event-extra-hour').value = '150';
-            document.getElementById('inp-event-equipments').value = 'Iluminação com PAR LED, 2 moving, 2 spider, máquina de fumaça, TV de LED 43, Pista de LED, Microfone, Repertório personalizado, Montagem e desmontagem, Som e suporte técnico.';
-            switchTab('proposta');
-        }
-
-        function compileContractText(ev) {
-            return contractTemplateState
-                .replace(/{{NOME_CLIENTE}}/g, ev.clientName || '')
-                .replace(/{{CPF_CLIENTE}}/g, ev.clientCpf || '')
-                .replace(/{{FONE_CLIENTE}}/g, ev.clientPhone || '')
-                .replace(/{{CEP_CLIENTE}}/g, ev.clientCep || 'Não informado')
-                .replace(/{{ENDERECO_CLIENTE}}/g, ev.clientAddress || 'Não informado')
-                .replace(/{{DATA_EVENTO}}/g, formatDateBR(ev.date))
-                .replace(/{{LOCAL_EVENTO}}/g, ev.location || '')
-                .replace(/{{DURACAO}}/g, ev.duration || '6')
-                .replace(/{{HORARIO_INICIO}}/g, ev.startTime || '21:00')
-                .replace(/{{HORARIO_TERMINO}}/g, ev.endTime || '03:00')
-                .replace(/{{VALOR_EXTRA}}/g, formatNumberBR(ev.extraHour))
-                .replace(/{{VALOR_TOTAL}}/g, formatNumberBR(ev.price))
-                .replace(/{{ENTRADA}}/g, formatNumberBR(ev.deposit))
-                .replace(/{{SALDO}}/g, formatNumberBR(ev.saldo))
-                .replace(/{{EQUIPAMENTOS}}/g, ev.equipments || '')
-                .replace(/{{OBSERVACOES}}/g, ev.notes || 'Nenhuma.')
-                .replace(/{{NOME_DJ}}/g, profileState.userName)
-                .replace(/{{CPF_DJ}}/g, profileState.userCpf)
-                .replace(/{{FONE_DJ}}/g, profileState.userPhone)
-                .replace(/{{ENDERECO_DJ}}/g, profileState.userAddress || '');
+            document.getElementById('inp-event-saldo').value = (p - (p * 0.20)).toFixed(2);
         }
 
         function handleSaveEvent(e) {
             e.preventDefault();
-            const name = document.getElementById('inp-client-name').value.trim();
-            const cpf = document.getElementById('inp-client-cpf').value.trim();
-            const phone = document.getElementById('inp-client-phone').value.trim();
-            const cep = document.getElementById('inp-client-cep').value.trim();
-            const addr = document.getElementById('inp-client-address').value.trim();
-            const date = document.getElementById('inp-event-date').value;
-            const loc = document.getElementById('inp-event-location').value.trim();
-            const status = document.getElementById('inp-event-status').value;
-            const dur = document.getElementById('inp-event-duration').value;
-            const st = document.getElementById('inp-time-start').value;
-            const et = document.getElementById('inp-time-end').value;
-            const eh = document.getElementById('inp-event-extra-hour').value;
-            const price = parseFloat(document.getElementById('inp-event-price').value) || 0;
-            const dep = parseFloat(document.getElementById('inp-event-deposit').value) || 0;
-            const saldo = Math.max(0, price - dep);
-            const eq = document.getElementById('inp-event-equipments').value.trim();
-            const notes = document.getElementById('inp-event-notes').value.trim();
             const eid = document.getElementById('event-id').value;
-            if (!name || !cpf || !phone || !date || !loc || price <= 0) { alert("Preencha obrigatórios."); return; }
-            const conf = eventsState.find(e => e.date === date && e.id !== eid && e.status !== 'Cancelado');
-            if (conf && !confirm(`Já existe evento de "${conf.clientName}" nesta data. Continuar?`)) return;
+            const ev = {
+                id: eid || 'ev_' + Date.now(),
+                clientName: document.getElementById('inp-client-name').value,
+                clientCpf: document.getElementById('inp-client-cpf').value,
+                clientPhone: document.getElementById('inp-client-phone').value,
+                clientCep: document.getElementById('inp-client-cep').value,
+                clientAddress: document.getElementById('inp-client-address').value,
+                date: document.getElementById('inp-event-date').value,
+                location: document.getElementById('inp-event-location').value,
+                status: document.getElementById('inp-event-status').value,
+                duration: document.getElementById('inp-event-duration').value,
+                startTime: document.getElementById('inp-time-start').value,
+                endTime: document.getElementById('inp-time-end').value,
+                price: parseFloat(document.getElementById('inp-event-price').value) || 0,
+                deposit: parseFloat(document.getElementById('inp-event-deposit').value) || 0,
+                saldo: parseFloat(document.getElementById('inp-event-saldo').value) || 0,
+                equipments: document.getElementById('inp-event-equipments').value,
+                notes: ''
+            };
+            
             if (eid) {
-                const idx = eventsState.findIndex(e => e.id === eid);
-                if (idx !== -1) {
-                    const old = eventsState[idx];
-                    let sc = old.signatureClient, sd = old.signatureDj, sca = old.signedClientAt, sda = old.signedDjAt;
-                    const tmp = { ...old, clientName: name, clientCpf: cpf, clientPhone: phone, clientCep: cep, clientAddress: addr, date, location: loc, duration: dur, startTime: st, endTime: et, extraHour: eh, price, deposit: dep, equipments: eq, notes };
-                    tmp.contractSnapshot = compileContractText(tmp);
-                    const newHash = computeContractHash(tmp);
-                    if (sc && old.contractHash && old.contractHash !== newHash) {
-                        if (confirm("⚠️ Alteração após assinatura. Invalidar assinaturas?")) { sc = null; sd = null; sca = null; sda = null; }
-                        else return;
-                    }
-                    eventsState[idx] = { ...old, clientName: name, clientCpf: cpf, clientPhone: phone, clientCep: cep, clientAddress: addr, date, location: loc, status, duration: dur, startTime: st, endTime: et, extraHour: eh, price, deposit: dep, saldo, equipments: eq, notes, signatureClient: sc, signatureDj: sd, signedClientAt: sca, signedDjAt: sda, contractHash: newHash };
-                    eventsState[idx].contractSnapshot = compileContractText(eventsState[idx]);
-                    activeEventId = eid;
-                }
+                const idx = eventsState.findIndex(x => x.id === eid);
+                if (idx !== -1) eventsState[idx] = { ...eventsState[idx], ...ev };
             } else {
-                const nid = 'ev_' + Date.now();
-                const ne = { id: nid, clientName: name, clientCpf: cpf, clientPhone: phone, clientCep: cep, clientAddress: addr, date, location: loc, status, duration: dur, startTime: st, endTime: et, extraHour: eh, price, deposit: dep, saldo, equipments: eq, notes, extraPayments: [], signatureClient: null, signatureDj: null, signedClientAt: null, signedDjAt: null, contractSnapshot: '', contractHash: '' };
-                ne.contractSnapshot = compileContractText(ne);
-                ne.contractHash = computeContractHash(ne);
-                eventsState.push(ne);
-                activeEventId = nid;
+                ev.extraPayments = [];
+                ev.signatureClient = null;
+                ev.signatureDj = null;
+                eventsState.push(ev);
             }
-            const checkEv = eventsState.find(e => e.id === activeEventId);
-            if (checkEv && checkEv.status === 'Confirmado' && checkEv.deposit > 0) {
-                if (!checkEv.extraPayments) checkEv.extraPayments = [];
-                // PROTEÇÃO CONTRA DUPLICIDADE
-                const hasSinal = checkEv.extraPayments.some(p => p.note && p.note.toLowerCase().includes('sinal'));
-                if (!hasSinal) {
-                    checkEv.extraPayments.push({ id: 'pay_sinal_' + Date.now(), amount: parseFloat(checkEv.deposit) || 0, date: new Date().toISOString().slice(0, 10), note: 'Sinal auto', paymentMethod: 'PIX' });
+            
+            // Lançar sinal automático se confirmado
+            const saved = eventsState.find(x => x.id === ev.id);
+            if (saved.status === 'Confirmado' && saved.deposit > 0) {
+                if (!saved.extraPayments) saved.extraPayments = [];
+                const jaTemSinal = saved.extraPayments.some(p => p.note && p.note.toLowerCase().includes('sinal'));
+                if (!jaTemSinal) {
+                    saved.extraPayments.push({ id: 'pay_' + Date.now(), amount: saved.deposit, date: new Date().toISOString().slice(0,10), note: 'Sinal (auto)' });
                 }
             }
+            
             saveToLocalStorage();
-            viewEventContract(activeEventId);
+            activeEventId = ev.id;
+            viewEventContract(ev.id);
+        }
+
+        function renderDashboard() {
+            document.getElementById('dash-total-events').innerText = eventsState.length;
+            let pending = 0, received = 0;
+            eventsState.forEach(e => {
+                if (e.status !== 'Cancelado') {
+                    const paid = (e.extraPayments || []).reduce((s, x) => s + x.amount, 0);
+                    pending += Math.max(0, e.price - paid);
+                    received += paid;
+                }
+            });
+            const expenses = expensesState.reduce((s, x) => s + x.amount, 0);
+            document.getElementById('dash-pending-value').innerText = formatCurrency(pending);
+            document.getElementById('dash-net-profit').innerText = formatCurrency(received - expenses);
+
+            const list = document.getElementById('dash-events-list');
+            list.innerHTML = '';
+            eventsState.filter(e => e.status !== 'Cancelado').slice(0,5).forEach(ev => {
+                const paid = (ev.extraPayments || []).reduce((s, x) => s + x.amount, 0);
+                list.innerHTML += `<tr>
+                    <td class="p-2">${formatDateBR(ev.date)}</td>
+                    <td class="p-2">${escapeHTML(ev.clientName)}</td>
+                    <td class="p-2">${ev.status}</td>
+                    <td class="p-2 text-amber-400">${formatCurrency(ev.price - paid)}</td>
+                    <td class="p-2 text-right"><button onclick="viewEventContract('${ev.id}')" class="bg-emerald-600 px-2 py-1 rounded text-xs text-white">Ver</button></td>
+                </tr>`;
+            });
+        }
+
+        function renderEventsList() {
+            const list = document.getElementById('full-events-list');
+            list.innerHTML = '';
+            eventsState.forEach(ev => {
+                list.innerHTML += `<tr>
+                    <td class="p-2">${escapeHTML(ev.clientName)}</td>
+                    <td class="p-2">${formatDateBR(ev.date)}</td>
+                    <td class="p-2">${ev.status}</td>
+                    <td class="p-2 text-emerald-400">${formatCurrency(ev.price)}</td>
+                    <td class="p-2 text-right space-x-1">
+                        <button onclick="viewEventContract('${ev.id}')" class="bg-slate-700 px-2 py-1 rounded text-xs text-white"><i class="fa fa-eye"></i></button>
+                        <button onclick="editEvent('${ev.id}')" class="bg-blue-700 px-2 py-1 rounded text-xs text-white"><i class="fa fa-pen"></i></button>
+                        <button onclick="deleteEvent('${ev.id}')" class="bg-rose-700 px-2 py-1 rounded text-xs text-white"><i class="fa fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            });
         }
 
         function editEvent(id) {
-            const ev = eventsState.find(e => e.id === id);
-            if (!ev) return;
+            const ev = eventsState.find(x => x.id === id);
+            if(!ev) return;
             activeEventId = id;
-            document.getElementById('form-title').innerText = 'Editar Evento';
             document.getElementById('event-id').value = ev.id;
             document.getElementById('inp-client-name').value = ev.clientName;
             document.getElementById('inp-client-cpf').value = ev.clientCpf;
             document.getElementById('inp-client-phone').value = ev.clientPhone;
             document.getElementById('inp-client-cep').value = ev.clientCep || '';
-            document.getElementById('inp-client-address').value = ev.clientAddress || '';
+            document.getElementById('inp-client-address').value = ev.clientAddress;
             document.getElementById('inp-event-date').value = ev.date;
             document.getElementById('inp-event-location').value = ev.location;
-            document.getElementById('inp-event-status').value = ev.status || 'Confirmado';
-            document.getElementById('inp-event-duration').value = ev.duration || '6';
-            document.getElementById('inp-time-start').value = ev.startTime || '21:00';
+            document.getElementById('inp-event-status').value = ev.status;
+            document.getElementById('inp-event-duration').value = ev.duration;
+            document.getElementById('inp-time-start').value = ev.startTime;
             calculateEndTime();
-            document.getElementById('inp-event-extra-hour').value = ev.extraHour || '150';
             document.getElementById('inp-event-price').value = ev.price;
             document.getElementById('inp-event-deposit').value = ev.deposit;
             document.getElementById('inp-event-saldo').value = ev.saldo;
-            document.getElementById('inp-event-equipments').value = ev.equipments || '';
-            document.getElementById('inp-event-notes').value = ev.notes || '';
+            document.getElementById('inp-event-equipments').value = ev.equipments;
             switchTab('proposta');
         }
 
-        function editCurrentEventFromContract() { if (activeEventId) editEvent(activeEventId); }
-
         function deleteEvent(id) {
-            const ev = eventsState.find(e => e.id === id);
-            if (!ev) return;
-            if (!confirm(`Excluir evento de "${ev.clientName}"?`)) return;
-            const hasPaid = (ev.extraPayments && ev.extraPayments.length > 0);
-            if (hasPaid) {
-                ev.status = 'Cancelado';
-                saveToLocalStorage();
-                alert("Marcado como CANCELADO (caixa histórico preservado).");
-            } else {
-                eventsState = eventsState.filter(e => e.id !== id);
-                expensesState = expensesState.filter(e => e.eventId !== id);
-                if (activeEventId === id) activeEventId = null;
-                saveToLocalStorage();
-            }
-            renderDashboard(); renderEventsList(); renderFinanceTab();
+            if(!confirm("Excluir evento?")) return;
+            eventsState = eventsState.filter(x => x.id !== id);
+            saveToLocalStorage();
+            renderEventsList(); renderDashboard();
         }
 
         function viewEventContract(id) {
-            const ev = eventsState.find(e => e.id === id);
-            if (!ev) return;
+            const ev = eventsState.find(x => x.id === id);
+            if(!ev) return;
             activeEventId = id;
-            document.getElementById('contract-render-view').innerText = ev.contractSnapshot || compileContractText(ev);
-            const ce = document.getElementById('client-existing-sig-box');
-            const cn = document.getElementById('client-new-sig-box');
-            const ci = document.getElementById('img-client-signature');
-            const cp = document.getElementById('sig-client-printed-name');
+            
+            let txt = contractTemplateState
+                .replace(/{{NOME_CLIENTE}}/g, ev.clientName)
+                .replace(/{{CPF_CLIENTE}}/g, ev.clientCpf)
+                .replace(/{{FONE_CLIENTE}}/g, ev.clientPhone)
+                .replace(/{{ENDERECO_CLIENTE}}/g, ev.clientAddress)
+                .replace(/{{CEP_CLIENTE}}/g, ev.clientCep || '')
+                .replace(/{{DATA_EVENTO}}/g, formatDateBR(ev.date))
+                .replace(/{{LOCAL_EVENTO}}/g, ev.location)
+                .replace(/{{DURACAO}}/g, ev.duration)
+                .replace(/{{HORARIO_INICIO}}/g, ev.startTime)
+                .replace(/{{HORARIO_TERMINO}}/g, ev.endTime)
+                .replace(/{{VALOR_TOTAL}}/g, (ev.price).toFixed(2).replace('.',','))
+                .replace(/{{ENTRADA}}/g, (ev.deposit).toFixed(2).replace('.',','))
+                .replace(/{{SALDO}}/g, (ev.saldo).toFixed(2).replace('.',','))
+                .replace(/{{EQUIPAMENTOS}}/g, ev.equipments)
+                .replace(/{{OBSERVACOES}}/g, ev.notes || 'Nenhuma')
+                .replace(/{{NOME_DJ}}/g, profileState.userName)
+                .replace(/{{CPF_DJ}}/g, profileState.userCpf)
+                .replace(/{{FONE_DJ}}/g, profileState.userPhone);
+                
+            document.getElementById('contract-render-view').innerText = txt;
+            
             if (ev.signatureClient) {
-                ci.src = ev.signatureClient;
-                cp.innerText = `${ev.clientName} (${ev.clientCpf})${ev.signedClientAt ? ' - ' + new Date(ev.signedClientAt).toLocaleString('pt-BR') : ''}`;
-                ce.classList.remove('hidden'); cn.classList.add('hidden');
+                document.getElementById('client-existing-sig-box').classList.remove('hidden');
+                document.getElementById('client-new-sig-box').classList.add('hidden');
+                document.getElementById('img-client-signature').src = ev.signatureClient;
             } else {
-                ce.classList.add('hidden'); cn.classList.remove('hidden');
-                clearSignaturePad('client');
-            }
-            const de = document.getElementById('dj-existing-sig-box');
-            const dn = document.getElementById('dj-new-sig-box');
-            const di = document.getElementById('img-dj-signature');
-            const dp = document.getElementById('sig-dj-printed-name');
-            if (ev.signatureDj) {
-                di.src = ev.signatureDj; di.style.display = 'block';
-                dp.innerText = `${profileState.userName || 'DJ'} (DJ BROW)${ev.signedDjAt ? ' - ' + new Date(ev.signedDjAt).toLocaleString('pt-BR') : ''}`;
-                de.classList.remove('hidden'); dn.classList.add('hidden');
-            } else {
-                de.classList.add('hidden'); dn.classList.remove('hidden');
-                clearSignaturePad('dj');
-            }
-            switchTab('contratos');
-        }
-
-        let canvases = {}, ctxs = {}, isDrawingState = {};
-
-        function setupSignaturePads() {
-            ['client', 'dj'].forEach(role => {
-                const c = document.getElementById(`signature-pad-${role}`);
-                if (!c) return;
-                canvases[role] = c;
-                ctxs[role] = c.getContext('2d');
-                isDrawingState[role] = false;
-                const getPos = e => {
-                    const r = c.getBoundingClientRect();
-                    return { x: ((e.touches ? e.touches[0].clientX : e.clientX) - r.left) * (c.width / r.width), y: ((e.touches ? e.touches[0].clientY : e.clientY) - r.top) * (c.height / r.height) };
-                };
-                const start = e => { isDrawingState[role] = true; draw(e); };
-                const stop = () => { isDrawingState[role] = false; ctxs[role].beginPath(); };
-                const draw = e => {
-                    if (!isDrawingState[role]) return;
-                    e.preventDefault();
-                    const p = getPos(e);
-                    ctxs[role].lineWidth = 2.5;
-                    ctxs[role].lineCap = 'round';
-                    ctxs[role].strokeStyle = role === 'client' ? '#10b981' : '#3b82f6';
-                    ctxs[role].lineTo(p.x, p.y);
-                    ctxs[role].stroke();
-                    ctxs[role].beginPath();
-                    ctxs[role].moveTo(p.x, p.y);
-                };
-                c.addEventListener('mousedown', start);
-                c.addEventListener('mouseup', stop);
-                c.addEventListener('mousemove', draw);
-                c.addEventListener('mouseleave', stop);
-                c.addEventListener('touchstart', start, { passive: false });
-                c.addEventListener('touchend', stop);
-                c.addEventListener('touchmove', draw, { passive: false });
-            });
-        }
-
-        function clearSignaturePad(role) { if (ctxs[role] && canvases[role]) ctxs[role].clearRect(0, 0, canvases[role].width, canvases[role].height); }
-
-        function isCanvasBlank(c) { const b = document.createElement('canvas'); b.width = c.width; b.height = c.height; return c.toDataURL() === b.toDataURL(); }
-
-        function saveSignature(role) {
-            if (isClientMode && role === 'dj') { alert("Acesso negado."); return; }
-            const c = canvases[role];
-            if (isCanvasBlank(c)) { alert("Desenhe sua assinatura."); return; }
-            const url = c.toDataURL('image/png');
-            const ts = new Date().toISOString();
-            if (isClientMode) {
-                const p = new URLSearchParams(window.location.search);
-                const cid = p.get('clientView');
-                const cdp = p.get('clientData');
-                let ev = null;
-                if (cid) ev = eventsState.find(e => e.id === cid);
-                if (!ev && cdp) ev = decodeBase64Json(cdp);
-                if (!ev && activeEventId) ev = eventsState.find(e => e.id === activeEventId);
-                if (ev) {
-                    ev.signatureClient = url;
-                    ev.signedClientAt = ts;
-                    activeEventId = ev.id;
-                    const idx = eventsState.findIndex(e => e.id === ev.id);
-                    if (idx !== -1) eventsState[idx] = ev;
-                    else eventsState.push(ev);
-                    saveToLocalStorage();
-                    alert("Assinatura salva!");
-                    activateClientViewMode(activeEventId, encodeBase64Json(ev));
-                }
-                return;
-            }
-            if (!activeEventId) { alert("Selecione evento."); return; }
-            const idx = eventsState.findIndex(e => e.id === activeEventId);
-            if (idx !== -1) {
-                if (role === 'client') { eventsState[idx].signatureClient = url; eventsState[idx].signedClientAt = ts; }
-                else { eventsState[idx].signatureDj = url; eventsState[idx].signedDjAt = ts; }
-                saveToLocalStorage();
-                alert(`Assinatura do ${role === 'client' ? 'Cliente' : 'DJ'} salva!`);
-                viewEventContract(activeEventId);
-                renderEventsList();
-            }
-        }
-
-        function reopenSignaturePad(role) {
-            if (isClientMode && role === 'dj') { alert("Acesso negado."); return; }
-            if (!confirm("Refazer?")) return;
-            if (role === 'client') {
                 document.getElementById('client-existing-sig-box').classList.add('hidden');
                 document.getElementById('client-new-sig-box').classList.remove('hidden');
                 clearSignaturePad('client');
+            }
+            
+            if (ev.signatureDj) {
+                document.getElementById('dj-existing-sig-box').classList.remove('hidden');
+                document.getElementById('dj-new-sig-box').classList.add('hidden');
+                document.getElementById('img-dj-signature').src = ev.signatureDj;
             } else {
                 document.getElementById('dj-existing-sig-box').classList.add('hidden');
                 document.getElementById('dj-new-sig-box').classList.remove('hidden');
                 clearSignaturePad('dj');
             }
+            
+            switchTab('contratos');
+        }
+
+        // --- SISTEMA DE ASSINATURA BLINDADO ---
+        let canvases = {}, ctxs = {}, drawing = {};
+        function setupSignaturePads() {
+            ['client', 'dj'].forEach(role => {
+                const c = document.getElementById(`signature-pad-${role}`);
+                if(!c) return;
+                canvases[role] = c; ctxs[role] = c.getContext('2d');
+                drawing[role] = false;
+                
+                const getPos = e => {
+                    const r = c.getBoundingClientRect();
+                    return { x: (e.touches ? e.touches[0].clientX : e.clientX) - r.left, y: (e.touches ? e.touches[0].clientY : e.clientY) - r.top };
+                };
+                const start = e => { drawing[role] = true; draw(e); };
+                const stop = () => { drawing[role] = false; ctxs[role].beginPath(); };
+                const draw = e => {
+                    if(!drawing[role]) return;
+                    e.preventDefault();
+                    const p = getPos(e);
+                    ctxs[role].lineWidth = 2; ctxs[role].strokeStyle = '#10b981'; ctxs[role].lineCap = 'round';
+                    ctxs[role].lineTo(p.x, p.y); ctxs[role].stroke();
+                    ctxs[role].beginPath(); ctxs[role].moveTo(p.x, p.y);
+                };
+                c.addEventListener('mousedown', start); c.addEventListener('mouseup', stop); c.addEventListener('mousemove', draw); c.addEventListener('mouseleave', stop);
+                c.addEventListener('touchstart', start, {passive:false}); c.addEventListener('touchend', stop); c.addEventListener('touchmove', draw, {passive:false});
+            });
+        }
+        
+        function clearSignaturePad(role) { if(ctxs[role]) ctxs[role].clearRect(0,0,canvases[role].width,canvases[role].height); }
+        
+        function saveSignature(role) {
+            if(!canvases[role]) return;
+            const data = canvases[role].toDataURL('image/png');
+            const idx = eventsState.findIndex(x => x.id === activeEventId);
+            if(idx !== -1) {
+                if(role === 'client') eventsState[idx].signatureClient = data;
+                if(role === 'dj') eventsState[idx].signatureDj = data;
+                saveToLocalStorage();
+                viewEventContract(activeEventId);
+                alert("Assinatura salva!");
+            }
+        }
+
+        // --- SISTEMA DE IMPRESSÃO / PDF ---
+        function downloadPDFForClientExternal() {
+            const ev = eventsState.find(x => x.id === activeEventId);
+            if(!ev) return;
+            
+            document.getElementById('print-contract-text').innerText = document.getElementById('contract-render-view').innerText;
+            
+            if(ev.signatureDj) {
+                document.getElementById('print-sig-dj-img').src = ev.signatureDj;
+                document.getElementById('print-sig-dj-img').style.display = 'block';
+            } else {
+                document.getElementById('print-sig-dj-img').style.display = 'none';
+            }
+            document.getElementById('print-sig-dj-name').innerText = profileState.userName + " (Contratado)";
+            
+            document.getElementById('print-sig-client-img').style.display = 'none';
+            document.getElementById('print-sig-client-name').innerText = ev.clientName + " (Contratante)";
+            
+            setTimeout(() => { window.print(); }, 200);
+        }
+
+        function downloadSignedContractPDF() {
+            const ev = eventsState.find(x => x.id === activeEventId);
+            if(!ev) return;
+            
+            document.getElementById('print-contract-text').innerText = document.getElementById('contract-render-view').innerText;
+            
+            if(ev.signatureDj) {
+                document.getElementById('print-sig-dj-img').src = ev.signatureDj;
+                document.getElementById('print-sig-dj-img').style.display = 'block';
+            } else document.getElementById('print-sig-dj-img').style.display = 'none';
+            document.getElementById('print-sig-dj-name').innerText = profileState.userName + " (Contratado)";
+            
+            if(ev.signatureClient) {
+                document.getElementById('print-sig-client-img').src = ev.signatureClient;
+                document.getElementById('print-sig-client-img').style.display = 'block';
+            } else document.getElementById('print-sig-client-img').style.display = 'none';
+            document.getElementById('print-sig-client-name').innerText = ev.clientName + " (Contratante)";
+            
+            setTimeout(() => { window.print(); }, 200);
+        }
+
+        // --- FINANCEIRO E DESPESAS ---
+        function renderFinanceTab() {
+            let rec = 0; eventsState.forEach(e => (e.extraPayments||[]).forEach(p => rec += p.amount));
+            let exp = 0; expensesState.forEach(e => exp += e.amount);
+            document.getElementById('fin-total-received').innerText = formatCurrency(rec);
+            document.getElementById('fin-total-expenses').innerText = formatCurrency(exp);
+            document.getElementById('fin-net-profit').innerText = formatCurrency(rec - exp);
+
+            const cList = document.getElementById('fin-clients-list');
+            cList.innerHTML = '';
+            eventsState.forEach(ev => {
+                const paid = (ev.extraPayments||[]).reduce((s,x)=>s+x.amount,0);
+                cList.innerHTML += `<tr>
+                    <td class="p-2">${escapeHTML(ev.clientName)}</td>
+                    <td class="p-2 text-emerald-400">${formatCurrency(paid)}</td>
+                    <td class="p-2 text-amber-400">${formatCurrency(ev.price - paid)}</td>
+                    <td class="p-2 text-right"><button onclick="openPaymentModalForEvent('${ev.id}')" class="bg-emerald-600 text-xs px-2 py-1 rounded text-white">+ Pgto</button></td>
+                </tr>`;
+            });
+
+            const eList = document.getElementById('fin-expenses-list');
+            eList.innerHTML = '';
+            expensesState.forEach(ex => {
+                eList.innerHTML += `<tr>
+                    <td class="p-2">${formatDateBR(ex.date)}</td>
+                    <td class="p-2">${escapeHTML(ex.desc)}</td>
+                    <td class="p-2 text-rose-400">${formatCurrency(ex.amount)}</td>
+                    <td class="p-2 text-right"><button onclick="deleteExpense('${ex.id}')" class="text-rose-500"><i class="fa fa-trash"></i></button></td>
+                </tr>`;
+            });
+        }
+
+        function openPaymentModal() {
+            const sel = document.getElementById('modal-pay-event-id');
+            sel.innerHTML = '<option value="">Selecione...</option>';
+            eventsState.forEach(e => sel.innerHTML += `<option value="${e.id}">${escapeHTML(e.clientName)}</option>`);
+            document.getElementById('modal-payment').classList.remove('hidden');
+        }
+        function openPaymentModalForEvent(id) { openPaymentModal(); document.getElementById('modal-pay-event-id').value = id; }
+        function closePaymentModal() { document.getElementById('modal-payment').classList.add('hidden'); }
+        
+        function handleSavePayment(e) {
+            e.preventDefault();
+            const id = document.getElementById('modal-pay-event-id').value;
+            const amt = parseFloat(document.getElementById('modal-pay-amount').value);
+            const idx = eventsState.findIndex(x => x.id === id);
+            if(idx !== -1) {
+                if(!eventsState[idx].extraPayments) eventsState[idx].extraPayments = [];
+                eventsState[idx].extraPayments.push({ id: 'p'+Date.now(), amount: amt, date: document.getElementById('modal-pay-date').value, note: document.getElementById('modal-pay-note').value });
+                saveToLocalStorage(); closePaymentModal(); renderFinanceTab(); renderDashboard();
+            }
+        }
+
+        function openExpenseModal() { document.getElementById('modal-expense').classList.remove('hidden'); }
+        function handleSaveExpense(e) {
+            e.preventDefault();
+            expensesState.push({ id: 'e'+Date.now(), desc: document.getElementById('modal-exp-desc').value, amount: parseFloat(document.getElementById('modal-exp-amount').value), date: document.getElementById('modal-exp-date').value });
+            saveToLocalStorage(); document.getElementById('modal-expense').classList.add('hidden'); renderFinanceTab(); renderDashboard();
+        }
+        function deleteExpense(id) { if(confirm("Excluir?")) { expensesState = expensesState.filter(x => x.id !== id); saveToLocalStorage(); renderFinanceTab(); } }
+
+        // --- CEP E PERFIL ---
+        async function fetchAddressByCEP() {
+            const cep = document.getElementById('inp-client-cep').value.replace(/\D/g, '');
+            if(cep.length !== 8) return;
+            try {
+                const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const d = await r.json();
+                if(!d.erro) document.getElementById('inp-client-address').value = `${d.logradouro}, ${d.bairro, d.localidade} - ${d.uf}`;
+            } catch(e) { alert("Erro ao buscar CEP."); }
         }
 
         function handleSaveProfile(e) {
             e.preventDefault();
-            profileState.companyName = document.getElementById('cfg-company-name').value.trim();
-            profileState.userName = document.getElementById('cfg-user-name').value.trim();
-            profileState.userCpf = document.getElementById('cfg-user-cpf').value.trim();
-            profileState.userPhone = document.getElementById('cfg-user-phone').value.trim();
-            profileState.userAddress = document.getElementById('cfg-user-address').value.trim();
-            profileState.monthlyGoal = parseFloat(document.getElementById('cfg-monthly-goal').value) || 0;
+            profileState.companyName = document.getElementById('cfg-company-name').value;
+            profileState.userName = document.getElementById('cfg-user-name').value;
+            profileState.userCpf = document.getElementById('cfg-user-cpf').value;
+            profileState.userPhone = document.getElementById('cfg-user-phone').value;
+            profileState.userAddress = document.getElementById('cfg-user-address').value;
             saveToLocalStorage();
-            updateSidebarProfile();
+            document.getElementById('sidebar-user-name').innerText = profileState.userName;
+            document.getElementById('sidebar-company-name').innerText = profileState.companyName;
             alert("Perfil salvo!");
         }
 
-        function handleSaveContractTemplate() {
-            contractTemplateState = document.getElementById('contract-template').value;
-            saveToLocalStorage();
-            alert("Modelo salvo!");
-        }
-
-        function restoreDefaultContractTemplate() {
-            if (confirm("Restaurar modelo padrão?")) {
-                contractTemplateState = defaultContractText;
-                document.getElementById('contract-template').value = defaultContractText;
-                saveToLocalStorage();
-                alert("Restaurado.");
-            }
-        }
-
+        // --- BACKUP ---
         function exportBackupData() {
-            const data = JSON.stringify({ version: "24.1_AUDIT", exportDate: new Date().toISOString(), events: eventsState, expenses: expensesState, profile: profileState, contractTemplate: contractTemplateState }, null, 2);
-            const blob = new Blob([data], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `DJ_BROW_Backup_${new Date().toISOString().slice(0,10)}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
+            const blob = new Blob([JSON.stringify({ events: eventsState, expenses: expensesState, profile: profileState, template: contractTemplateState })], {type:"application/json"});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "backup_djbrow.json"; a.click();
         }
-
+        
         function processImportBackup(e) {
-            const f = e.target.files[0];
-            if (!f) return;
+            const f = e.target.files[0]; if(!f) return;
             const r = new FileReader();
             r.onload = evt => {
                 try {
                     const d = JSON.parse(evt.target.result);
-                    if (!d || !Array.isArray(d.events) || !Array.isArray(d.expenses)) { alert("Arquivo inválido ou corrompido."); return; }
-                    if (!confirm(`⚠️ ATENÇÃO: O backup contém ${d.events.length} eventos e ${d.expenses.length} despesas. Isso substituirá TODOS os seus dados atuais. Deseja continuar?`)) return;
-                    eventsState = d.events; expensesState = d.expenses;
-                    if (d.profile) profileState = { ...profileState, ...d.profile };
-                    if (d.contractTemplate) contractTemplateState = d.contractTemplate;
-                    saveToLocalStorage();
-                    loadFromLocalStorage();
-                    selectedFinanceYear = 'all';
-                    populateFinanceYears();
-                    renderDashboard(); renderEventsList(); renderFinanceTab();
-                    alert("Backup restaurado com sucesso!");
-                } catch (err) { alert("Erro ao processar o arquivo JSON. Verifique se é um backup válido."); }
+                    if(!d.events) throw new Error("Invalido");
+                    eventsState = d.events; expensesState = d.expenses || []; profileState = d.profile || profileState;
+                    saveToLocalStorage(); location.reload();
+                } catch(err) { alert("Arquivo inválido."); }
             };
             r.readAsText(f);
         }
