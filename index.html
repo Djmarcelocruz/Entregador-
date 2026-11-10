@@ -2,13 +2,14 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DJ BROW - Gestão de Eventos, Contratos & Finanças v24</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DJ BROW - Gestão Total v24.1</title>
     <meta name="theme-color" content="#10b981">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="DJ BROW">
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%2310b981' width='512' height='512' rx='96'/%3E%3Ctext x='256' y='340' font-size='220' font-weight='bold' text-anchor='middle' fill='%23000' font-family='Arial'%3EDJ%3C/text%3E%3C/svg%3E">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -17,12 +18,9 @@
         .canvas-container { border: 2px dashed #374151; border-radius: 8px; background: #030712; position: relative; }
         .tab-btn.active { background-color: #1e293b; color: #10b981; border-left: 4px solid #10b981; }
         
-        /* Esconde a área de impressão na tela normal do app */
-        #print-section {
-            display: none;
-        }
-
-        /* Estilos que só valem quando for imprimir ou salvar PDF */
+        /* Área de Impressão Oculta (Nativa) */
+        #print-section { display: none; }
+        
         @media print {
             body { background: #ffffff !important; color: #000000 !important; margin: 0; padding: 0; }
             #app-sidebar, main, #modal-payment, #modal-payments-history, #modal-expense, #modal-onboarding, .no-print { display: none !important; }
@@ -46,53 +44,39 @@
 </head>
 <body class="min-h-screen flex flex-col md:flex-row">
 
+    <!-- ONBOARDING -->
     <div id="modal-onboarding" class="fixed inset-0 bg-slate-950/95 flex items-center justify-center p-4 z-[100] hidden no-print">
         <div class="bg-slate-900 border border-slate-700 rounded-xl max-w-lg w-full p-6 space-y-4 max-h-[95vh] overflow-y-auto">
             <div class="text-center">
                 <div class="w-16 h-16 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center font-bold text-2xl mx-auto mb-3 shadow-lg shadow-emerald-500/30">DJ</div>
                 <h2 class="text-xl font-bold text-white">Bem-vindo ao DJ BROW!</h2>
-                <p class="text-sm text-slate-400 mt-1">Antes de começar, precisamos dos seus dados.</p>
+                <p class="text-sm text-slate-400 mt-1">Vamos configurar seu perfil profissional.</p>
             </div>
             <div class="bg-amber-950/50 border border-amber-700/50 p-3 rounded-lg space-y-1 text-xs">
                 <p class="font-bold text-amber-400">⚠️ Importante:</p>
-                <p class="text-amber-200">Seus dados ficam apenas no <strong>SEU navegador</strong>. Nada é enviado para servidores externos.</p>
-                <p class="text-amber-200">No iPhone/iPad, use <strong>"Adicionar à Tela de Início"</strong> para evitar que o iOS apague dados após 7 dias.</p>
+                <p class="text-amber-200">Os dados são salvos no seu dispositivo. No iPhone, use <strong>"Adicionar à Tela de Início"</strong>.</p>
             </div>
             <form onsubmit="handleSaveOnboarding(event)" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Nome Artístico / Empresa *</label>
-                    <input type="text" id="onb-company" required placeholder="Ex: DJ BROW Eventos" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:border-emerald-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Seu Nome Completo *</label>
-                    <input type="text" id="onb-name" required placeholder="Ex: Marcelo da Cruz" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:border-emerald-500 focus:outline-none">
-                </div>
+                <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Nome Artístico / Empresa *</label><input type="text" id="onb-company" required placeholder="Ex: DJ BROW Eventos" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:border-emerald-500 focus:outline-none"></div>
+                <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Seu Nome Completo *</label><input type="text" id="onb-name" required placeholder="Ex: Marcelo da Cruz" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:border-emerald-500 focus:outline-none"></div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">CPF *</label>
-                        <input type="text" id="onb-cpf" required placeholder="000.000.000-00" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:border-emerald-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">WhatsApp *</label>
-                        <input type="text" id="onb-phone" required placeholder="(00) 00000-0000" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:border-emerald-500 focus:outline-none">
-                    </div>
+                    <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">CPF *</label><input type="text" id="onb-cpf" required placeholder="000.000.000-00" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:border-emerald-500 focus:outline-none"></div>
+                    <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">WhatsApp *</label><input type="text" id="onb-phone" required placeholder="(00) 00000-0000" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:border-emerald-500 focus:outline-none"></div>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Endereço (opcional)</label>
-                    <input type="text" id="onb-address" placeholder="Rua, número, cidade - UF" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:border-emerald-500 focus:outline-none">
-                </div>
-                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-lg transition text-sm shadow-lg shadow-emerald-500/20">Começar a Usar o App →</button>
+                <div><label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Endereço (opcional)</label><input type="text" id="onb-address" placeholder="Rua, número, cidade - UF" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm focus:border-emerald-500 focus:outline-none"></div>
+                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-lg transition text-sm shadow-lg shadow-emerald-500/20">Começar a Usar →</button>
             </form>
         </div>
     </div>
 
+    <!-- SIDEBAR -->
     <aside id="app-sidebar" class="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col justify-between no-print shrink-0">
         <div>
             <div class="flex items-center gap-3 mb-8">
                 <div class="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-slate-950 text-xl shadow-lg shadow-emerald-500/20">DJ</div>
                 <div>
                     <h1 class="font-bold text-lg leading-none tracking-wide" id="sidebar-app-name">DJ BROW</h1>
-                    <span class="text-xs text-slate-400">Gestão Total v24</span>
+                    <span class="text-xs text-slate-400">Gestão Total v24.1</span>
                 </div>
             </div>
             <nav class="space-y-1" id="nav-container">
@@ -134,11 +118,12 @@
             </div>
         </div>
 
+        <!-- DASHBOARD -->
         <section id="tab-dashboard" class="space-y-6">
             <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-bold tracking-tight text-white">Painel Geral</h2>
-                    <p class="text-slate-400 text-sm">Resumo financeiro de caixa real e próximos compromissos da agenda</p>
+                    <p class="text-slate-400 text-sm">Resumo financeiro de caixa e agenda</p>
                 </div>
                 <button onclick="prepareNewEvent()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-5 py-2.5 rounded-lg transition flex items-center gap-2 self-start md:self-auto shadow-lg shadow-emerald-500/10"><i class="fa-solid fa-plus"></i> Novo Evento</button>
             </div>
@@ -180,11 +165,11 @@
             </div>
 
             <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 md:p-6 space-y-4">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-calendar-day text-emerald-400"></i> Próximos Eventos (A Realizar)</h3>
+                <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-calendar-day text-emerald-400"></i> Próximos Eventos</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-slate-300">
                         <thead class="bg-slate-800/60 text-slate-400 uppercase text-xs">
-                            <tr><th class="p-3 rounded-l-lg">Data</th><th class="p-3">Cliente</th><th class="p-3">Local</th><th class="p-3">Status</th><th class="p-3">Valor Total</th><th class="p-3">Saldo</th><th class="p-3 text-right rounded-r-lg">Ação</th></tr>
+                            <tr><th class="p-3 rounded-l-lg">Data</th><th class="p-3">Cliente</th><th class="p-3">Local</th><th class="p-3">Status</th><th class="p-3">Valor</th><th class="p-3">Saldo</th><th class="p-3 text-right rounded-r-lg">Ação</th></tr>
                         </thead>
                         <tbody id="dash-events-list" class="divide-y divide-slate-800"></tbody>
                     </table>
@@ -192,6 +177,7 @@
             </div>
         </section>
 
+        <!-- EVENTOS -->
         <section id="tab-eventos" class="space-y-6 hidden">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -217,6 +203,7 @@
             </div>
         </section>
 
+        <!-- PROPOSTA -->
         <section id="tab-proposta" class="space-y-6 hidden">
             <div class="flex justify-between items-center">
                 <div>
@@ -271,11 +258,12 @@
                 </div>
                 <div class="flex gap-4 pt-4 border-t border-slate-800">
                     <button type="button" onclick="switchTab('eventos')" class="w-1/3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3 rounded-lg transition text-sm">Cancelar</button>
-                    <button type="submit" class="w-2/3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-lg transition text-sm shadow-lg shadow-emerald-500/10">Salvar e Ver Contrato</button>
+                    <button type="submit" class="w-2/3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-lg transition text-sm shadow-lg shadow-emerald-500/10">Salvar Evento</button>
                 </div>
             </form>
         </section>
 
+        <!-- CONTRATOS -->
         <section id="tab-contratos" class="space-y-6 hidden">
             <div id="dj-contract-actions" class="flex flex-col gap-4 no-print">
                 <div>
@@ -336,6 +324,7 @@
             </div>
         </section>
 
+        <!-- FINANCEIRO -->
         <section id="tab-financeiro" class="space-y-6 hidden">
             <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
                 <div>
@@ -355,7 +344,7 @@
                     <select id="finance-year-select" onchange="setFinanceYearFilter(this.value)" class="bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-emerald-500"><option value="all">Todos</option></select>
                 </div>
                 <div class="flex items-center gap-2">
-                    <label class="text-xs font-semibold text-slate-300 uppercase"><i class="fa-solid fa-tag me-1 text-rose-400"></i> Categoria:</label>
+                    <label class="text-xs font-semibold text-slate-300 uppercase"><i class="fa-solid fa-tag me-1 text-rose-400"></i> Categoria (Despesas):</label>
                     <select id="finance-category-filter" onchange="setFinanceCategoryFilter(this.value)" class="bg-slate-950 border border-slate-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-emerald-500">
                         <option value="all">Todas</option>
                         <option value="Equipe / Auxiliar">Equipe / Auxiliar</option>
@@ -413,6 +402,7 @@
             </div>
         </section>
 
+        <!-- PERFIL -->
         <section id="tab-perfil" class="space-y-6 hidden">
             <div>
                 <h2 class="text-2xl font-bold text-white">Dados do DJ & Empresa</h2>
@@ -435,6 +425,7 @@
             </form>
         </section>
 
+        <!-- MODELO -->
         <section id="tab-modelo-contrato" class="space-y-6 hidden">
             <div>
                 <h2 class="text-2xl font-bold text-white">Modelo Padrão de Contrato</h2>
@@ -453,6 +444,7 @@
             </div>
         </section>
 
+        <!-- BACKUP -->
         <section id="tab-backup" class="space-y-6 hidden">
             <div>
                 <h2 class="text-2xl font-bold text-white">Backup e Segurança</h2>
@@ -481,7 +473,7 @@
             </div>
         </section>
 
-        <!-- ÁREA INVISÍVEL QUE SERÁ IMPRESSA -->
+        <!-- ÁREA OCULTA DE IMPRESSÃO NATIVA -->
         <div id="print-section">
             <div class="print-header">CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE DJ</div>
             <div class="print-content" id="print-contract-text"></div>
@@ -499,6 +491,7 @@
 
     </main>
 
+    <!-- MODAIS -->
     <div id="modal-payment" class="fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50 hidden no-print">
         <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 space-y-4">
             <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i> Registrar Pagamento</h3>
@@ -610,7 +603,7 @@ CONTRATANTE: {{NOME_CLIENTE}}, CPF/CNPJ nº {{CPF_CLIENTE}}, residente e domicil
 CONTRATADO: {{NOME_DJ}}, CPF nº {{CPF_DJ}}, residente e domiciliado à {{ENDERECO_DJ}}, Telefone/WhatsApp {{FONE_DJ}}.
 
 CLÁUSULA 1ª - DO EVENTO E DO SERVIÇO
-O CONTRATADO prestará serviços profissionais de DJ no evento do CONTRATANTE, em {{DATA_EVENTO}}, no local {{LOCAL_EVENTO}}, com duração de {{DURACAO}} horas (das {{HORARIO_INICIO}} às {{HORARIO_TERMINO}}).
+O CONTRATADO prestará serviços profissionais de DJ no evento do CONTRATANTE, em {{DATA_EVENTO}}, no local {{LOCAL_EVENTO}}, com duração de {{DURACAO}} horas (das {{HORARIO_INICIO}} às {{HORARIO_TERMINO}}). O CONTRATADO terá autonomia profissional para selecionar e organizar o repertório durante a festa.
 
 CLÁUSULA 2ª - DOS EQUIPAMENTOS E SERVIÇOS INCLUÍDOS
 Fazem parte desta contratação somente os itens discriminados:
@@ -620,25 +613,25 @@ CLÁUSULA 3ª - DO VALOR E PAGAMENTO
 O valor total da contratação será de R$ {{VALOR_TOTAL}}. No ato da assinatura, o CONTRATANTE pagará 20%, correspondente a R$ {{ENTRADA}}, confirmando a contratação e a reserva da data. O saldo de R$ {{SALDO}} deverá ser pago até 07 dias antes do evento. Forma de pagamento: PIX (Chave PIX: {{CPF_DJ}}).
 
 CLÁUSULA 4ª - DO CANCELAMENTO E DO SINAL
-Em caso de cancelamento por iniciativa do CONTRATANTE, sem culpa do CONTRATADO, o valor pago para reserva da data poderá ser retido.
+Em caso de cancelamento por iniciativa do CONTRATANTE, sem culpa do CONTRATADO, o valor pago para reserva da data poderá ser retido, observadas a legislação aplicável e as circunstâncias do cancelamento.
 
 CLÁUSULA 5ª - DA REMARCAÇÃO
-O CONTRATANTE poderá solicitar a remarcação do evento com antecedência mínima de 30 dias. A remarcação estará condicionada à disponibilidade do CONTRATADO.
+O CONTRATANTE poderá solicitar a remarcação do evento, preferencialmente com antecedência mínima de 30 dias. A remarcação estará condicionada à disponibilidade do CONTRATADO.
 
 CLÁUSULA 6ª - DOS ATRASOS E DAS HORAS EXTRAS
 O período contratado é de {{DURACAO}} horas (término às {{HORARIO_TERMINO}}). Permanência após o horário contratado dependerá da disponibilidade do DJ e será cobrada à parte no valor de R$ {{VALOR_EXTRA}} por hora adicional.
 
 CLÁUSULA 7ª - DA ESTRUTURA, ENERGIA E SEGURANÇA
-O CONTRATANTE deverá disponibilizar local adequado e seguro para instalação dos equipamentos.
+O CONTRATANTE deverá disponibilizar local adequado e seguro para instalação dos equipamentos, bem como energia elétrica compatível. Danos causados aos equipamentos por convidados ou terceiros serão de responsabilidade de quem os causar.
 
 CLÁUSULA 8ª - DE EVENTOS AO AR LIVRE E FORÇA MAIOR
-Em áreas externas, o CONTRATANTE deverá disponibilizar cobertura adequada contra chuva e sol excessivo.
+Em áreas externas, o CONTRATANTE deverá disponibilizar cobertura adequada contra chuva e sol excessivo. Em situações de força maior ou caso fortuito, as partes deverão priorizar a remarcação.
 
 CLÁUSULA 9ª - DA ALIMENTAÇÃO
 O CONTRATANTE deverá fornecer alimentação e água ao CONTRATADO durante o período de trabalho.
 
 CLÁUSULA 10ª - DA ASSINATURA ELETRÔNICA E DISPOSIÇÕES FINAIS
-As partes reconhecem e aceitam a validade jurídica da assinatura eletrônica simples, nos termos da MP 2.200-2/2001 e da Lei 14.063/2020.
+As partes reconhecem e aceitam a validade jurídica da assinatura eletrônica simples, nos termos do art. 10 da MP 2.200-2/2001 e da Lei 14.063/2020, dispensando certificação ICP-Brasil. A assinatura desenhada em meio eletrônico manifesta a livre e espontânea vontade das partes em firmar o presente contrato. O CONTRATANTE declara ter lido integralmente o conteúdo do contrato antes de assiná-lo. Este documento poderá ser assinado em vias separadas, sendo considerado válido o conjunto de assinaturas reunidas em um único arquivo PDF.
 
 OBSERVAÇÕES ADICIONAIS:
 {{OBSERVACOES}}`;
@@ -683,10 +676,10 @@ OBSERVAÇÕES ADICIONAIS:
 
         function computeContractHash(ev) {
             const snap = ev.contractSnapshot || compileContractText(ev);
-            const raw = `${ev.clientName}|${ev.date}|${ev.location}|${ev.price}|${snap}`;
+            const raw = `${ev.clientName}|${ev.clientCpf}|${ev.clientPhone}|${ev.clientCep}|${ev.clientAddress}|${ev.date}|${ev.location}|${ev.duration}|${ev.startTime}|${ev.endTime}|${ev.extraHour}|${ev.price}|${ev.deposit}|${ev.equipments}|${ev.notes}|${snap}`;
             let h = 0;
             for (let i = 0; i < raw.length; i++) { h = ((h << 5) - h) + raw.charCodeAt(i); h |= 0; }
-            return 'v24_' + Math.abs(h).toString(16);
+            return 'v24.1_' + Math.abs(h).toString(16);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -848,7 +841,6 @@ OBSERVAÇÕES ADICIONAIS:
             navigator.clipboard.writeText(link).then(() => alert("Link copiado!")).catch(() => prompt("Copie:", link));
         }
 
-        // NOVA FUNÇÃO DE GERAR PDF (USANDO IMPRESSÃO NATIVA)
         function downloadPDFForClientExternal() {
             if (!activeEventId) { alert("Selecione um evento."); return; }
             const ev = eventsState.find(e => e.id === activeEventId);
@@ -857,19 +849,14 @@ OBSERVAÇÕES ADICIONAIS:
             
             const text = ev.contractSnapshot || compileContractText(ev);
             
-            // Preenche a div invisível
             document.getElementById('print-contract-text').innerText = text;
             document.getElementById('print-sig-dj-img').src = ev.signatureDj;
             document.getElementById('print-sig-dj-name').innerText = (profileState.userName || 'DJ BROW') + ' (Contratado)';
             
-            // Cliente ainda não assinou, então deixa o espaço em branco
             document.getElementById('print-sig-client-img').style.display = 'none';
             document.getElementById('print-sig-client-name').innerText = (ev.clientName || 'Cliente') + ' (Contratante)';
             
-            // Aciona a impressão
-            setTimeout(() => {
-                window.print();
-            }, 200);
+            setTimeout(() => { window.print(); }, 200);
         }
 
         function exportStandaloneHTML() {
@@ -915,7 +902,6 @@ button { padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; 
 .alert-success { background: #d1fae5; border: 1px solid #10b981; color: #065f46; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 12px; display: none; }
 .alert-success.show { display: block; }
 .warning-box { display: none; background: #fef3c7; border: 1px solid #fbbf24; color: #78350f; padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 12px; }
-
 @media print { 
     body { background: #fff; padding: 0; margin: 0; } 
     .container { box-shadow: none; padding: 0; max-width: 100%; } 
@@ -998,11 +984,9 @@ function saveSig() {
 function downloadPDF() {
     if (!hasSignature) { alert('Por favor, assine antes de baixar o PDF.'); return; }
     
-    // Esconde tudo o que não deve ir pro PDF
     document.querySelectorAll('.no-print').forEach(e => e.style.display = 'none');
     document.getElementById('browser-warning').style.display = 'none';
     
-    // Aciona a impressão nativa do celular (que salva como PDF)
     setTimeout(() => {
         window.print();
     }, 300);
@@ -1038,7 +1022,6 @@ ${'</scr' + 'ipt>'}
         }
 
         function shareSignedContractPDF() {
-            // Como o PDF agora é gerado nativamente, pediremos ao usuário para tirar um print ou salvar pelo menu de impressão
             alert("Para enviar o contrato assinado:\n\n1. Toque em 'Baixar PDF' e escolha 'Salvar como PDF'.\n2. Volte ao WhatsApp e anexe o PDF na conversa.");
             const el = document.getElementById('pdf-printable-area');
             el.style.display = 'block';
@@ -1075,9 +1058,7 @@ ${'</scr' + 'ipt>'}
             }
             document.getElementById('print-sig-client-name').innerText = (ev.clientName || 'Cliente') + ' (Contratante)';
             
-            setTimeout(() => {
-                window.print();
-            }, 200);
+            setTimeout(() => { window.print(); }, 200);
         }
 
         function calculateEndTime() {
@@ -1096,14 +1077,25 @@ ${'</scr' + 'ipt>'}
             const a = document.getElementById('inp-client-address');
             const l = document.getElementById('cep-loading');
             const clean = c.value.replace(/\D/g, '');
-            if (clean.length !== 8) return;
+            if (clean.length !== 8) {
+                if(clean.length > 0) alert("CEP inválido. Deve conter 8 números.");
+                return;
+            }
             l.classList.remove('hidden');
             try {
                 const r = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
                 const d = await r.json();
-                if (!d.erro) a.value = `${d.logradouro}, ${d.bairro}, ${d.localidade} - ${d.uf}`;
-            } catch (e) { console.log(e); }
-            finally { l.classList.add('hidden'); }
+                if (d.erro) {
+                    alert("CEP não encontrado na base dos Correios. Preencha o endereço manualmente.");
+                } else {
+                    a.value = `${d.logradouro}, ${d.bairro}, ${d.localidade} - ${d.uf}`;
+                }
+            } catch (e) { 
+                console.error(e);
+                alert("Falha de rede ao buscar o CEP. Verifique sua internet e preencha manualmente se necessário.");
+            } finally { 
+                l.classList.add('hidden'); 
+            }
         }
 
         function loadFromLocalStorage() {
@@ -1120,7 +1112,7 @@ ${'</scr' + 'ipt>'}
                 document.getElementById('cfg-monthly-goal').value = profileState.monthlyGoal || '';
                 document.getElementById('contract-template').value = contractTemplateState;
                 updateSidebarProfile();
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Erro ao carregar dados:", e); }
         }
 
         function saveToLocalStorage() {
@@ -1130,7 +1122,7 @@ ${'</scr' + 'ipt>'}
                 localStorage.setItem('djbrow_profile', JSON.stringify(profileState));
                 localStorage.setItem('djbrow_template', contractTemplateState);
             } catch (e) {
-                alert("❌ ERRO: armazenamento cheio. Faça backup imediato!");
+                alert("❌ ERRO GRAVE: O armazenamento do navegador está cheio ou bloqueado. Suas alterações recentes NÃO foram salvas permanentemente. Exporte um backup imediatamente!");
                 throw e;
             }
         }
@@ -1279,22 +1271,29 @@ ${'</scr' + 'ipt>'}
         function renderFinanceTab() {
             let received = 0, pending = 0;
             eventsState.filter(e => e.status !== 'Cancelado').forEach(e => {
+                // Filtro de saldo pendente deve respeitar o ano selecionado
+                if (selectedFinanceYear !== 'all' && e.date && e.date.split('-')[0] !== selectedFinanceYear) return;
+
                 const p = parseFloat(e.price) || 0;
                 const paid = (e.extraPayments || []).reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
                 pending += Math.max(0, p - paid);
             });
+            
             eventsState.forEach(e => (e.extraPayments || []).forEach(p => {
                 const y = p.date ? p.date.split('-')[0] : '';
                 if (selectedFinanceYear === 'all' || y === selectedFinanceYear) received += parseFloat(p.amount) || 0;
             }));
+            
             const filteredExp = expensesState.filter(exp => {
                 if (selectedFinanceYear !== 'all' && exp.date && exp.date.split('-')[0] !== selectedFinanceYear) return false;
                 if (selectedFinanceCategory !== 'all' && exp.category !== selectedFinanceCategory) return false;
                 return true;
             });
+            
             const paidExp = filteredExp.filter(e => e.status !== 'pending').reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
             const pendExp = filteredExp.filter(e => e.status === 'pending').reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
             const netProfit = received - paidExp;
+            
             document.getElementById('fin-total-received').innerText = formatCurrency(received);
             document.getElementById('fin-total-pending').innerText = formatCurrency(pending);
             document.getElementById('fin-total-expenses').innerText = formatCurrency(paidExp);
@@ -1637,7 +1636,9 @@ ${'</scr' + 'ipt>'}
             const checkEv = eventsState.find(e => e.id === activeEventId);
             if (checkEv && checkEv.status === 'Confirmado' && checkEv.deposit > 0) {
                 if (!checkEv.extraPayments) checkEv.extraPayments = [];
-                if (!checkEv.extraPayments.some(p => p.note && p.note.toLowerCase().includes('sinal'))) {
+                // PROTEÇÃO CONTRA DUPLICIDADE
+                const hasSinal = checkEv.extraPayments.some(p => p.note && p.note.toLowerCase().includes('sinal'));
+                if (!hasSinal) {
                     checkEv.extraPayments.push({ id: 'pay_sinal_' + Date.now(), amount: parseFloat(checkEv.deposit) || 0, date: new Date().toISOString().slice(0, 10), note: 'Sinal auto', paymentMethod: 'PIX' });
                 }
             }
@@ -1846,7 +1847,7 @@ ${'</scr' + 'ipt>'}
         }
 
         function exportBackupData() {
-            const data = JSON.stringify({ version: "24_AUDIT", exportDate: new Date().toISOString(), events: eventsState, expenses: expensesState, profile: profileState, contractTemplate: contractTemplateState }, null, 2);
+            const data = JSON.stringify({ version: "24.1_AUDIT", exportDate: new Date().toISOString(), events: eventsState, expenses: expensesState, profile: profileState, contractTemplate: contractTemplateState }, null, 2);
             const blob = new Blob([data], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1863,8 +1864,8 @@ ${'</scr' + 'ipt>'}
             r.onload = evt => {
                 try {
                     const d = JSON.parse(evt.target.result);
-                    if (!d || !Array.isArray(d.events) || !Array.isArray(d.expenses)) { alert("Arquivo inválido."); return; }
-                    if (!confirm(`Backup com ${d.events.length} eventos e ${d.expenses.length} despesas. Substituir?`)) return;
+                    if (!d || !Array.isArray(d.events) || !Array.isArray(d.expenses)) { alert("Arquivo inválido ou corrompido."); return; }
+                    if (!confirm(`⚠️ ATENÇÃO: O backup contém ${d.events.length} eventos e ${d.expenses.length} despesas. Isso substituirá TODOS os seus dados atuais. Deseja continuar?`)) return;
                     eventsState = d.events; expensesState = d.expenses;
                     if (d.profile) profileState = { ...profileState, ...d.profile };
                     if (d.contractTemplate) contractTemplateState = d.contractTemplate;
@@ -1873,8 +1874,8 @@ ${'</scr' + 'ipt>'}
                     selectedFinanceYear = 'all';
                     populateFinanceYears();
                     renderDashboard(); renderEventsList(); renderFinanceTab();
-                    alert("Restaurado!");
-                } catch (err) { alert("Erro ao processar."); }
+                    alert("Backup restaurado com sucesso!");
+                } catch (err) { alert("Erro ao processar o arquivo JSON. Verifique se é um backup válido."); }
             };
             r.readAsText(f);
         }
